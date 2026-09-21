@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flowgrove — Scheduling Engine v1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #ffffff;
+    --ink: #1c2b22;
+    --ink-soft: #5b6b60;
+    --green: #6fa287;
+    --green-soft: #e6f1ec;
+    --green-line: #bcd9c9;
+    --border: #e4e8e5;
+    --shadow: 0 1px 2px rgba(28,43,34,0.06);
+    --optional-bg: #fbf6e8;
+    --optional-line: #e3d6a3;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: 'Lora', serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.5;
+  }
+
+  header {
+    padding: 28px 32px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  header h1 {
+    margin: 0 0 4px;
+    font-size: 26px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  header p {
+    margin: 0;
+    color: var(--ink-soft);
+    font-size: 14.5px;
+    max-width: 62ch;
+  }
+
+  main {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 28px 32px 64px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  @media (min-width: 860px) {
+    main { grid-template-columns: 1fr 300px; align-items: start; }
+  }
+
+  .panel {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: #fff;
+  }
+
+  .schedule-panel { padding: 20px 20px 28px; }
+
+  .schedule-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+
+  .schedule-header h2 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 600;
+  }
+
+  .schedule-header span {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+  }
+
+  .grid {
+    position: relative;
+    border-top: 1px solid var(--border);
+  }
+
+  .hour-row {
+    position: relative;
+    height: 64px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+  }
+
+  .hour-label {
+    width: 58px;
+    flex-shrink: 0;
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    padding-top: 3px;
+    text-align: right;
+    padding-right: 10px;
+  }
+
+  .hour-track { flex: 1; position: relative; }
+
+  .block {
+    position: absolute;
+    left: 4px;
+    right: 4px;
+    border-radius: 7px;
+    padding: 5px 9px;
+    font-size: 12.5px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    border: 1px solid transparent;
+  }
+
+  .block .title { font-weight: 600; display: block; }
+  .block .meta { display: block; font-size: 11px; opacity: 0.8; margin-top: 1px; }
+
+  .block.event {
+    background: repeating-linear-gradient(135deg, #f1f3f1, #f1f3f1 6px, #e8ebe8 6px, #e8ebe8 12px);
+    border: 1px dashed #9aa79f;
+    color: var(--ink);
+  }
+
+  .block.task {
+    background: var(--green-soft);
+    border-color: var(--green-line);
+  }
+
+  .block.task.optional {
+    background: var(--optional-bg);
+    border-color: var(--optional-line);
+  }
+
+  .badge {
+    display: inline-block;
+    font-size: 9.5px;
+    text-transform: none;
+    background: rgba(0,0,0,0.06);
+    border-radius: 4px;
+    padding: 0 4px;
+    margin-left: 4px;
+  }
+
+  .sidebar { display: flex; flex-direction: column; gap: 16px; }
+
+  .add-panel { padding: 16px 16px 18px; }
+  .add-panel h2 { margin: 0 0 10px; font-size: 15px; font-weight: 600; }
+
+  label { display: block; font-size: 12px; color: var(--ink-soft); margin: 10px 0 3px; }
+  label:first-of-type { margin-top: 0; }
+
+  input[type="text"], input[type="number"], select {
+    width: 100%;
+    padding: 7px 9px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-family: 'Lora', serif;
+    font-size: 13.5px;
+    background: #fff;
+    color: var(--ink);
+  }
+
+  input:focus, select:focus { outline: 2px solid var(--green-line); border-color: var(--green); }
+
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+  .checkbox-row { display: flex; align-items: center; gap: 6px; margin: 10px 0 0; }
+  .checkbox-row input { width: auto; }
+  .checkbox-row label { margin: 0; color: var(--ink); font-size: 13px; }
+
+  button.primary {
+    margin-top: 14px;
+    width: 100%;
+    background: var(--green);
+    color: #fff;
+    border: none;
+    border-radius: 7px;
+    padding: 9px 0;
+    font-family: 'Lora', serif;
+    font-weight: 600;
+    font-size: 13.5px;
+    cursor: pointer;
+  }
+
+  button.primary:hover { background: #5f9077; }
+
+  .legend { padding: 14px 16px; font-size: 12px; color: var(--ink-soft); }
+  .legend h3 { margin: 0 0 8px; font-size: 12.5px; color: var(--ink); font-weight: 600; }
+  .legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .swatch { width: 14px; height: 14px; border-radius: 4px; flex-shrink: 0; }
+  .swatch.event { background: #e8ebe8; border: 1px dashed #9aa79f; }
+  .swatch.task { background: var(--green-soft); border: 1px solid var(--green-line); }
+  .swatch.optional { background: var(--optional-bg); border: 1px solid var(--optional-line); }
+
+  .note {
+    font-size: 12px;
+    color: var(--ink-soft);
+    padding: 12px 16px;
+    background: var(--green-soft);
+    border-radius: 8px;
+    border: 1px solid var(--green-line);
+  }
+
+  .task-list { padding: 14px 16px; }
+  .task-list h3 { margin: 0 0 8px; font-size: 12.5px; font-weight: 600; }
+  .task-list ul { list-style: none; margin: 0; padding: 0; }
+  .task-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 12.5px;
+  }
+  .task-list li:last-child { border-bottom: none; }
+  .task-list button.remove {
+    background: none; border: none; color: #a3372f; cursor: pointer; font-size: 12px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Flowgrove — Scheduling Engine (v1)</h1>
+  <p>This is the core auto-scheduling logic, tested against the worked example from the Absolute V1 spec: a fixed Math class from 9–10am, a Top-priority/low-motivation task, two Medium-priority tasks, and an optional Low-priority task. Add or remove tasks below to test the ordering rules yourself.</p>
+</header>
+
+<main>
+  <div class="panel schedule-panel">
+    <div class="schedule-header">
+      <h2>Today's Schedule</h2>
+      <span id="dayRange">7:00 AM – 9:00 PM</span>
+    </div>
+    <div class="grid" id="grid"></div>
+  </div>
+
+  <div class="sidebar">
+    <div class="panel add-panel">
+      <h2>Add a Task</h2>
+      <label for="title">Title</label>
+      <input type="text" id="title" placeholder="e.g. Finish reading chapter">
+
+      <div class="row2">
+        <div>
+          <label for="priority">Priority</label>
+          <select id="priority">
+            <option value="3">Top</option>
+            <option value="2" selected>Medium</option>
+            <option value="1">Low</option>
+          </select>
+        </div>
+        <div>
+          <label for="time">Time (min)</label>
+          <input type="number" id="time" value="15" min="5" step="5">
+        </div>
+      </div>
+
+      <label for="motivation">Motivation (1–10)</label>
+      <input type="number" id="motivation" value="5" min="1" max="10">
+
+      <div class="checkbox-row">
+        <input type="checkbox" id="optional">
+        <label for="optional">Optional task</label>
+      </div>
+
+      <button class="primary" onclick="addTask()">Add &amp; Reschedule</button>
+    </div>
+
+    <div class="panel legend">
+      <h3>Legend</h3>
+      <div class="legend-item"><span class="swatch event"></span> Fixed calendar event (never moves)</div>
+      <div class="legend-item"><span class="swatch task"></span> Scheduled task</div>
+      <div class="legend-item"><span class="swatch optional"></span> Optional task</div>
+    </div>
+
+    <div class="panel task-list">
+      <h3>All Tasks</h3>
+      <ul id="taskListUI"></ul>
+    </div>
+
+    <div class="note">
+      This version implements: priority → time estimate → motivation tiebreaker ordering, low-motivation tasks scheduled early, optional tasks placed only in leftover time, and fixed calendar events blocking their time slot. Breaks, recurrence, labels, and Google Calendar sync are not yet wired in — those come next.
+    </div>
+  </div>
+</main>
+
+<script>
+// ---- Fixed calendar event (from Google Calendar sync — hardcoded here as the worked example) ----
+const events = [
+  { title: "Math class", startMin: 9 * 60, endMin: 10 * 60 }
+];
+
+// ---- Task data model ----
+// priority: 3 = Top, 2 = Medium, 1 = Low
+let tasks = [
+  { id: 1, title: "Study for science quiz", priority: 3, time: 30, motivation: 3, optional: false, completed: false },
+  { id: 2, title: "Finish reading chapter", priority: 2, time: 45, motivation: 7, optional: false, completed: false },
+  { id: 3, title: "Practice violin", priority: 2, time: 20, motivation: 8, optional: false, completed: false },
+  { id: 4, title: "Clean room", priority: 1, time: 15, motivation: 2, optional: true, completed: false }
+];
+let nextId = 5;
+
+const DAY_START = 7 * 60;   // 7:00 AM in minutes
+const DAY_END = 21 * 60;    // 9:00 PM in minutes
+
+function addTask() {
+  const title = document.getElementById('title').value.trim();
+  if (!title) { return; }
+  const priority = parseInt(document.getElementById('priority').value, 10);
+  const time = parseInt(document.getElementById('time').value, 10) || 15;
+  const motivation = Math.min(10, Math.max(1, parseInt(document.getElementById('motivation').value, 10) || 5));
+  const optional = document.getElementById('optional').checked;
+
+  tasks.push({ id: nextId++, title, priority, time, motivation, optional, completed: false });
+  document.getElementById('title').value = '';
+  render();
+}
+
+function removeTask(id) {
+  tasks = tasks.filter(t => t.id !== id);
+  render();
+}
+
+// ---- Core scheduling logic ----
+// Step 1: build list of "busy" blocks from fixed events
+// Step 2: sort required tasks by priority, then time estimate, then motivation tiebreaker
+// Step 3: low-motivation tasks get pulled earlier within their priority tier
+// Step 4: fill gaps around fixed events with required tasks
+// Step 5: optional tasks only placed in genuinely leftover time, at the end
+function computeSchedule() {
+  const required = tasks.filter(t => !t.optional);
+  const optional = tasks.filter(t => t.optional);
+
+  // Sort required: priority desc, then time asc (shorter first, fills gaps),
+  // then motivation asc within same priority+time so LOW motivation goes earlier (rule: schedule low-motivation early)
+  required.sort((a, b) => {
+    if (b.priority !== a.priority) return b.priority - a.priority;
+    if (a.time !== b.time) return a.time - b.time;
+    return a.motivation - b.motivation; // lower motivation first = scheduled earlier
+  });
+
+  // Build free-time windows around fixed events
+  const sortedEvents = [...events].sort((a, b) => a.startMin - b.startMin);
+  let windows = [];
+  let cursor = DAY_START;
+  sortedEvents.forEach(ev => {
+    if (ev.startMin > cursor) windows.push({ start: cursor, end: ev.startMin });
+    cursor = Math.max(cursor, ev.endMin);
+  });
+  if (cursor < DAY_END) windows.push({ start: cursor, end: DAY_END });
+
+  const placed = [];
+
+  function place(task) {
+    for (let w of windows) {
+      if (w.end - w.start >= task.time) {
+        placed.push({ ...task, startMin: w.start, endMin: w.start + task.time, type: 'task' });
+        w.start += task.time;
+        return true;
+      }
+    }
+    return false; // doesn't fit anywhere -> would go to "Tomorrow" in the full app
+  }
+
+  required.forEach(t => place(t));
+  // Optional tasks: only placed if genuine leftover time remains, sorted the same way
+  optional.sort((a, b) => {
+    if (b.priority !== a.priority) return b.priority - a.priority;
+    if (a.time !== b.time) return a.time - b.time;
+    return a.motivation - b.motivation;
+  });
+  optional.forEach(t => place(t));
+
+  return placed;
+}
+
+// ---- Rendering ----
+function render() {
+  renderGrid();
+  renderTaskList();
+}
+
+function renderGrid() {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+
+  const startHour = DAY_START / 60;
+  const endHour = DAY_END / 60;
+  const totalHours = endHour - startHour;
+
+  for (let h = startHour; h < endHour; h++) {
+    const row = document.createElement('div');
+    row.className = 'hour-row';
+
+    const label = document.createElement('div');
+    label.className = 'hour-label';
+    const displayHour = h % 12 === 0 ? 12 : h % 12;
+    const ampm = h < 12 ? 'AM' : 'PM';
+    label.textContent = `${displayHour} ${ampm}`;
+    row.appendChild(label);
+
+    const track = document.createElement('div');
+    track.className = 'hour-track';
+    track.dataset.hour = h;
+    row.appendChild(track);
+
+    grid.appendChild(row);
+  }
+
+  const rowHeight = 64; // must match CSS .hour-row height
+
+  function placeBlockOnGrid(startMin, endMin, el) {
+    const startOffsetMin = startMin - DAY_START;
+    const durationMin = endMin - startMin;
+    const hourIndex = Math.floor(startOffsetMin / 60);
+    const withinHourOffset = startOffsetMin % 60;
+    const tracks = grid.querySelectorAll('.hour-track');
+    if (hourIndex < 0 || hourIndex >= tracks.length) return;
+    const track = tracks[hourIndex];
+    el.style.top = (withinHourOffset / 60 * rowHeight) + 'px';
+    el.style.height = Math.max(20, durationMin / 60 * rowHeight) + 'px';
+    track.appendChild(el);
+  }
+
+  // Fixed events
+  events.forEach(ev => {
+    const el = document.createElement('div');
+    el.className = 'block event';
+    el.innerHTML = `<span class="title">${ev.title}</span><span class="meta">Fixed event — never moves</span>`;
+    placeBlockOnGrid(ev.startMin, ev.endMin, el);
+  });
+
+  // Scheduled tasks
+  const schedule = computeSchedule();
+  schedule.forEach(t => {
+    const el = document.createElement('div');
+    el.className = 'block task' + (t.optional ? ' optional' : '');
+    const priorityLabel = t.priority === 3 ? 'Top' : t.priority === 2 ? 'Medium' : 'Low';
+    el.innerHTML = `<span class="title">${t.title}${t.optional ? '<span class="badge">Optional</span>' : ''}</span><span class="meta">${priorityLabel} · ${t.time}m · Motivation ${t.motivation}</span>`;
+    placeBlockOnGrid(t.startMin, t.endMin, el);
+  });
+}
+
+function renderTaskList() {
+  const ul = document.getElementById('taskListUI');
+  ul.innerHTML = '';
+  tasks.forEach(t => {
+    const li = document.createElement('li');
+    const priorityLabel = t.priority === 3 ? 'Top' : t.priority === 2 ? 'Medium' : 'Low';
+    li.innerHTML = `<span>${t.title} <span class="badge">${priorityLabel}</span>${t.optional ? '<span class="badge">Optional</span>' : ''}</span>`;
+    const btn = document.createElement('button');
+    btn.className = 'remove';
+    btn.textContent = 'Remove';
+    btn.onclick = () => removeTask(t.id);
+    li.appendChild(btn);
+    ul.appendChild(li);
+  });
+}
+
+render();
+</script>
+
+</body>
+</html>

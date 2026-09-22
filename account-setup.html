@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flowgrove — Account Setup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #ffffff;
+    --ink: #1c2b22;
+    --ink-soft: #5b6b60;
+    --green: #6fa287;
+    --green-soft: #e6f1ec;
+    --green-line: #bcd9c9;
+    --border: #e4e8e5;
+    --shadow: 0 1px 2px rgba(28,43,34,0.06);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: 'Lora', serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.5;
+    display: flex;
+    justify-content: center;
+    padding: 40px 20px 80px;
+  }
+
+  .card {
+    width: 100%;
+    max-width: 480px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 32px 28px 28px;
+    box-shadow: var(--shadow);
+  }
+
+  h1 {
+    margin: 0 0 4px;
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .sub {
+    margin: 0 0 24px;
+    color: var(--ink-soft);
+    font-size: 14px;
+  }
+
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin: 18px 0 6px;
+  }
+
+  label:first-of-type { margin-top: 0; }
+
+  .hint {
+    font-weight: 400;
+    color: var(--ink-soft);
+    font-size: 12px;
+    margin-top: -2px;
+    margin-bottom: 6px;
+  }
+
+  input[type="text"], select {
+    width: 100%;
+    padding: 9px 10px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    font-family: 'Lora', serif;
+    font-size: 14px;
+    background: #fff;
+    color: var(--ink);
+  }
+
+  input:focus, select:focus { outline: 2px solid var(--green-line); border-color: var(--green); }
+
+  .checkbox-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 13.5px;
+    font-weight: 400;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 8px 10px;
+  }
+
+  .checkbox-item input { width: auto; }
+
+  #otherRoleWrap { display: none; margin-top: 8px; }
+
+  #consentBox {
+    display: none;
+    margin-top: 18px;
+    background: var(--green-soft);
+    border: 1px solid var(--green-line);
+    border-radius: 8px;
+    padding: 12px 14px;
+  }
+
+  #consentBox p {
+    margin: 0 0 8px;
+    font-size: 13px;
+    color: var(--ink);
+  }
+
+  #consentBox .checkbox-item { border: none; padding: 0; background: none; }
+
+  button.primary {
+    margin-top: 26px;
+    width: 100%;
+    background: var(--green);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 11px 0;
+    font-family: 'Lora', serif;
+    font-weight: 600;
+    font-size: 14.5px;
+    cursor: pointer;
+  }
+
+  button.primary:hover { background: #5f9077; }
+  button.primary:disabled { background: #b7c9bf; cursor: not-allowed; }
+
+  .error {
+    color: #a3372f;
+    font-size: 12.5px;
+    margin-top: 6px;
+    display: none;
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h1>Welcome to Flowgrove</h1>
+  <p class="sub">A few quick questions to set things up for you.</p>
+
+  <form id="setupForm">
+    <label for="name">Your name</label>
+    <input type="text" id="name" placeholder="Your full name" required>
+
+    <label for="role">Which best describes you?</label>
+    <select id="role">
+      <option value="Elementary">Elementary</option>
+      <option value="Middle School">Middle School</option>
+      <option value="High School">High School</option>
+      <option value="College">College</option>
+      <option value="Working Adult">Working Adult</option>
+      <option value="Other">Other</option>
+    </select>
+    <div id="otherRoleWrap">
+      <input type="text" id="otherRole" placeholder="Tell us more">
+    </div>
+
+    <label for="age">What's your age range?</label>
+    <select id="age">
+      <option value="11-under">11 and under</option>
+      <option value="12-18">12–18</option>
+      <option value="19-30">19–30</option>
+      <option value="31-50">31–50</option>
+      <option value="50-above">Above 50</option>
+    </select>
+
+    <label>What do you need to manage? <span class="hint">(select all that apply)</span></label>
+    <div class="checkbox-grid">
+      <div class="checkbox-item"><input type="checkbox" id="reasonSchool" value="School/Homework"><label for="reasonSchool" style="margin:0;font-weight:400;">School/Homework</label></div>
+      <div class="checkbox-item"><input type="checkbox" id="reasonExtra" value="Extracurricular"><label for="reasonExtra" style="margin:0;font-weight:400;">Extracurricular</label></div>
+      <div class="checkbox-item"><input type="checkbox" id="reasonHome" value="Home/Chores"><label for="reasonHome" style="margin:0;font-weight:400;">Home/Chores</label></div>
+      <div class="checkbox-item"><input type="checkbox" id="reasonWork" value="Work"><label for="reasonWork" style="margin:0;font-weight:400;">Work</label></div>
+    </div>
+    <div class="error" id="reasonError">Please select at least one.</div>
+
+    <label for="nickname">What do we call you? <span class="hint" style="font-weight:400;">(can be a nickname)</span></label>
+    <input type="text" id="nickname" placeholder="Optional — leave blank to use your name">
+
+    <div id="consentBox">
+      <p>Since you're 11 or under, we need a parent or guardian to confirm this account setup.</p>
+      <div class="checkbox-item">
+        <input type="checkbox" id="consent">
+        <label for="consent" style="margin:0;font-weight:400;">A parent or guardian has reviewed and approved this</label>
+      </div>
+      <div class="error" id="consentError">A parent/guardian must check this box to continue.</div>
+    </div>
+
+    <button type="submit" class="primary" id="submitBtn">Continue to Flowgrove</button>
+  </form>
+</div>
+
+<script>
+const roleSelect = document.getElementById('role');
+const otherRoleWrap = document.getElementById('otherRoleWrap');
+const ageSelect = document.getElementById('age');
+const consentBox = document.getElementById('consentBox');
+
+roleSelect.addEventListener('change', () => {
+  otherRoleWrap.style.display = roleSelect.value === 'Other' ? 'block' : 'none';
+});
+
+function updateConsentVisibility() {
+  consentBox.style.display = ageSelect.value === '11-under' ? 'block' : 'none';
+}
+ageSelect.addEventListener('change', updateConsentVisibility);
+updateConsentVisibility();
+
+document.getElementById('setupForm').addEventListener('submit', function (e) {
+  e.preventDefault();
+
+  const name = document.getElementById('name').value.trim();
+  const role = roleSelect.value === 'Other'
+    ? (document.getElementById('otherRole').value.trim() || 'Other')
+    : roleSelect.value;
+  const age = ageSelect.value;
+  const nickname = document.getElementById('nickname').value.trim() || name;
+
+  const reasons = [];
+  ['reasonSchool','reasonExtra','reasonHome','reasonWork'].forEach(id => {
+    const box = document.getElementById(id);
+    if (box.checked) reasons.push(box.value);
+  });
+
+  let valid = true;
+
+  document.getElementById('reasonError').style.display = 'none';
+  if (reasons.length === 0) {
+    document.getElementById('reasonError').style.display = 'block';
+    valid = false;
+  }
+
+  document.getElementById('consentError').style.display = 'none';
+  if (age === '11-under' && !document.getElementById('consent').checked) {
+    document.getElementById('consentError').style.display = 'block';
+    valid = false;
+  }
+
+  if (!valid) return;
+
+  const profile = { name, role, age, nickname, reasons, createdAt: new Date().toISOString() };
+  localStorage.setItem('flowgrove_profile', JSON.stringify(profile));
+
+  window.location.href = 'index.html';
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flowgrove</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #ffffff;
+    --secondary: #ffffff;
+    --tertiary: #6fa287;
+    --tertiary-hover: #5f9077;
+    --ink: #1c2b22;
+    --ink-soft: #5b6b60;
+    --border: #e4e8e5;
+    --shadow: 0 1px 2px rgba(28,43,34,0.06);
+    --optional-bg: #fbf6e8;
+    --optional-line: #e3d6a3;
+    --event-bg: #e8ebe8;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Lora', serif; background: var(--primary); color: var(--ink); line-height: 1.5; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; padding: 14px 24px; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 10px; }
+  .brand { font-size: 19px; font-weight: 700; }
+  .view-switch { display: flex; gap: 4px; background: #f4f6f5; border-radius: 8px; padding: 3px; }
+  .view-switch button { border: none; background: none; padding: 6px 14px; border-radius: 6px; font-family: 'Lora', serif; font-size: 13px; cursor: pointer; color: var(--ink-soft); }
+  .view-switch button.active { background: #fff; color: var(--ink); box-shadow: var(--shadow); font-weight: 600; }
+  .topbar-actions { display: flex; gap: 8px; align-items: center; }
+  .icon-btn { border: 1px solid var(--border); background: #fff; border-radius: 8px; padding: 7px 12px; font-family: 'Lora', serif; font-size: 12.5px; cursor: pointer; color: var(--ink); }
+  .icon-btn:hover { background: #f7f9f8; }
+  #breakBtn { border: 1px solid var(--tertiary); background: var(--tertiary); color: #fff; border-radius: 8px; padding: 7px 14px; font-family: 'Lora', serif; font-size: 12.5px; cursor: pointer; white-space: nowrap; }
+  #breakBtn.on { background: #fff; color: var(--tertiary); }
+  main { max-width: 1000px; margin: 0 auto; padding: 20px 24px 64px; display: grid; grid-template-columns: 1fr; gap: 22px; }
+  @media (min-width: 900px) { main { grid-template-columns: 1fr 320px; align-items: start; } }
+  .panel { border: 1px solid var(--border); border-radius: 10px; background: #fff; }
+  .schedule-panel { padding: 18px 18px 24px; }
+  .schedule-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .schedule-header h2 { margin: 0; font-size: 16.5px; font-weight: 600; }
+  .progress-pill { font-size: 12px; color: var(--ink-soft); background: #f4f6f5; border-radius: 20px; padding: 4px 10px; }
+  .grid { position: relative; border-top: 1px solid var(--border); }
+  .hour-row { position: relative; height: 60px; border-bottom: 1px solid var(--border); display: flex; }
+  .hour-label { width: 56px; flex-shrink: 0; font-size: 11px; color: var(--ink-soft); padding-top: 3px; text-align: right; padding-right: 10px; }
+  .hour-track { flex: 1; position: relative; }
+  .block { position: absolute; left: 4px; right: 4px; border-radius: 7px; padding: 5px 9px; font-size: 12px; overflow: hidden; box-shadow: var(--shadow); border: 1px solid transparent; }
+  .block .title { font-weight: 600; display: block; }
+  .block .meta { display: block; font-size: 10.5px; opacity: 0.8; margin-top: 1px; }
+  .block.event { background: repeating-linear-gradient(135deg, var(--event-bg), var(--event-bg) 6px, #dfe3e0 6px, #dfe3e0 12px); border: 1px dashed #9aa79f; }
+  .block.task { border-color: var(--border); cursor: pointer; }
+  .block.task.optional { background: var(--optional-bg) !important; border-color: var(--optional-line); }
+  .block.task.completed { opacity: 0.45; text-decoration: line-through; }
+  .badge { display: inline-block; font-size: 9px; background: rgba(0,0,0,0.08); border-radius: 4px; padding: 0 4px; margin-left: 4px; text-decoration: none; }
+  .habit-flame { margin-left: 3px; }
+  .month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+  .month-cell { border: 1px solid var(--border); border-radius: 8px; min-height: 60px; padding: 6px; font-size: 11.5px; color: var(--ink-soft); }
+  .month-cell.today { border-color: var(--tertiary); background: #f3f8f5; font-weight: 600; color: var(--ink); }
+  .month-note { font-size: 12px; color: var(--ink-soft); margin-top: 12px; padding: 10px 12px; background: #f4f6f5; border-radius: 8px; }
+  .sidebar { display: flex; flex-direction: column; gap: 16px; }
+  .side-panel { padding: 14px 16px 16px; }
+  .side-panel h3 { margin: 0 0 10px; font-size: 13.5px; font-weight: 600; }
+  .tab-row { display: flex; gap: 6px; margin-bottom: 10px; }
+  .tab-row button { flex: 1; border: 1px solid var(--border); background: #fff; border-radius: 7px; padding: 6px 0; font-family: 'Lora', serif; font-size: 12px; cursor: pointer; }
+  .tab-row button.active { background: var(--tertiary); color: #fff; border-color: var(--tertiary); }
+  label { display: block; font-size: 11.5px; color: var(--ink-soft); margin: 8px 0 3px; }
+  label:first-of-type { margin-top: 0; }
+  input[type="text"], input[type="number"], select { width: 100%; padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; font-family: 'Lora', serif; font-size: 13px; background: #fff; color: var(--ink); }
+  input:focus, select:focus { outline: 2px solid #cfe3d8; border-color: var(--tertiary); }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .checkbox-row { display: flex; align-items: center; gap: 6px; margin: 8px 0 0; }
+  .checkbox-row input { width: auto; }
+  .checkbox-row label { margin: 0; color: var(--ink); font-size: 12.5px; }
+  button.primary { margin-top: 12px; width: 100%; background: var(--tertiary); color: #fff; border: none; border-radius: 7px; padding: 8px 0; font-family: 'Lora', serif; font-weight: 600; font-size: 13px; cursor: pointer; }
+  button.primary:hover { background: var(--tertiary-hover); }
+  .quickadd-line { font-size: 13px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 7px; background: #fafbfa; }
+  .quickadd-prompt { font-size: 11px; color: var(--ink-soft); margin-top: 4px; }
+  #quickAddInput { width: 100%; border: none; outline: none; font-family: 'Lora', serif; font-size: 13.5px; background: transparent; }
+  .label-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; padding: 3px 8px; border-radius: 20px; border: 1px solid var(--border); margin: 2px 4px 2px 0; }
+  .label-swatch { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .preset-swatches { display: flex; gap: 5px; margin-top: 5px; flex-wrap: wrap; }
+  .preset-swatches span { width: 20px; height: 20px; border-radius: 5px; cursor: pointer; border: 1px solid var(--border); display: inline-block; }
+  .task-list { padding: 12px 14px; }
+  .task-list ul { list-style: none; margin: 0; padding: 0; }
+  .task-list li { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+  .task-list li:last-child { border-bottom: none; }
+  .task-list button.remove { background: none; border: none; color: #a3372f; cursor: pointer; font-size: 11.5px; }
+  .habit-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 12.5px; }
+  .habit-item:last-child { border-bottom: none; }
+  .streak-ticks { display: flex; gap: 2px; margin-top: 2px; }
+  .tick { width: 6px; height: 6px; border-radius: 50%; background: var(--border); }
+  .tick.hit { background: var(--tertiary); }
+  .saying-toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 10px 16px; border-radius: 30px; font-size: 13px; box-shadow: 0 4px 14px rgba(0,0,0,0.2); z-index: 300; opacity: 0; transition: opacity 0.4s ease; }
+  .saying-toast.show { opacity: 1; }
+  .milestone-toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--tertiary); color: #fff; padding: 12px 20px; border-radius: 10px; font-size: 13.5px; font-weight: 600; box-shadow: 0 6px 20px rgba(0,0,0,0.18); z-index: 300; opacity: 0; transition: opacity 0.4s ease; }
+  .milestone-toast.show { opacity: 1; }
+  .modal-overlay { position: fixed; inset: 0; background: rgba(28,43,34,0.35); display: none; align-items: flex-start; justify-content: center; padding: 40px 16px; overflow-y: auto; z-index: 200; }
+  .modal-overlay.show { display: flex; }
+  .modal { background: #fff; border-radius: 12px; padding: 24px; width: 100%; max-width: 460px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
+  .modal h2 { margin: 0 0 14px; font-size: 17px; font-weight: 600; }
+  .modal-close { float: right; background: none; border: none; font-size: 18px; cursor: pointer; color: var(--ink-soft); }
+  .settings-section { margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid var(--border); }
+  .settings-section:last-child { border-bottom: none; }
+  .settings-section h4 { margin: 0 0 8px; font-size: 12.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; color: var(--ink-soft); }
+  .day-hours-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 12.5px; }
+  .day-hours-row span.day-name { width: 34px; }
+  .day-hours-row input[type="time"] { flex: 1; padding: 5px 7px; border: 1px solid var(--border); border-radius: 6px; font-family: 'Lora', serif; }
+  .toggle-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 13px; }
+  .stub-note { font-size: 11px; color: #a3372f; margin-top: 4px; }
+  #tutorialOverlay { position: fixed; inset: 0; z-index: 500; display: none; }
+  #tutorialOverlay.show { display: block; }
+  #tutorialDim { position: absolute; inset: 0; background: rgba(28,43,34,0.55); }
+  #tutorialSpot { position: absolute; border-radius: 10px; box-shadow: 0 0 0 6px rgba(111,162,135,0.55), 0 0 0 2000px rgba(28,43,34,0.55); transition: all 0.25s ease; pointer-events: none; }
+  #tutorialCard { position: absolute; background: #fff; border-radius: 10px; padding: 16px 18px; max-width: 280px; box-shadow: 0 8px 24px rgba(0,0,0,0.25); font-size: 13px; }
+  #tutorialCard h4 { margin: 0 0 6px; font-size: 13.5px; }
+  #tutorialCard p { margin: 0 0 12px; color: var(--ink-soft); }
+  .tutorial-actions { display: flex; justify-content: space-between; align-items: center; }
+  .tutorial-actions button { border: none; background: none; font-family: 'Lora', serif; font-size: 12.5px; cursor: pointer; }
+  .tutorial-actions .skip { color: var(--ink-soft); }
+  .tutorial-actions .next { background: var(--tertiary); color: #fff; border-radius: 6px; padding: 6px 14px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">Flowgrove</div>
+  <div class="view-switch">
+    <button id="dayTabBtn" class="active" onclick="switchView('day')">Day</button>
+    <button id="monthTabBtn" onclick="switchView('month')">Month</button>
+  </div>
+  <div class="topbar-actions">
+    <button class="icon-btn" onclick="openSettings()" data-tut="settingsBtn">Settings</button>
+    <button class="icon-btn" onclick="startTutorial()" data-tut="helpBtn">? Help</button>
+    <button id="breakBtn" onclick="toggleBreak()" data-tut="breakBtn">Click me to have an automatic break right now</button>
+  </div>
+</div>
+
+<main>
+  <div>
+    <div class="panel schedule-panel" id="dayView">
+      <div class="schedule-header">
+        <h2>Today's Schedule</h2>
+        <span class="progress-pill" id="progressPill">0 of 0 tasks done</span>
+      </div>
+      <div class="grid" id="grid" data-tut="scheduleGrid"></div>
+    </div>
+
+    <div class="panel schedule-panel" id="monthView" style="display:none;">
+      <div class="schedule-header"><h2 id="monthTitle">This Month</h2></div>
+      <div class="month-grid" id="monthGrid"></div>
+      <div class="month-note">This is a simplified month view for now, it shows the calendar and highlights today, but full day-by-day task planning across the month is a later addition. Use Day view for actual scheduling.</div>
+    </div>
+  </div>
+
+  <div class="sidebar">
+    <div class="panel side-panel" data-tut="addTaskPanel">
+      <h3>Add a Task</h3>
+      <div class="tab-row">
+        <button id="detailedTabBtn" class="active" onclick="switchAddMode('detailed')">Detailed</button>
+        <button id="quickTabBtn" onclick="switchAddMode('quick')">Quick Add</button>
+      </div>
+
+      <div id="detailedForm">
+        <label>Title</label>
+        <input type="text" id="title" placeholder="e.g. Finish reading chapter">
+        <div class="row2">
+          <div><label>Priority</label>
+            <select id="priority"><option value="3">Top</option><option value="2" selected>Medium</option><option value="1">Low</option></select>
+          </div>
+          <div><label>Time (min)</label><input type="number" id="time" value="15" min="5" step="5"></div>
+        </div>
+        <label>Motivation (1-10)</label>
+        <input type="number" id="motivation" value="5" min="1" max="10">
+
+        <label>Label</label>
+        <select id="labelSelect"><option value="">No label</option></select>
+        <div style="margin-top:6px;">
+          <input type="text" id="newLabelName" placeholder="Or type a new label name" style="margin-bottom:4px;">
+          <div class="preset-swatches" id="labelPresets"></div>
+        </div>
+
+        <label>Repeat</label>
+        <select id="repeatPattern">
+          <option value="none">Does not repeat</option>
+          <option value="daily">Daily</option>
+          <option value="weekdays">Weekdays</option>
+          <option value="weekends">Weekends</option>
+          <option value="weekly">Weekly</option>
+        </select>
+
+        <div class="checkbox-row"><input type="checkbox" id="isHabit"><label for="isHabit">This is a Habit (tracks a streak)</label></div>
+        <div class="checkbox-row"><input type="checkbox" id="optional"><label for="optional">Optional task</label></div>
+        <div class="checkbox-row"><input type="checkbox" id="assignTomorrow"><label for="assignTomorrow">Add to Tomorrow instead of today</label></div>
+
+        <button class="primary" onclick="addTaskFromForm()">Add &amp; Reschedule</button>
+      </div>
+
+      <div id="quickForm" style="display:none;">
+        <div class="quickadd-line"><input type="text" id="quickAddInput" placeholder="Type a task title and press Enter..." onkeydown="quickAddKey(event)"></div>
+        <div class="quickadd-prompt" id="quickAddPrompt">Step 1 of 8: type the title, then press Enter.</div>
+      </div>
+    </div>
+
+    <div class="panel side-panel" data-tut="habitsPanel">
+      <h3>Habits &amp; Streaks</h3>
+      <div id="habitsListUI"><p style="font-size:12px;color:var(--ink-soft);margin:0;">No habits yet, check "This is a Habit" when adding a task.</p></div>
+    </div>
+
+    <div class="panel side-panel" data-tut="tomorrowPanel">
+      <h3>Tomorrow</h3>
+      <ul id="tomorrowListUI" style="list-style:none;margin:0;padding:0;font-size:12.5px;"></ul>
+      <p id="tomorrowEmpty" style="font-size:12px;color:var(--ink-soft);margin:6px 0 0;">Nothing here yet.</p>
+    </div>
+
+    <div class="panel task-list" data-tut="taskListPanel">
+      <h3>All Tasks Today</h3>
+      <ul id="taskListUI"></ul>
+    </div>
+  </div>
+</main>
+
+<div class="modal-overlay" id="settingsOverlay">
+  <div class="modal" style="max-width:520px;">
+    <button class="modal-close" onclick="closeSettings()">x</button>
+    <h2>Settings</h2>
+
+    <div class="settings-section">
+      <h4>Appearance</h4>
+      <select id="themeSelect" onchange="applyThemePreset()">
+        <option value="modern">Modern (white + soft green)</option>
+        <option value="dark">Dark theme</option>
+        <option value="colorful">Colorful</option>
+        <option value="pastel">Pastel</option>
+        <option value="custom">Custom</option>
+      </select>
+      <div id="customColors" style="display:none;margin-top:10px;">
+        <label>Primary (background)</label><input type="color" id="primaryColor" onchange="applyCustomColors()">
+        <label>Secondary (unlabeled task color)</label><input type="color" id="secondaryColor" onchange="applyCustomColors()">
+        <label>Tertiary (buttons + Optional tag)</label><input type="color" id="tertiaryColor" onchange="applyCustomColors()">
+      </div>
+      <p style="font-size:11px;color:var(--ink-soft);margin-top:6px;">Font is fixed to Lora across all themes.</p>
+    </div>
+
+    <div class="settings-section">
+      <h4>Weekly Working Hours</h4>
+      <div id="workingHoursUI"></div>
+      <p class="stub-note">Note: these are saved as a preference, but the schedule grid still uses a fixed 7am-9pm window in this version, full per-day integration is a later step.</p>
+    </div>
+
+    <div class="settings-section">
+      <h4>Notifications &amp; Sound</h4>
+      <div class="toggle-row"><span>Task completion sound</span><input type="checkbox" id="soundToggle" checked></div>
+      <div class="toggle-row"><span>Motivation sayings</span><input type="checkbox" id="sayingsToggle" checked></div>
+      <div class="toggle-row"><span>Milestone popups</span><input type="checkbox" id="milestoneToggle" checked></div>
+      <p class="stub-note">Real push notifications need a backend/service worker and aren't wired up yet, these toggles control the in-app sound and messages only.</p>
+    </div>
+
+    <div class="settings-section">
+      <h4>Break Settings</h4>
+      <div class="row2">
+        <div><label>Short work interval (min)</label><input type="number" id="shortWorkMin" value="25"></div>
+        <div><label>Short break length (min)</label><input type="number" id="shortBreakMin" value="5"></div>
+      </div>
+      <div class="row2">
+        <div><label>Medium break length (min)</label><input type="number" id="medBreakMin" value="15"></div>
+        <div><label>Free-time interval (min)</label><input type="number" id="freeIntervalMin" value="60"></div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h4>Labels</h4>
+      <div id="settingsLabelList"></div>
+    </div>
+
+    <div class="settings-section">
+      <h4>Google Calendar</h4>
+      <button class="icon-btn" disabled>Connect Google Calendar</button>
+      <p class="stub-note">Not yet functional, real Google sign-in requires a backend server. The Math class event on your schedule is a hardcoded stand-in for now.</p>
+    </div>
+
+    <div class="settings-section">
+      <h4>Account &amp; Data</h4>
+      <label>Nickname</label>
+      <input type="text" id="settingsNickname">
+      <button class="icon-btn" style="margin-top:10px;" onclick="exportData()">Export my data</button>
+      <button class="icon-btn" style="margin-top:6px;color:#a3372f;" onclick="deleteAccount()">Delete account</button>
+    </div>
+
+    <button class="primary" onclick="saveSettings()">Save Settings</button>
+  </div>
+</div>
+
+<div id="tutorialOverlay">
+  <div id="tutorialDim"></div>
+  <div id="tutorialSpot"></div>
+  <div id="tutorialCard">
+    <h4 id="tutTitle"></h4>
+    <p id="tutText"></p>
+    <div class="tutorial-actions">
+      <button class="skip" onclick="endTutorial()">Skip</button>
+      <button class="next" onclick="nextTutorialStep()">Next</button>
+    </div>
+  </div>
+</div>
+
+<div class="saying-toast" id="sayingToast"></div>
+<div class="milestone-toast" id="milestoneToast"></div>
+
+<script>
+const events = [{ title: "Math class", startMin: 9*60, endMin: 10*60 }];
+
+let tasks = JSON.parse(localStorage.getItem('flowgrove_tasks') || 'null') || [
+  { id: 1, title: "Study for science quiz", priority: 3, time: 30, motivation: 3, optional: false, completed: false, label: null, isHabit: false, tomorrow: false },
+  { id: 2, title: "Finish reading chapter", priority: 2, time: 45, motivation: 7, optional: false, completed: false, label: null, isHabit: false, tomorrow: false },
+  { id: 3, title: "Practice violin", priority: 2, time: 20, motivation: 8, optional: false, completed: false, label: null, isHabit: true, tomorrow: false },
+  { id: 4, title: "Clean room", priority: 1, time: 15, motivation: 2, optional: true, completed: false, label: null, isHabit: false, tomorrow: false }
+];
+let nextId = Math.max(0, ...tasks.map(t => t.id)) + 1;
+
+let labels = JSON.parse(localStorage.getItem('flowgrove_labels') || 'null') || [];
+let habits = JSON.parse(localStorage.getItem('flowgrove_habits') || 'null') || {};
+let settings = JSON.parse(localStorage.getItem('flowgrove_settings') || 'null') || {
+  theme: 'modern', primary: '#ffffff', secondary: '#ffffff', tertiary: '#6fa287',
+  sound: true, sayings: true, milestones: true,
+  shortWorkMin: 25, shortBreakMin: 5, medBreakMin: 15, freeIntervalMin: 60,
+  workingHours: { Sun:{on:false,start:'09:00'}, Mon:{on:true,start:'09:00'}, Tue:{on:true,start:'09:00'}, Wed:{on:true,start:'09:00'}, Thu:{on:true,start:'09:00'}, Fri:{on:true,start:'09:00'}, Sat:{on:false,start:'09:00'} }
+};
+
+const PRESET_COLORS = ['#6fa287','#e08e5b','#5b8ac9','#c96f9a','#d1b34a','#7b6fc9','#4fa89a','#c95b5b'];
+const COMMON_NAMES = ["sarah","tyler","emma","jacob","olivia","liam","ava","noah","sophia","mason","isabella","james","mia","logan","charlotte","lucas","amelia","ethan","harper","aiden","evelyn","jackson","abigail","carter","ella","adelynn","melissa","sonny"];
+
+const DAY_START = 7*60, DAY_END = 21*60;
+
+function switchView(v) {
+  document.getElementById('dayView').style.display = v === 'day' ? 'block' : 'none';
+  document.getElementById('monthView').style.display = v === 'month' ? 'block' : 'none';
+  document.getElementById('dayTabBtn').classList.toggle('active', v === 'day');
+  document.getElementById('monthTabBtn').classList.toggle('active', v === 'month');
+  if (v === 'month') renderMonth();
+}
+
+function renderMonth() {
+  const now = new Date();
+  const year = now.getFullYear(), month = now.getMonth();
+  document.getElementById('monthTitle').textContent = now.toLocaleString('default', { month: 'long', year: 'numeric' });
+  const grid = document.getElementById('monthGrid');
+  grid.innerHTML = '';
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  for (let i = 0; i < firstDay; i++) grid.appendChild(document.createElement('div'));
+  for (let d = 1; d <= daysInMonth; d++) {
+    const cell = document.createElement('div');
+    cell.className = 'month-cell' + (d === now.getDate() ? ' today' : '');
+    cell.textContent = d;
+    grid.appendChild(cell);
+  }
+}
+
+function switchAddMode(mode) {
+  document.getElementById('detailedForm').style.display = mode === 'detailed' ? 'block' : 'none';
+  document.getElementById('quickForm').style.display = mode === 'quick' ? 'block' : 'none';
+  document.getElementById('detailedTabBtn').classList.toggle('active', mode === 'detailed');
+  document.getElementById('quickTabBtn').classList.toggle('active', mode === 'quick');
+  if (mode === 'quick') { resetQuickAdd(); document.getElementById('quickAddInput').focus(); }
+}
+
+function saveLabels() { localStorage.setItem('flowgrove_labels', JSON.stringify(labels)); }
+
+function randomUnusedColor() {
+  const used = labels.map(l => l.color);
+  let choices = PRESET_COLORS.filter(c => !used.includes(c));
+  if (choices.length === 0) choices = PRESET_COLORS;
+  return choices[Math.floor(Math.random() * choices.length)];
+}
+
+function findOrCreateLabel(name) {
+  const clean = capitalizeFirst(name.trim());
+  let existing = labels.find(l => l.name.toLowerCase() === clean.toLowerCase());
+  if (existing) return existing;
+  const label = { name: clean, color: randomUnusedColor() };
+  labels.push(label);
+  saveLabels();
+  refreshLabelUI();
+  return label;
+}
+
+function refreshLabelUI() {
+  const sel = document.getElementById('labelSelect');
+  sel.innerHTML = '<option value="">No label</option>' + labels.map(l => '<option value="' + l.name + '">' + l.name + '</option>').join('');
+  const presets = document.getElementById('labelPresets');
+  presets.innerHTML = PRESET_COLORS.map(c => '<span style="background:' + c + '"></span>').join('');
+  const list = document.getElementById('settingsLabelList');
+  list.innerHTML = labels.length
+    ? labels.map(l => '<span class="label-chip"><span class="label-swatch" style="background:' + l.color + '"></span>' + l.name + '</span>').join('')
+    : '<p style="font-size:12px;color:var(--ink-soft);margin:0;">No labels yet.</p>';
+}
+
+function capitalizeFirst(str) {
+  if (!str) return str;
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+function autoCapitalizeTitle(str) {
+  if (!str) return str;
+  let words = str.split(' ');
+  words[0] = capitalizeFirst(words[0]);
+  const titles = ['ms.', 'mr.', 'mrs.', 'dr.'];
+  for (let i = 0; i < words.length; i++) {
+    const lower = words[i].toLowerCase();
+    if (titles.includes(lower) && words[i+1]) {
+      words[i] = capitalizeFirst(words[i]);
+      words[i+1] = capitalizeFirst(words[i+1]);
+    }
+    const bareWord = lower.replace(/[^a-z]/g, '');
+    if (COMMON_NAMES.includes(bareWord)) {
+      words[i] = capitalizeFirst(words[i]);
+    }
+  }
+  return words.join(' ');
+}
+
+function saveTasks() { localStorage.setItem('flowgrove_tasks', JSON.stringify(tasks)); }
+
+function addTaskFromForm() {
+  const titleRaw = document.getElementById('title').value.trim();
+  if (!titleRaw) return;
+  const title = autoCapitalizeTitle(titleRaw);
+  const priority = parseInt(document.getElementById('priority').value, 10);
+  const time = parseInt(document.getElementById('time').value, 10) || 15;
+  const motivation = Math.min(10, Math.max(1, parseInt(document.getElementById('motivation').value, 10) || 5));
+  const optional = document.getElementById('optional').checked;
+  const isHabit = document.getElementById('isHabit').checked;
+  const tomorrow = document.getElementById('assignTomorrow').checked;
+  const repeatPattern = document.getElementById('repeatPattern').value;
+
+  let labelName = document.getElementById('newLabelName').value.trim() || document.getElementById('labelSelect').value;
+  let label = null;
+  if (isHabit) { label = findOrCreateLabel('Habit'); }
+  else if (labelName) { label = findOrCreateLabel(labelName); }
+
+  const task = { id: nextId++, title: title, priority: priority, time: time, motivation: motivation, optional: optional, completed: false, label: label ? label.name : null, isHabit: isHabit, tomorrow: tomorrow, repeatPattern: repeatPattern };
+  tasks.push(task);
+  saveTasks();
+
+  document.getElementById('title').value = '';
+  document.getElementById('newLabelName').value = '';
+  document.getElementById('isHabit').checked = false;
+  document.getElementById('optional').checked = false;
+  document.getElementById('assignTomorrow').checked = false;
+
+  render();
+}
+
+function removeTask(id) { tasks = tasks.filter(t => t.id !== id); saveTasks(); render(); }
+
+function toggleComplete(id) {
+  const t = tasks.find(x => x.id === id);
+  if (!t) return;
+  t.completed = !t.completed;
+  if (t.completed) {
+    if (settings.sound) playCompletionSound();
+    if (t.isHabit) bumpStreak(t.title);
+    maybeShowSaying();
+  }
+  saveTasks();
+  render();
+}
+
+let qa = { step: 0, title: '', priority: 2, time: 15, motivation: 5, repeat: false, repeatPattern: 'none', label: '', optional: false };
+
+function resetQuickAdd() {
+  qa = { step: 0, title: '', priority: 2, time: 15, motivation: 5, repeat: false, repeatPattern: 'none', label: '', optional: false };
+  const input = document.getElementById('quickAddInput');
+  input.value = '';
+  input.placeholder = 'Type a task title and press Enter...';
+  document.getElementById('quickAddPrompt').textContent = 'Step 1 of 8: type the title, then press Enter.';
+}
+
+function quickAddKey(e) {
+  if (e.key !== 'Enter') return;
+  const input = document.getElementById('quickAddInput');
+  const val = input.value.trim();
+
+  if (qa.step === 0) {
+    if (!val) return;
+    qa.title = autoCapitalizeTitle(val);
+    qa.step = 1;
+    input.value = '';
+    input.placeholder = '1 = Low, 2 = Medium, 3 = Top';
+    document.getElementById('quickAddPrompt').textContent = 'Step 2 of 8: type 1, 2, or 3 for priority.';
+  } else if (qa.step === 1) {
+    const n = parseInt(val, 10);
+    if ([1,2,3].includes(n)) qa.priority = n;
+    qa.step = 2;
+    input.value = '15';
+    input.select();
+    document.getElementById('quickAddPrompt').textContent = 'Step 3 of 8: time estimate (minutes), overwrite or press Enter to accept.';
+  } else if (qa.step === 2) {
+    qa.time = parseInt(val, 10) || 15;
+    qa.step = 3;
+    input.value = '5';
+    input.select();
+    document.getElementById('quickAddPrompt').textContent = 'Step 4 of 8: motivation 1-10, overwrite or press Enter to accept.';
+  } else if (qa.step === 3) {
+    qa.motivation = Math.min(10, Math.max(1, parseInt(val, 10) || 5));
+    qa.step = 4;
+    input.value = '';
+    input.placeholder = 'Y or N, repeat this task?';
+    document.getElementById('quickAddPrompt').textContent = 'Step 5 of 8: type Y or N for repeat.';
+  } else if (qa.step === 4) {
+    const yes = val.toLowerCase().startsWith('y');
+    qa.repeat = yes;
+    if (yes) {
+      qa.step = 5;
+      input.value = '';
+      input.placeholder = "e.g. '2 M F' or '1' for daily";
+      document.getElementById('quickAddPrompt').textContent = 'Step 5b: 1=Daily, 2=Weekly, 3=Every other week, 4=Annually (+ day letters like M F or T and W).';
+    } else {
+      qa.step = 6;
+      input.value = '';
+      input.placeholder = 'Label name (or leave blank)';
+      document.getElementById('quickAddPrompt').textContent = 'Step 6 of 8: type a label name, or press Enter to skip.';
+    }
+  } else if (qa.step === 5) {
+    qa.repeatPattern = val || 'daily';
+    qa.step = 6;
+    input.value = '';
+    input.placeholder = 'Label name (or leave blank)';
+    document.getElementById('quickAddPrompt').textContent = 'Step 6 of 8: type a label name, or press Enter to skip.';
+  } else if (qa.step === 6) {
+    qa.label = val;
+    qa.step = 7;
+    input.value = '';
+    input.placeholder = 'Y or N, is this optional?';
+    document.getElementById('quickAddPrompt').textContent = 'Step 7 of 8: type Y or N for optional.';
+  } else if (qa.step === 7) {
+    qa.optional = val.toLowerCase().startsWith('y');
+    finishQuickAdd();
+  }
+}
+
+function finishQuickAdd() {
+  let label = null;
+  if (qa.label) label = findOrCreateLabel(qa.label);
+  const task = {
+    id: nextId++, title: qa.title, priority: qa.priority, time: qa.time, motivation: qa.motivation,
+    optional: qa.optional, completed: false, label: label ? label.name : null, isHabit: false,
+    tomorrow: false, repeatPattern: qa.repeat ? (qa.repeatPattern || 'daily') : 'none'
+  };
+  tasks.push(task);
+  saveTasks();
+  document.getElementById('quickAddPrompt').textContent = 'Added! Step 8 of 8 complete.';
+  resetQuickAdd();
+  render();
+}
+
+function saveHabits() { localStorage.setItem('flowgrove_habits', JSON.stringify(habits)); }
+
+function bumpStreak(title) {
+  const today = new Date().toDateString();
+  if (!habits[title]) habits[title] = { streak: 0, lastDate: null };
+  const h = habits[title];
+  if (h.lastDate !== today) {
+    h.streak += 1;
+    h.lastDate = today;
+    if (settings.milestones && h.streak % 7 === 0) {
+      showMilestone('Streak milestone: ' + h.streak + ' days on "' + title + '"!');
+    }
+  }
+  saveHabits();
+  renderHabits();
+}
+
+function renderHabits() {
+  const list = document.getElementById('habitsListUI');
+  const entries = Object.entries(habits);
+  if (entries.length === 0) {
+    list.innerHTML = '<p style="font-size:12px;color:var(--ink-soft);margin:0;">No habits yet, check "This is a Habit" when adding a task.</p>';
+    return;
+  }
+  list.innerHTML = entries.map(function(entry) {
+    const title = entry[0], h = entry[1];
+    let ticks = '';
+    for (let i = 0; i < 7; i++) {
+      ticks += '<span class="tick ' + ((h.streak % 7 || 7) > i ? 'hit' : '') + '"></span>';
+    }
+    return '<div class="habit-item"><div><div>' + title + '</div><div class="streak-ticks">' + ticks + '</div></div><div>' + h.streak + ' day streak</div></div>';
+  }).join('');
+}
+
+function showMilestone(text) {
+  const el = document.getElementById('milestoneToast');
+  el.textContent = text;
+  el.classList.add('show');
+  setTimeout(function() { el.classList.remove('show'); }, 3200);
+}
+
+const SAYINGS = {
+  encouragement: ["You've got this!", "Look at you, getting things done.", "You're doing better than you think."],
+  health: ["Don't forget to breathe.", "Go grab some water.", "Time to stretch for a second."],
+  playful: ["Boop! You did a thing!", "High five!", "Your future self says thanks."]
+};
+
+function maybeShowSaying() {
+  if (!settings.sayings) return;
+  const profile = JSON.parse(localStorage.getItem('flowgrove_profile') || 'null');
+  const isElementary = profile && profile.role === 'Elementary';
+  let pool = SAYINGS.encouragement.concat(SAYINGS.health);
+  if (isElementary) pool = pool.concat(SAYINGS.playful, SAYINGS.playful);
+  else pool = pool.concat(SAYINGS.playful);
+  const msg = pool[Math.floor(Math.random() * pool.length)];
+  const el = document.getElementById('sayingToast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(function() { el.classList.remove('show'); }, 2600);
+}
+
+setInterval(function() { if (Math.random() < 0.15) maybeShowSaying(); }, 45000);
+
+function playCompletionSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.4);
+  } catch (e) {}
+}
+
+let breakActive = false, breakStart = null, breakInterval = null;
+function toggleBreak() {
+  const btn = document.getElementById('breakBtn');
+  if (!breakActive) {
+    breakActive = true; breakStart = Date.now();
+    btn.classList.add('on');
+    breakInterval = setInterval(function() {
+      const mins = Math.floor((Date.now() - breakStart) / 60000);
+      btn.textContent = "I'm on break - " + mins + " min";
+    }, 1000);
+  } else {
+    breakActive = false;
+    clearInterval(breakInterval);
+    btn.classList.remove('on');
+    btn.textContent = 'Click me to have an automatic break right now';
+  }
+}
+
+function computeSchedule() {
+  const todays = tasks.filter(function(t) { return !t.tomorrow; });
+  const required = todays.filter(function(t) { return !t.optional; });
+  const optional = todays.filter(function(t) { return t.optional; });
+
+  const sortFn = function(a, b) {
+    if (b.priority !== a.priority) return b.priority - a.priority;
+    if (a.time !== b.time) return a.time - b.time;
+    return a.motivation - b.motivation;
+  };
+  required.sort(sortFn);
+  optional.sort(sortFn);
+
+  const sortedEvents = events.slice().sort(function(a,b) { return a.startMin - b.startMin; });
+  let windows = [];
+  let cursor = DAY_START;
+  sortedEvents.forEach(function(ev) {
+    if (ev.startMin > cursor) windows.push({ start: cursor, end: ev.startMin });
+    cursor = Math.max(cursor, ev.endMin);
+  });
+  if (cursor < DAY_END) windows.push({ start: cursor, end: DAY_END });
+
+  const placed = [];
+  function place(task) {
+    for (let w of windows) {
+      if (w.end - w.start >= task.time) {
+        placed.push(Object.assign({}, task, { startMin: w.start, endMin: w.start + task.time }));
+        w.start += task.time;
+        return true;
+      }
+    }
+    return false;
+  }
+  required.forEach(place);
+  optional.forEach(place);
+  return placed;
+}
+
+function render() {
+  renderGrid();
+  renderTaskList();
+  renderHabits();
+  renderTomorrow();
+  refreshLabelUI();
+  updateProgress();
+}
+
+function labelColor(name) {
+  const l = labels.find(function(x) { return x.name === name; });
+  return l ? l.color : settings.secondary;
+}
+
+function renderGrid() {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  const startHour = DAY_START/60, endHour = DAY_END/60;
+  for (let h = startHour; h < endHour; h++) {
+    const row = document.createElement('div'); row.className = 'hour-row';
+    const label = document.createElement('div'); label.className = 'hour-label';
+    const dh = h % 12 === 0 ? 12 : h % 12; const ampm = h < 12 ? 'AM' : 'PM';
+    label.textContent = dh + ' ' + ampm;
+    row.appendChild(label);
+    const track = document.createElement('div'); track.className = 'hour-track';
+    row.appendChild(track);
+    grid.appendChild(row);
+  }
+  const rowHeight = 60;
+  function placeOnGrid(startMin, endMin, el) {
+    const offset = startMin - DAY_START;
+    const hourIndex = Math.floor(offset/60);
+    const within = offset % 60;
+    const tracks = grid.querySelectorAll('.hour-track');
+    if (hourIndex < 0 || hourIndex >= tracks.length) return;
+    el.style.top = (within/60*rowHeight) + 'px';
+    el.style.height = Math.max(20, (endMin-startMin)/60*rowHeight) + 'px';
+    tracks[hourIndex].appendChild(el);
+  }
+  events.forEach(function(ev) {
+    const el = document.createElement('div'); el.className = 'block event';
+    el.innerHTML = '<span class="title">' + ev.title + '</span><span class="meta">Fixed event, never moves</span>';
+    placeOnGrid(ev.startMin, ev.endMin, el);
+  });
+  computeSchedule().forEach(function(t) {
+    const el = document.createElement('div');
+    el.className = 'block task' + (t.optional ? ' optional' : '') + (t.completed ? ' completed' : '');
+    if (t.label) el.style.background = labelColor(t.label) + '33';
+    else el.style.background = settings.secondary === '#ffffff' ? '#f4f6f5' : settings.secondary;
+    const pLabel = t.priority === 3 ? 'Top' : t.priority === 2 ? 'Medium' : 'Low';
+    el.innerHTML = '<span class="title">' + t.title + (t.optional ? '<span class="badge">Optional</span>' : '') + (t.isHabit ? ' [habit]' : '') + '</span><span class="meta">' + pLabel + ' - ' + t.time + 'm - Motivation ' + t.motivation + (t.label ? ' - ' + t.label : '') + '</span>';
+    el.onclick = function() { toggleComplete(t.id); };
+    placeOnGrid(t.startMin, t.endMin, el);
+  });
+}
+
+function renderTaskList() {
+  const ul = document.getElementById('taskListUI');
+  ul.innerHTML = '';
+  tasks.filter(function(t) { return !t.tomorrow; }).forEach(function(t) {
+    const li = document.createElement('li');
+    const pLabel = t.priority === 3 ? 'Top' : t.priority === 2 ? 'Medium' : 'Low';
+    li.innerHTML = '<span>' + (t.completed ? 'DONE ' : '') + t.title + ' <span class="badge">' + pLabel + '</span>' + (t.optional ? '<span class="badge">Optional</span>' : '') + (t.label ? '<span class="badge">' + t.label + '</span>' : '') + '</span>';
+    const btn = document.createElement('button'); btn.className = 'remove'; btn.textContent = 'Remove';
+    btn.onclick = function() { removeTask(t.id); };
+    li.appendChild(btn);
+    ul.appendChild(li);
+  });
+}
+
+function renderTomorrow() {
+  const ul = document.getElementById('tomorrowListUI');
+  const list = tasks.filter(function(t) { return t.tomorrow; });
+  ul.innerHTML = list.map(function(t) { return '<li style="padding:4px 0;border-bottom:1px solid var(--border);">' + t.title + '</li>'; }).join('');
+  document.getElementById('tomorrowEmpty').style.display = list.length ? 'none' : 'block';
+}
+
+function updateProgress() {
+  const todays = tasks.filter(function(t) { return !t.tomorrow; });
+  const done = todays.filter(function(t) { return t.completed; }).length;
+  document.getElementById('progressPill').textContent = done + ' of ' + todays.length + ' tasks done';
+}
+
+function openSettings() {
+  document.getElementById('settingsOverlay').classList.add('show');
+  document.getElementById('themeSelect').value = settings.theme;
+  document.getElementById('primaryColor').value = settings.primary;
+  document.getElementById('secondaryColor').value = settings.secondary;
+  document.getElementById('tertiaryColor').value = settings.tertiary;
+  document.getElementById('soundToggle').checked = settings.sound;
+  document.getElementById('sayingsToggle').checked = settings.sayings;
+  document.getElementById('milestoneToggle').checked = settings.milestones;
+  document.getElementById('shortWorkMin').value = settings.shortWorkMin;
+  document.getElementById('shortBreakMin').value = settings.shortBreakMin;
+  document.getElementById('medBreakMin').value = settings.medBreakMin;
+  document.getElementById('freeIntervalMin').value = settings.freeIntervalMin;
+  document.getElementById('customColors').style.display = settings.theme === 'custom' ? 'block' : 'none';
+  renderWorkingHoursUI();
+  const profile = JSON.parse(localStorage.getItem('flowgrove_profile') || 'null');
+  document.getElementById('settingsNickname').value = profile ? (profile.nickname || '') : '';
+}
+function closeSettings() { document.getElementById('settingsOverlay').classList.remove('show'); }
+
+function renderWorkingHoursUI() {
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const el = document.getElementById('workingHoursUI');
+  el.innerHTML = days.map(function(d) {
+    return '<div class="day-hours-row"><span class="day-name">' + d + '</span><input type="time" id="wh_' + d + '_start" value="' + settings.workingHours[d].start + '"><label style="margin:0;"><input type="checkbox" id="wh_' + d + '_on" ' + (settings.workingHours[d].on ? 'checked' : '') + '> On</label></div>';
+  }).join('');
+}
+
+function applyThemePreset() {
+  const val = document.getElementById('themeSelect').value;
+  document.getElementById('customColors').style.display = val === 'custom' ? 'block' : 'none';
+  const presets = {
+    modern: { primary:'#ffffff', secondary:'#ffffff', tertiary:'#6fa287' },
+    dark: { primary:'#1c2320', secondary:'#26302b', tertiary:'#8fc4a8' },
+    colorful: { primary:'#fff8f0', secondary:'#ffe9d6', tertiary:'#e08e5b' },
+    pastel: { primary:'#fdf6fb', secondary:'#f3e6f5', tertiary:'#c98fc0' }
+  };
+  if (presets[val]) {
+    settings.primary = presets[val].primary; settings.secondary = presets[val].secondary; settings.tertiary = presets[val].tertiary;
+    applyColorsToPage();
+  }
+  settings.theme = val;
+}
+
+function applyCustomColors() {
+  settings.primary = document.getElementById('primaryColor').value;
+  settings.secondary = document.getElementById('secondaryColor').value;
+  settings.tertiary = document.getElementById('tertiaryColor').value;
+  applyColorsToPage();
+}
+
+function applyColorsToPage() {
+  document.documentElement.style.setProperty('--primary', settings.primary);
+  document.documentElement.style.setProperty('--secondary', settings.secondary);
+  document.documentElement.style.setProperty('--tertiary', settings.tertiary);
+  document.documentElement.style.setProperty('--tertiary-hover', settings.tertiary);
+}
+
+function saveSettings() {
+  settings.sound = document.getElementById('soundToggle').checked;
+  settings.sayings = document.getElementById('sayingsToggle').checked;
+  settings.milestones = document.getElementById('milestoneToggle').checked;
+  settings.shortWorkMin = parseInt(document.getElementById('shortWorkMin').value, 10) || 25;
+  settings.shortBreakMin = parseInt(document.getElementById('shortBreakMin').value, 10) || 5;
+  settings.medBreakMin = parseInt(document.getElementById('medBreakMin').value, 10) || 15;
+  settings.freeIntervalMin = parseInt(document.getElementById('freeIntervalMin').value, 10) || 60;
+
+  ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach(function(d) {
+    settings.workingHours[d].on = document.getElementById('wh_' + d + '_on').checked;
+    settings.workingHours[d].start = document.getElementById('wh_' + d + '_start').value;
+  });
+
+  const nickname = document.getElementById('settingsNickname').value.trim();
+  const profile = JSON.parse(localStorage.getItem('flowgrove_profile') || 'null');
+  if (profile) { profile.nickname = nickname; localStorage.setItem('flowgrove_profile', JSON.stringify(profile)); }
+
+  localStorage.setItem('flowgrove_settings', JSON.stringify(settings));
+  closeSettings();
+}
+
+function exportData() {
+  const data = { profile: JSON.parse(localStorage.getItem('flowgrove_profile') || 'null'), tasks: tasks, labels: labels, habits: habits, settings: settings };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'flowgrove-data.json';
+  a.click();
+}
+
+function deleteAccount() {
+  if (!confirm('This clears all local Flowgrove data on this device. Continue?')) return;
+  localStorage.clear();
+  window.location.href = 'account-setup.html';
+}
+
+const TUTORIAL_STEPS = [
+  { target: null, title: "Welcome to Flowgrove!", text: "Let's walk through how everything works. You can skip anytime." },
+  { target: '[data-tut="settingsBtn"]', title: "Settings", text: "Appearance, working hours, notifications, breaks, labels, and account info all live here." },
+  { target: '#dayTabBtn', title: "Day view", text: "Your schedule shows real clock times, with tasks placed automatically." },
+  { target: '#monthTabBtn', title: "Month view", text: "A simplified monthly overview, day view is where the real scheduling happens." },
+  { target: '[data-tut="addTaskPanel"]', title: "Adding a task", text: "Set a title, priority, time estimate, motivation, label, and repeat pattern here." },
+  { target: '#quickTabBtn', title: "Quick Add", text: "A faster way to add a task, type a title, then press Enter to step through priority, time, motivation, repeat, label, and optional, each with a default you can accept or overwrite." },
+  { target: '[data-tut="scheduleGrid"]', title: "How ordering works", text: "Tasks are placed by priority first, then time estimate, then motivation as a tiebreaker. Low-motivation tasks get scheduled earlier in the day." },
+  { target: '[data-tut="scheduleGrid"]', title: "Completing tasks", text: "Click any task block to mark it complete, the schedule recalculates automatically if something runs long or short." },
+  { target: '[data-tut="breakBtn"]', title: "The break button", text: "Tap it anytime for an instant break. It'll show how long you've been on break, end it whenever you're ready by tapping again." },
+  { target: '[data-tut="tomorrowPanel"]', title: "Tomorrow list", text: "Tasks that don't fit today move here, or you can add a task directly to Tomorrow when creating it." },
+  { target: '[data-tut="addTaskPanel"]', title: "Labels", text: "Create a label with a custom name and color to organize tasks visually. Labels never affect the schedule order." },
+  { target: '[data-tut="habitsPanel"]', title: "Habits & Streaks", text: "Mark a task as a Habit to track a streak automatically, with a small celebration every 7 days in a row." },
+  { target: null, title: "You're all set!", text: "Have a great day with Flowgrove! You can replay this tutorial anytime with the Help button." }
+];
+let tutStep = 0;
+
+function startTutorial() {
+  tutStep = 0;
+  document.getElementById('tutorialOverlay').classList.add('show');
+  showTutorialStep();
+}
+function endTutorial() {
+  document.getElementById('tutorialOverlay').classList.remove('show');
+  localStorage.setItem('flowgrove_tutorial_seen', 'true');
+}
+function nextTutorialStep() {
+  tutStep++;
+  if (tutStep >= TUTORIAL_STEPS.length) { endTutorial(); return; }
+  showTutorialStep();
+}
+function showTutorialStep() {
+  const step = TUTORIAL_STEPS[tutStep];
+  document.getElementById('tutTitle').textContent = step.title;
+  document.getElementById('tutText').textContent = step.text;
+  const spot = document.getElementById('tutorialSpot');
+  const card = document.getElementById('tutorialCard');
+  if (step.target) {
+    const el = document.querySelector(step.target);
+    if (el) {
+      const r = el.getBoundingClientRect();
+      spot.style.display = 'block';
+      spot.style.top = (r.top - 6 + window.scrollY) + 'px';
+      spot.style.left = (r.left - 6 + window.scrollX) + 'px';
+      spot.style.width = (r.width + 12) + 'px';
+      spot.style.height = (r.height + 12) + 'px';
+      card.style.top = (r.bottom + 14 + window.scrollY) + 'px';
+      card.style.left = Math.min(r.left + window.scrollX, window.innerWidth - 300) + 'px';
+      card.style.transform = 'none';
+    }
+  } else {
+    spot.style.display = 'none';
+    card.style.top = '40%';
+    card.style.left = '50%';
+    card.style.transform = 'translate(-50%,-50%)';
+  }
+}
+
+applyColorsToPage();
+refreshLabelUI();
+render();
+if (!localStorage.getItem('flowgrove_tutorial_seen')) {
+  setTimeout(startTutorial, 400);
+}
+</script>
+
+</body>
+</html>

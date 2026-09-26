@@ -999,7 +999,7 @@ function deleteAccount() {
 
 const TUTORIAL_STEPS = [
   { target: null, title: "Hey, glad you're here!", text: "Let's take a quick, friendly tour together. Skip anytime, no pressure." },
-  { target: '[data-tut="settingsBtn"]', title: "Your Settings live here", text: "Try going to Settings sometime and poking around, you can change the appearance, working hours, notifications, and more, whatever fits how you like to work!" },
+  { target: '[data-tut="settingsBtn"]', title: "Your Settings live here", text: "Whenever you have a moment, take a look through Settings, you can adjust the appearance, working hours, notifications, and more, whatever fits how you like to work." },
   { target: '#dayTabBtn', title: "Day view is home base", text: "This is where the real scheduling magic happens, real clock times, tasks placed automatically for you." },
   { target: '#weekdaysTabBtn', title: "Weekdays view", text: "Want a Monday-through-Friday look? Tap here anytime." },
   { target: '#weekTabBtn', title: "Week view", text: "Prefer seeing your whole week, weekends included? This one's for you." },
@@ -1038,14 +1038,29 @@ function showTutorialStep() {
   if (step.target) {
     const el = document.querySelector(step.target);
     if (el) {
+      // The overlay is position:fixed (locked to the viewport), so its children
+      // must use plain viewport-relative coordinates, NOT scrollX/scrollY added on
+      // top, adding scroll offset here was the bug that sent the card off-screen.
+      // Scroll the target into view first so it's guaranteed visible on screen.
+      el.scrollIntoView({ block: 'center', behavior: 'instant' });
       const r = el.getBoundingClientRect();
       spot.style.display = 'block';
-      spot.style.top = (r.top - 6 + window.scrollY) + 'px';
-      spot.style.left = (r.left - 6 + window.scrollX) + 'px';
+      spot.style.top = (r.top - 6) + 'px';
+      spot.style.left = (r.left - 6) + 'px';
       spot.style.width = (r.width + 12) + 'px';
       spot.style.height = (r.height + 12) + 'px';
-      card.style.top = (r.bottom + 14 + window.scrollY) + 'px';
-      card.style.left = Math.min(r.left + window.scrollX, window.innerWidth - 300) + 'px';
+
+      const cardWidth = 280;
+      let cardTop = r.bottom + 14;
+      // If the card would run off the bottom of the screen, place it above the target instead.
+      if (cardTop + 160 > window.innerHeight) {
+        cardTop = Math.max(10, r.top - 170);
+      }
+      let cardLeft = Math.min(r.left, window.innerWidth - cardWidth - 20);
+      cardLeft = Math.max(10, cardLeft);
+
+      card.style.top = cardTop + 'px';
+      card.style.left = cardLeft + 'px';
       card.style.transform = 'none';
     }
   } else {

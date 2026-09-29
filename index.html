@@ -51,14 +51,19 @@
   .hour-label { width: 56px; flex-shrink: 0; font-size: 11px; color: var(--ink-soft); padding-top: 3px; text-align: right; padding-right: 10px; }
   .hour-track { flex: 1; position: relative; }
   .block { position: absolute; left: 4px; right: 4px; border-radius: 7px; padding: 5px 9px; font-size: 12px; overflow: hidden; box-shadow: var(--shadow); border: 1px solid transparent; }
-  .block .title { font-weight: 600; display: block; }
-  .block .meta { display: block; font-size: 10.5px; opacity: 0.8; margin-top: 1px; }
+  .block .title { font-weight: 600; display: block; padding-left: 20px; }
+  .task-checkbox-wrap { position: absolute; top: 6px; left: 8px; cursor: pointer; }
+  .task-checkbox-wrap input { cursor: pointer; }
+  .block .meta { display: block; font-size: 10.5px; opacity: 0.8; margin-top: 1px; padding-left: 20px; }
   .block.event { background: repeating-linear-gradient(135deg, var(--event-bg), var(--event-bg) 6px, #dfe3e0 6px, #dfe3e0 12px); border: 1px dashed #9aa79f; }
+  .block.event .title, .block.event .meta { padding-left: 0; }
   .block.task { border-color: var(--border); cursor: pointer; }
   .block.task.optional { background: var(--optional-bg) !important; border-color: var(--optional-line); }
   .block.task.completed { opacity: 0.45; text-decoration: line-through; }
   .badge { display: inline-block; font-size: 9px; background: rgba(0,0,0,0.08); border-radius: 4px; padding: 0 4px; margin-left: 4px; text-decoration: none; }
   .month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+  .month-header-row { margin-bottom: 4px; }
+  .month-header-row div { text-align: center; font-size: 11px; font-weight: 600; color: var(--ink-soft); }
   .month-cell { border: 1px solid var(--border); border-radius: 8px; min-height: 60px; padding: 6px; font-size: 11.5px; color: var(--ink-soft); }
   .month-cell.today { border-color: var(--tertiary); background: #f3f8f5; font-weight: 600; color: var(--ink); }
   .month-note { font-size: 12px; color: var(--ink-soft); margin-top: 12px; padding: 10px 12px; background: #f4f6f5; border-radius: 8px; }
@@ -182,12 +187,23 @@
 
     <div class="panel schedule-panel" id="monthView" style="display:none;">
       <div class="schedule-header"><h2 id="monthTitle">This Month</h2></div>
+      <div class="month-grid month-header-row">
+        <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+      </div>
       <div class="month-grid" id="monthGrid"></div>
       <div class="month-note">This is a simplified month view for now, it shows the calendar and highlights today, but full day-by-day task planning across the month is a later addition. Use Day view for actual scheduling.</div>
     </div>
   </div>
 
   <div class="sidebar">
+    <div class="panel side-panel motivation-panel">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <h3 style="margin:0;">Motivation</h3>
+        <button type="button" class="icon-btn" onclick="refreshMotivationQuote()" title="Get a new quote">↻ Refresh</button>
+      </div>
+      <p id="motivationText" style="font-size:13px;margin:8px 0 0;font-style:italic;"></p>
+    </div>
+
     <div class="panel side-panel" data-tut="addTaskPanel">
       <h3>Add a Task</h3>
       <p style="font-size:11px;color:var(--ink-soft);margin:0 0 10px;">Click any field, or use the fast keyboard shortcuts shown (type a number, hit Space, or press Enter to jump to the next field).</p>
@@ -214,16 +230,17 @@
         <input type="text" id="labelSearch" placeholder="Type a label name, or leave blank" autocomplete="off" oninput="renderInlineLabelResults(this.value)" onkeydown="labelSearchKey(event)">
         <div id="inlineLabelResults" style="display:none;margin-top:4px;"></div>
 
-        <div class="checkbox-row"><input type="checkbox" id="optional"><label for="optional">Optional task <span class="hint-inline">(Space toggles)</span></label></div>
-        <div class="checkbox-row"><input type="checkbox" id="repeatCheck" onchange="toggleRepeatChecklist()"><label for="repeatCheck">Repeat <span class="hint-inline">(Space toggles)</span></label></div>
+        <div class="checkbox-row"><input type="checkbox" id="optional" onkeydown="checkboxKey(event,'repeatCheck')"><label for="optional">Optional task <span class="hint-inline">(Space toggles)</span></label></div>
+        <div class="checkbox-row"><input type="checkbox" id="repeatCheck" onchange="toggleRepeatChecklist()" onkeydown="checkboxKey(event,'assignTomorrow')"><label for="repeatCheck">Repeat <span class="hint-inline">(Space toggles)</span></label></div>
 
         <div id="repeatChecklistInline" style="display:none;margin:8px 0;">
           <div class="checklist-grid" id="repeatChecklistGrid"></div>
         </div>
 
-        <div class="checkbox-row"><input type="checkbox" id="assignTomorrow"><label for="assignTomorrow">Add to Tomorrow instead of today</label></div>
+        <div class="checkbox-row"><input type="checkbox" id="assignTomorrow" onkeydown="checkboxKey(event,'taskSubmitBtn')"><label for="assignTomorrow">Add to Tomorrow instead of today</label></div>
 
-        <button type="submit" class="primary">Add &amp; Reschedule</button>
+        <button type="submit" class="primary" id="taskSubmitBtn">Add &amp; Reschedule</button>
+        <button type="button" class="icon-btn" id="cancelEditBtn" style="display:none;width:100%;margin-top:6px;" onclick="cancelEditTask()">Cancel Edit</button>
       </form>
     </div>
 
@@ -288,7 +305,10 @@
       <h4>Motivational Quotes</h4>
       <p style="font-size:11px;color:var(--ink-soft);margin:0 0 8px;">Turn a whole category off, delete a quote you don't love, or add your own.</p>
       <div id="quoteCategoryToggles"></div>
-      <div id="quoteListUI" style="margin-top:8px;"></div>
+      <details style="margin-top:8px;">
+        <summary style="cursor:pointer;font-size:12px;color:var(--tertiary);">View, edit, or delete individual quotes</summary>
+        <div id="quoteListUI" style="margin-top:8px;max-height:220px;overflow-y:auto;"></div>
+      </details>
       <div class="row2" style="margin-top:8px;">
         <input type="text" id="newQuoteText" placeholder="Add a new quote...">
         <select id="newQuoteCategory"></select>
@@ -315,8 +335,8 @@
 
     <div class="settings-section">
       <h4>Google Calendar</h4>
-      <button class="icon-btn" disabled>Connect Google Calendar</button>
-      <p class="stub-note">Not yet functional, real Google sign-in requires a backend server. The Math class event on your schedule is a hardcoded stand-in for now.</p>
+      <div id="calendarConnectionStatus"></div>
+      <p style="font-size:11px;color:var(--ink-soft);margin-top:6px;">Connected events show up as fixed blocks on your schedule and can't be moved or edited from within Flowgrove, only from Google Calendar itself.</p>
     </div>
 
     <div class="settings-section">
@@ -344,10 +364,56 @@
   </div>
 </div>
 
-<div class="saying-toast" id="sayingToast"></div>
 
 <script>
-const events = [{ title: "Math class", startMin: 9*60, endMin: 10*60 }];
+let events = []; // populated by loadGoogleCalendarEvents() below; empty until connected
+let calendarConnected = false;
+
+function isoToMinutesSinceMidnight(iso) {
+  const d = new Date(iso);
+  return d.getHours() * 60 + d.getMinutes();
+}
+
+function loadGoogleCalendarEvents() {
+  const todayStr = new Date().toISOString().slice(0, 10);
+  fetch('/api/calendar/events?date=' + todayStr)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      calendarConnected = !!data.connected;
+      if (data.connected && data.events) {
+        events = data.events.filter(function(e) { return !e.allDay; }).map(function(e) {
+          return { title: e.title, startMin: isoToMinutesSinceMidnight(e.start), endMin: isoToMinutesSinceMidnight(e.end) };
+        });
+      } else {
+        events = [];
+      }
+      updateCalendarConnectionUI();
+      render();
+    })
+    .catch(function() {
+      calendarConnected = false;
+      updateCalendarConnectionUI();
+    });
+}
+
+function disconnectGoogleCalendar() {
+  fetch('/api/calendar/disconnect', { method: 'POST' }).finally(function() {
+    calendarConnected = false;
+    events = [];
+    updateCalendarConnectionUI();
+    render();
+  });
+}
+
+function updateCalendarConnectionUI() {
+  const statusBox = document.getElementById('calendarConnectionStatus');
+  if (!statusBox) return;
+  if (calendarConnected) {
+    statusBox.innerHTML = '<span style="color:var(--tertiary);font-weight:600;">Connected</span> &middot; <button type="button" class="icon-btn" onclick="disconnectGoogleCalendar()">Disconnect</button>';
+  } else {
+    statusBox.innerHTML = '<a href="/api/auth/google" class="icon-btn" style="text-decoration:none;display:inline-block;">Connect Google Calendar</a>';
+  }
+}
 
 let tasks = JSON.parse(localStorage.getItem('flowgrove_tasks') || 'null') || [
   { id: 1, title: "Study for science quiz", priority: 3, time: 30, motivation: 3, optional: false, completed: false, label: null, tomorrow: false },
@@ -441,7 +507,7 @@ function switchView(v) {
   });
   if (v === 'month') renderMonth();
   if (v === 'weekdays') renderWeekGrid('weekdaysGrid', ['Mon','Tue','Wed','Thu','Fri']);
-  if (v === 'week') renderWeekGrid('weekGrid', ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']);
+  if (v === 'week') renderWeekGrid('weekGrid', ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']);
 }
 
 function renderMonth() {
@@ -528,6 +594,15 @@ function timeKey(e) {
     e.preventDefault();
     document.getElementById('motivation').focus();
     document.getElementById('motivation').select();
+  }
+}
+
+function checkboxKey(e, nextId) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    document.getElementById(nextId).focus();
+  } else if (e.key === ' ') {
+    setTimeout(function() { document.getElementById(nextId).focus(); }, 0);
   }
 }
 
@@ -647,6 +722,8 @@ function autoCapitalizeTitle(str) {
 
 function saveTasks() { localStorage.setItem('flowgrove_tasks', JSON.stringify(tasks)); }
 
+let editingTaskId = null;
+
 function submitTaskForm(e) {
   e.preventDefault();
   const titleRaw = document.getElementById('title').value.trim();
@@ -663,10 +740,25 @@ function submitTaskForm(e) {
   let label = null;
   if (labelName) { label = findOrCreateLabel(labelName); }
 
-  const task = { id: nextId++, title: title, priority: currentPriority, time: time, motivation: motivation, optional: optional, completed: false, label: label ? label.name : null, tomorrow: tomorrow, repeatPattern: repeatPattern };
-  tasks.push(task);
+  if (editingTaskId !== null) {
+    const existing = tasks.find(function(t) { return t.id === editingTaskId; });
+    if (existing) {
+      existing.title = title; existing.priority = currentPriority; existing.time = time;
+      existing.motivation = motivation; existing.optional = optional; existing.tomorrow = tomorrow;
+      existing.repeatPattern = repeatPattern; existing.label = label ? label.name : null;
+    }
+  } else {
+    const task = { id: nextId++, title: title, priority: currentPriority, time: time, motivation: motivation, optional: optional, completed: false, label: label ? label.name : null, tomorrow: tomorrow, repeatPattern: repeatPattern };
+    tasks.push(task);
+  }
   saveTasks();
+  resetTaskForm();
+  render();
+  return false;
+}
 
+function resetTaskForm() {
+  editingTaskId = null;
   document.getElementById('title').value = '';
   document.getElementById('labelSearch').value = '';
   document.getElementById('inlineLabelResults').style.display = 'none';
@@ -677,10 +769,41 @@ function submitTaskForm(e) {
   document.getElementById('time').value = 15;
   document.getElementById('motivation').value = 5;
   setPriority(3);
-  document.getElementById('title').focus();
+  document.getElementById('taskSubmitBtn').textContent = 'Add & Reschedule';
+  document.getElementById('cancelEditBtn').style.display = 'none';
+}
 
-  render();
-  return false;
+function startEditTask(id) {
+  const t = tasks.find(function(x) { return x.id === id; });
+  if (!t) return;
+  editingTaskId = id;
+  document.getElementById('title').value = t.title;
+  setPriority(t.priority);
+  document.getElementById('time').value = t.time;
+  document.getElementById('motivation').value = t.motivation;
+  document.getElementById('labelSearch').value = t.label || '';
+  document.getElementById('optional').checked = t.optional;
+  document.getElementById('assignTomorrow').checked = t.tomorrow;
+
+  const hasRepeat = t.repeatPattern && t.repeatPattern !== 'none';
+  document.getElementById('repeatCheck').checked = hasRepeat;
+  toggleRepeatChecklist();
+  if (hasRepeat) {
+    const selected = t.repeatPattern.split(', ');
+    REPEAT_CHECKLIST_ITEMS.forEach(function(item, i) {
+      const box = document.getElementById('rc_' + i);
+      if (box) box.checked = selected.indexOf(item) !== -1;
+    });
+  }
+
+  document.getElementById('taskSubmitBtn').textContent = 'Save Changes';
+  document.getElementById('cancelEditBtn').style.display = 'block';
+  document.getElementById('title').scrollIntoView({ block: 'center', behavior: 'smooth' });
+  document.getElementById('title').focus();
+}
+
+function cancelEditTask() {
+  resetTaskForm();
 }
 
 function removeTask(id) { tasks = tasks.filter(t => t.id !== id); saveTasks(); render(); }
@@ -699,31 +822,44 @@ function toggleComplete(id) {
 
 const REPEAT_CHECKLIST_ITEMS = ['Every day','Every week','Every biweekly','Days','Weekends','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 
-function maybeShowSaying() {
-  if (!settings.sayings) return;
+function refreshMotivationQuote() {
+  const box = document.getElementById('motivationText');
+  if (!settings.sayings) {
+    box.textContent = "Motivational quotes are turned off in Settings.";
+    return;
+  }
   const pool = quotes.filter(function(q) { return settings.quoteCategories[q.category] !== false; });
-  if (pool.length === 0) return;
+  if (pool.length === 0) { box.textContent = "No quote categories are turned on right now."; return; }
   const msg = pool[Math.floor(Math.random() * pool.length)].text;
-  const el = document.getElementById('sayingToast');
-  el.textContent = msg;
-  el.classList.add('show');
-  setTimeout(function() { el.classList.remove('show'); }, 3600);
+  box.textContent = msg;
 }
 
-setInterval(function() { if (Math.random() < 0.15) maybeShowSaying(); }, 45000);
+function maybeShowSaying() {
+  // Called after completing a task: refreshes the persistent quote widget
+  // instead of an interruptive popup.
+  refreshMotivationQuote();
+}
 
 function playCompletionSound() {
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(880, ctx.currentTime);
-    gain.gain.setValueAtTime(0.15, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
-    osc.connect(gain).connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + 0.4);
+    // A soft two-note ascending chime (like a gentle "success" bell) instead of a flat single-tone ding.
+    const notes = [
+      { freq: 587.33, start: 0,    dur: 0.22 }, // D5
+      { freq: 880.00, start: 0.09, dur: 0.42 }  // A5
+    ];
+    notes.forEach(function(n) {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(n.freq, ctx.currentTime + n.start);
+      gain.gain.setValueAtTime(0, ctx.currentTime + n.start);
+      gain.gain.linearRampToValueAtTime(0.18, ctx.currentTime + n.start + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + n.start + n.dur);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(ctx.currentTime + n.start);
+      osc.stop(ctx.currentTime + n.start + n.dur + 0.05);
+    });
   } catch (e) {}
 }
 
@@ -734,8 +870,10 @@ function toggleBreak() {
     breakActive = true; breakStart = Date.now();
     btn.classList.add('on');
     breakInterval = setInterval(function() {
-      const mins = Math.floor((Date.now() - breakStart) / 60000);
-      btn.textContent = "I'm on break - " + mins + " min";
+      const totalSec = Math.floor((Date.now() - breakStart) / 1000);
+      const mins = Math.floor(totalSec / 60);
+      const secs = totalSec % 60;
+      btn.textContent = "I'm on break - " + mins + ":" + (secs < 10 ? '0' : '') + secs;
     }, 1000);
   } else {
     breakActive = false;
@@ -832,8 +970,8 @@ function renderGrid() {
     if (t.label) el.style.background = labelColor(t.label) + '33';
     else el.style.background = settings.secondary === '#ffffff' ? '#f4f6f5' : settings.secondary;
     const pLabel = t.priority === 3 ? 'Top' : t.priority === 2 ? 'Medium' : 'Low';
-    el.innerHTML = '<span class="title">' + t.title + (t.optional ? '<span class="badge">Optional</span>' : '') + '</span><span class="meta">' + pLabel + ' - ' + t.time + 'm - Motivation ' + t.motivation + (t.label ? ' - ' + t.label : '') + '</span>';
-    el.onclick = function() { toggleComplete(t.id); };
+    el.innerHTML = '<label class="task-checkbox-wrap" onclick="event.stopPropagation()"><input type="checkbox" ' + (t.completed ? 'checked' : '') + ' onchange="toggleComplete(' + t.id + ')"></label><span class="title">' + t.title + (t.optional ? '<span class="badge">Optional</span>' : '') + '</span><span class="meta">' + pLabel + ' - ' + t.time + 'm - Motivation ' + t.motivation + (t.label ? ' - ' + t.label : '') + '</span>';
+    el.onclick = function() { startEditTask(t.id); };
     placeOnGrid(t.startMin, t.endMin, el);
   });
 }
@@ -844,7 +982,11 @@ function renderTaskList() {
   tasks.filter(function(t) { return !t.tomorrow; }).forEach(function(t) {
     const li = document.createElement('li');
     const pLabel = t.priority === 3 ? 'Top' : t.priority === 2 ? 'Medium' : 'Low';
-    li.innerHTML = '<span>' + (t.completed ? 'DONE ' : '') + t.title + ' <span class="badge">' + pLabel + '</span>' + (t.optional ? '<span class="badge">Optional</span>' : '') + (t.label ? '<span class="badge">' + t.label + '</span>' : '') + '</span>';
+    const span = document.createElement('span');
+    span.style.cursor = 'pointer';
+    span.innerHTML = (t.completed ? 'DONE ' : '') + t.title + ' <span class="badge">' + pLabel + '</span>' + (t.optional ? '<span class="badge">Optional</span>' : '') + (t.label ? '<span class="badge">' + t.label + '</span>' : '');
+    span.onclick = function() { startEditTask(t.id); };
+    li.appendChild(span);
     const btn = document.createElement('button'); btn.className = 'remove'; btn.textContent = 'Remove';
     btn.onclick = function() { removeTask(t.id); };
     li.appendChild(btn);
@@ -881,6 +1023,7 @@ function openSettings() {
   document.getElementById('customColors').style.display = settings.theme === 'custom' ? 'block' : 'none';
   renderWorkingHoursUI();
   renderQuoteSettingsUI();
+  updateCalendarConnectionUI();
   const profile = JSON.parse(localStorage.getItem('flowgrove_profile') || 'null');
   document.getElementById('settingsNickname').value = profile ? (profile.nickname || '') : '';
 }
@@ -923,7 +1066,7 @@ function addQuote() {
 }
 
 function renderWorkingHoursUI() {
-  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
   const el = document.getElementById('workingHoursUI');
   el.innerHTML = days.map(function(d) {
     return '<div class="day-hours-row"><span class="day-name">' + d + '</span><input type="time" id="wh_' + d + '_start" value="' + settings.workingHours[d].start + '"><label style="margin:0;"><input type="checkbox" id="wh_' + d + '_on" ' + (settings.workingHours[d].on ? 'checked' : '') + '> On</label></div>';
@@ -969,7 +1112,7 @@ function saveSettings() {
   settings.medBreakMin = parseInt(document.getElementById('medBreakMin').value, 10) || 15;
   settings.freeIntervalMin = parseInt(document.getElementById('freeIntervalMin').value, 10) || 60;
 
-  ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach(function(d) {
+  ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].forEach(function(d) {
     settings.workingHours[d].on = document.getElementById('wh_' + d + '_on').checked;
     settings.workingHours[d].start = document.getElementById('wh_' + d + '_start').value;
   });
@@ -1080,6 +1223,21 @@ if (!localStorage.getItem('flowgrove_profile')) {
   applyColorsToPage();
   refreshLabelUI();
   render();
+  refreshMotivationQuote();
+  updateLiveClock();
+  loadGoogleCalendarEvents();
+
+  // If we just came back from the Google OAuth redirect, show a quick status
+  // message and clean the URL so refreshing the page doesn't repeat it.
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('calendar_connected') === '1') {
+    setTimeout(function() { alert('Google Calendar connected!'); }, 300);
+    window.history.replaceState({}, '', 'index.html');
+  } else if (params.get('calendar_error')) {
+    setTimeout(function() { alert('Google Calendar connection failed (' + params.get('calendar_error') + '). Please try again.'); }, 300);
+    window.history.replaceState({}, '', 'index.html');
+  }
+
   if (!localStorage.getItem('flowgrove_tutorial_seen')) {
     setTimeout(startTutorial, 400);
   }

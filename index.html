@@ -112,6 +112,7 @@
   .task-list { padding: 12px 14px; }
   .task-list ul { list-style: none; margin: 0; padding: 0; }
   .task-list li { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+  .task-list li.task-done-row { background: #eaf6ee; color: #4a7a5c; border-radius: 6px; padding-left: 6px; }
   .task-list li:last-child { border-bottom: none; }
   .task-list button.remove { background: none; border: none; color: #a3372f; cursor: pointer; font-size: 11.5px; }
   .tick.hit { background: var(--tertiary); }
@@ -130,6 +131,9 @@
   .day-hours-row input[type="time"] { flex: 1; padding: 5px 7px; border: 1px solid var(--border); border-radius: 6px; font-family: 'Lora', serif; }
   .toggle-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 13px; }
   .stub-note { font-size: 11px; color: #a3372f; margin-top: 4px; }
+  .sound-option { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; font-size: 13px; }
+  .block.task.label-dimmed { opacity: 0.35; }
+  .block.task.label-match { box-shadow: 0 0 0 2px var(--tertiary); }
   #tutorialOverlay { position: fixed; inset: 0; z-index: 500; display: none; }
   #tutorialOverlay.show { display: block; }
   #tutorialDim { position: absolute; inset: 0; background: rgba(28,43,34,0.55); }
@@ -159,7 +163,7 @@
   <div class="topbar-actions">
     <button class="icon-btn" onclick="openSettings()" data-tut="settingsBtn">Settings</button>
     <button class="icon-btn" onclick="startTutorial()" data-tut="helpBtn">? Help</button>
-    <button id="breakBtn" onclick="toggleBreak()" data-tut="breakBtn">Click me to have an automatic break right now</button>
+    <button id="breakBtn" onclick="toggleBreak()" data-tut="breakBtn">Click me to have an auto break</button>
   </div>
 </div>
 
@@ -196,6 +200,11 @@
   </div>
 
   <div class="sidebar">
+    <div class="panel side-panel" id="labelsSidebarPanel">
+      <h3>Labels</h3>
+      <div id="labelsSidebarList" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+    </div>
+
     <div class="panel side-panel motivation-panel">
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <h3 style="margin:0;">Motivation</h3>
@@ -210,7 +219,7 @@
 
       <form id="taskForm" onsubmit="return submitTaskForm(event)">
         <label for="title">Title</label>
-        <input type="text" id="title" placeholder="e.g. Finish reading chapter" onkeydown="titleKey(event)">
+        <input type="text" id="title" placeholder="e.g. Finish reading chapter" onkeydown="titleKey(event)" oninput="liveCapitalizeFirst(this)">
 
         <label>Priority <span class="hint-inline">(click, or type 1/2/3)</span></label>
         <div class="seg-group" id="prioritySeg" tabindex="0" onkeydown="prioritySegKey(event)">
@@ -237,7 +246,7 @@
           <div class="checklist-grid" id="repeatChecklistGrid"></div>
         </div>
 
-        <div class="checkbox-row"><input type="checkbox" id="assignTomorrow" onkeydown="checkboxKey(event,'taskSubmitBtn')"><label for="assignTomorrow">Add to Tomorrow instead of today</label></div>
+        <div class="checkbox-row"><input type="checkbox" id="assignTomorrow" onkeydown="checkboxKey(event,'taskSubmitBtn')"><label for="assignTomorrow">Add to Tomorrow</label></div>
 
         <button type="submit" class="primary" id="taskSubmitBtn">Add &amp; Reschedule</button>
         <button type="button" class="icon-btn" id="cancelEditBtn" style="display:none;width:100%;margin-top:6px;" onclick="cancelEditTask()">Cancel Edit</button>
@@ -297,6 +306,10 @@
     <div class="settings-section">
       <h4>Notifications &amp; Sound</h4>
       <div class="toggle-row"><span>Task completion sound</span><input type="checkbox" id="soundToggle" checked></div>
+      <div style="margin:6px 0 4px;font-size:12px;color:var(--ink-soft);">Pick a sound (tap ▶ to preview):</div>
+      <div class="sound-option"><label><input type="radio" name="completionSoundChoice" value="chime"> Soft Chime</label><button type="button" class="icon-btn" onclick="previewSound('chime')">▶</button></div>
+      <div class="sound-option"><label><input type="radio" name="completionSoundChoice" value="bell"> Gentle Bell</label><button type="button" class="icon-btn" onclick="previewSound('bell')">▶</button></div>
+      <div class="sound-option"><label><input type="radio" name="completionSoundChoice" value="pop"> Warm Pop</label><button type="button" class="icon-btn" onclick="previewSound('pop')">▶</button></div>
       <div class="toggle-row"><span>Motivation sayings</span><input type="checkbox" id="sayingsToggle" checked></div>
       <p class="stub-note">Real push notifications need a backend/service worker and aren't wired up yet, these toggles control the in-app sound and messages only.</p>
     </div>
@@ -331,6 +344,11 @@
     <div class="settings-section">
       <h4>Labels</h4>
       <div id="settingsLabelList"></div>
+      <div class="row2" style="margin-top:10px;">
+        <input type="text" id="newSettingsLabelName" placeholder="New label name">
+        <input type="color" id="newSettingsLabelColor" value="#6fa287">
+      </div>
+      <button type="button" class="icon-btn" style="margin-top:6px;" onclick="addLabelFromSettings()">Add Label</button>
     </div>
 
     <div class="settings-section">
@@ -426,7 +444,7 @@ let nextId = Math.max(0, ...tasks.map(t => t.id)) + 1;
 let labels = JSON.parse(localStorage.getItem('flowgrove_labels') || 'null') || [];
 let settings = JSON.parse(localStorage.getItem('flowgrove_settings') || 'null') || {
   theme: 'modern', primary: '#ffffff', secondary: '#ffffff', tertiary: '#6fa287',
-  sound: true, sayings: true, timeFormat: '12',
+  sound: true, sayings: true, timeFormat: '12', completionSound: 'chime',
   quoteCategories: { Wellness: true, Encouragement: true, Inspirational: true },
   shortWorkMin: 25, shortBreakMin: 5, medBreakMin: 15, freeIntervalMin: 60,
   workingHours: { Sun:{on:false,start:'09:00'}, Mon:{on:true,start:'09:00'}, Tue:{on:true,start:'09:00'}, Wed:{on:true,start:'09:00'}, Thu:{on:true,start:'09:00'}, Fri:{on:true,start:'09:00'}, Sat:{on:false,start:'09:00'} }
@@ -601,9 +619,9 @@ function checkboxKey(e, nextId) {
   if (e.key === 'Enter') {
     e.preventDefault();
     document.getElementById(nextId).focus();
-  } else if (e.key === ' ') {
-    setTimeout(function() { document.getElementById(nextId).focus(); }, 0);
   }
+  // Space is left alone entirely here, the browser's own default behavior
+  // toggles the checkbox on/off. It no longer also advances focus.
 }
 
 function fieldEnterAdvance(e, nextId) {
@@ -657,7 +675,8 @@ function renderInlineRepeatChecklist() {
   const grid = document.getElementById('repeatChecklistGrid');
   grid.innerHTML = REPEAT_CHECKLIST_ITEMS.map(function(item, i) {
     const id = 'rc_' + i;
-    return '<label class="checklist-item"><input type="checkbox" id="' + id + '" data-item="' + item + '"> ' + item + '</label>';
+    const nextId = (i < REPEAT_CHECKLIST_ITEMS.length - 1) ? ('rc_' + (i + 1)) : 'labelSearch';
+    return '<label class="checklist-item"><input type="checkbox" id="' + id + '" data-item="' + item + '" onkeydown="checkboxKey(event,\'' + nextId + '\')"> ' + item + '</label>';
   }).join('');
 }
 
@@ -689,11 +708,99 @@ function findOrCreateLabel(name) {
   return label;
 }
 
+let activeLabelFilter = null;
+
+function toggleLabelFilter(name) {
+  activeLabelFilter = (activeLabelFilter === name) ? null : name;
+  renderLabelsSidebar();
+  render();
+}
+
+function renderLabelsSidebar() {
+  const box = document.getElementById('labelsSidebarList');
+  if (!labels.length) {
+    box.innerHTML = '<p style="font-size:12px;color:var(--ink-soft);margin:0;">No labels yet, create one when adding a task.</p>';
+    return;
+  }
+  box.innerHTML = labels.map(function(l) {
+    const active = activeLabelFilter === l.name;
+    return '<span class="label-chip" style="cursor:pointer;' + (active ? 'outline:2px solid ' + l.color + ';' : '') + '" onclick="toggleLabelFilter(\'' + l.name.replace(/'/g, "\\'") + '\')"><span class="label-swatch" style="background:' + l.color + '"></span>' + l.name + '</span>';
+  }).join('');
+}
+
 function refreshLabelUI() {
+  renderLabelsSidebar();
   const list = document.getElementById('settingsLabelList');
-  list.innerHTML = labels.length
-    ? labels.map(l => '<span class="label-chip"><span class="label-swatch" style="background:' + l.color + '"></span>' + l.name + '</span>').join('')
-    : '<p style="font-size:12px;color:var(--ink-soft);margin:0;">No labels yet.</p>';
+  if (!labels.length) {
+    list.innerHTML = '<p style="font-size:12px;color:var(--ink-soft);margin:0;">No labels yet.</p>';
+    return;
+  }
+  list.innerHTML = labels.map(function(l, i) {
+    return '<div class="sound-option">' +
+      '<span style="display:flex;align-items:center;gap:6px;">' +
+        '<input type="color" value="' + l.color + '" onchange="editLabelColor(' + i + ',this.value)" style="width:24px;height:24px;padding:0;border:none;">' +
+        '<input type="text" value="' + l.name + '" onchange="editLabelName(' + i + ',this.value)" style="width:120px;">' +
+      '</span>' +
+      '<button type="button" class="remove" onclick="deleteLabel(' + i + ')" style="background:none;border:none;color:#a3372f;cursor:pointer;">Delete</button>' +
+    '</div>';
+  }).join('');
+}
+
+function addLabelFromSettings() {
+  const nameInput = document.getElementById('newSettingsLabelName');
+  const colorInput = document.getElementById('newSettingsLabelColor');
+  const name = nameInput.value.trim();
+  if (!name) return;
+  const clean = capitalizeFirst(name);
+  if (labels.find(function(l) { return l.name.toLowerCase() === clean.toLowerCase(); })) {
+    alert('A label with that name already exists.');
+    return;
+  }
+  labels.push({ name: clean, color: colorInput.value });
+  saveLabels();
+  nameInput.value = '';
+  refreshLabelUI();
+}
+
+function editLabelColor(index, color) {
+  if (!labels[index]) return;
+  labels[index].color = color;
+  saveLabels();
+  render();
+}
+
+function editLabelName(index, newName) {
+  if (!labels[index]) return;
+  const clean = capitalizeFirst(newName.trim());
+  if (!clean) return;
+  const oldName = labels[index].name;
+  labels[index].name = clean;
+  saveLabels();
+  // Update any tasks currently using the old label name to the new one.
+  tasks.forEach(function(t) { if (t.label === oldName) t.label = clean; });
+  saveTasks();
+  refreshLabelUI();
+  render();
+}
+
+function deleteLabel(index) {
+  if (!labels[index]) return;
+  const name = labels[index].name;
+  if (!confirm('Delete the label "' + name + '"? Tasks using it will lose this label.')) return;
+  labels.splice(index, 1);
+  saveLabels();
+  tasks.forEach(function(t) { if (t.label === name) t.label = null; });
+  saveTasks();
+  refreshLabelUI();
+  render();
+}
+
+function liveCapitalizeFirst(input) {
+  if (input.value.length === 1) {
+    const pos = input.selectionStart;
+    input.value = input.value.charAt(0).toUpperCase();
+    input.setSelectionRange(pos, pos);
+  }
 }
 
 function capitalizeFirst(str) {
@@ -702,22 +809,9 @@ function capitalizeFirst(str) {
 }
 
 function autoCapitalizeTitle(str) {
+  // Simplified on purpose: just the first letter of the task, nothing more.
   if (!str) return str;
-  let words = str.split(' ');
-  words[0] = capitalizeFirst(words[0]);
-  const titles = ['ms.', 'mr.', 'mrs.', 'dr.'];
-  for (let i = 0; i < words.length; i++) {
-    const lower = words[i].toLowerCase();
-    if (titles.includes(lower) && words[i+1]) {
-      words[i] = capitalizeFirst(words[i]);
-      words[i+1] = capitalizeFirst(words[i+1]);
-    }
-    const bareWord = lower.replace(/[^a-z]/g, '');
-    if (COMMON_NAMES.includes(bareWord)) {
-      words[i] = capitalizeFirst(words[i]);
-    }
-  }
-  return words.join(' ');
+  return capitalizeFirst(str);
 }
 
 function saveTasks() { localStorage.setItem('flowgrove_tasks', JSON.stringify(tasks)); }
@@ -808,13 +902,33 @@ function cancelEditTask() {
 
 function removeTask(id) { tasks = tasks.filter(t => t.id !== id); saveTasks(); render(); }
 
+function nowMinutesSinceMidnight() {
+  const n = new Date();
+  return n.getHours() * 60 + n.getMinutes();
+}
+
 function toggleComplete(id) {
   const t = tasks.find(x => x.id === id);
   if (!t) return;
-  t.completed = !t.completed;
-  if (t.completed) {
+  if (!t.completed) {
+    // Marking complete: lock in wherever it's currently scheduled, like a
+    // fixed calendar event, so adding new tasks later can't disturb it.
+    // The END of that fixed block is the ACTUAL moment you complete it,
+    // not the originally estimated end time — if a 45-minute task starting
+    // at 9:00 gets checked off at 9:43, the locked block is 9:00-9:43, not 9:00-9:45.
+    const current = computeSchedule().find(function(s) { return s.id === id; });
+    if (current) {
+      t.fixedStartMin = current.startMin;
+      t.fixedEndMin = Math.max(current.startMin + 1, nowMinutesSinceMidnight());
+    }
+    t.completed = true;
     if (settings.sound) playCompletionSound();
     maybeShowSaying();
+  } else {
+    // Un-completing: release it back into normal auto-scheduling.
+    t.completed = false;
+    delete t.fixedStartMin;
+    delete t.fixedEndMin;
   }
   saveTasks();
   render();
@@ -840,27 +954,59 @@ function maybeShowSaying() {
   refreshMotivationQuote();
 }
 
-function playCompletionSound() {
+function playTone(ctx, freq, start, dur, type, peakVol) {
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = type || 'triangle';
+  osc.frequency.setValueAtTime(freq, ctx.currentTime + start);
+  gain.gain.setValueAtTime(0, ctx.currentTime + start);
+  gain.gain.linearRampToValueAtTime(peakVol || 0.18, ctx.currentTime + start + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur);
+  osc.connect(gain).connect(ctx.destination);
+  osc.start(ctx.currentTime + start);
+  osc.stop(ctx.currentTime + start + dur + 0.05);
+}
+
+function playSound_chime() {
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  playTone(ctx, 587.33, 0, 0.22, 'triangle', 0.18);    // D5
+  playTone(ctx, 880.00, 0.09, 0.42, 'triangle', 0.18); // A5
+}
+
+function playSound_bell() {
+  // A single warm, slow-decaying tone with a quiet overtone, more relaxing/rounded than a chime.
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  playTone(ctx, 523.25, 0, 0.9, 'sine', 0.20);   // C5, long gentle decay
+  playTone(ctx, 1046.5, 0, 0.5, 'sine', 0.05);   // quiet octave overtone for warmth
+}
+
+function playSound_pop() {
+  // A short, satisfying downward "pop" instead of a ring.
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    // A soft two-note ascending chime (like a gentle "success" bell) instead of a flat single-tone ding.
-    const notes = [
-      { freq: 587.33, start: 0,    dur: 0.22 }, // D5
-      { freq: 880.00, start: 0.09, dur: 0.42 }  // A5
-    ];
-    notes.forEach(function(n) {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(n.freq, ctx.currentTime + n.start);
-      gain.gain.setValueAtTime(0, ctx.currentTime + n.start);
-      gain.gain.linearRampToValueAtTime(0.18, ctx.currentTime + n.start + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + n.start + n.dur);
-      osc.connect(gain).connect(ctx.destination);
-      osc.start(ctx.currentTime + n.start);
-      osc.stop(ctx.currentTime + n.start + n.dur + 0.05);
-    });
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(320, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(140, ctx.currentTime + 0.16);
+    gain.gain.setValueAtTime(0.22, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.2);
   } catch (e) {}
+}
+
+function previewSound(name) {
+  try {
+    if (name === 'chime') playSound_chime();
+    else if (name === 'bell') playSound_bell();
+    else if (name === 'pop') playSound_pop();
+  } catch (e) {}
+}
+
+function playCompletionSound() {
+  try { previewSound(settings.completionSound || 'chime'); } catch (e) {}
 }
 
 let breakActive = false, breakStart = null, breakInterval = null;
@@ -879,14 +1025,19 @@ function toggleBreak() {
     breakActive = false;
     clearInterval(breakInterval);
     btn.classList.remove('on');
-    btn.textContent = 'Click me to have an automatic break right now';
+    btn.textContent = 'Click me to have an auto break';
   }
 }
 
 function computeSchedule() {
   const todays = tasks.filter(function(t) { return !t.tomorrow; });
-  const required = todays.filter(function(t) { return !t.optional; });
-  const optional = todays.filter(function(t) { return t.optional; });
+
+  // Completed tasks are already locked into a specific time (set once, in
+  // toggleComplete) — they behave like a fixed calendar event from here on:
+  // nothing new gets scheduled over them.
+  const completedFixed = todays.filter(function(t) { return t.completed && typeof t.fixedStartMin === 'number'; });
+  const required = todays.filter(function(t) { return !t.completed && !t.optional; });
+  const optional = todays.filter(function(t) { return !t.completed && t.optional; });
 
   const sortFn = function(a, b) {
     if (b.priority !== a.priority) return b.priority - a.priority;
@@ -896,16 +1047,23 @@ function computeSchedule() {
   required.sort(sortFn);
   optional.sort(sortFn);
 
-  const sortedEvents = events.slice().sort(function(a,b) { return a.startMin - b.startMin; });
+  // Build the busy-block list from BOTH real calendar events and
+  // already-completed tasks, so new tasks only ever land in genuinely open time.
+  const busyBlocks = events.map(function(ev) { return { startMin: ev.startMin, endMin: ev.endMin }; })
+    .concat(completedFixed.map(function(t) { return { startMin: t.fixedStartMin, endMin: t.fixedEndMin }; }));
+  busyBlocks.sort(function(a, b) { return a.startMin - b.startMin; });
+
   let windows = [];
   let cursor = DAY_START;
-  sortedEvents.forEach(function(ev) {
-    if (ev.startMin > cursor) windows.push({ start: cursor, end: ev.startMin });
-    cursor = Math.max(cursor, ev.endMin);
+  busyBlocks.forEach(function(b) {
+    if (b.startMin > cursor) windows.push({ start: cursor, end: b.startMin });
+    cursor = Math.max(cursor, b.endMin);
   });
   if (cursor < DAY_END) windows.push({ start: cursor, end: DAY_END });
 
-  const placed = [];
+  const placed = completedFixed.map(function(t) {
+    return Object.assign({}, t, { startMin: t.fixedStartMin, endMin: t.fixedEndMin });
+  });
   function place(task) {
     for (let w of windows) {
       if (w.end - w.start >= task.time) {
@@ -966,7 +1124,9 @@ function renderGrid() {
   });
   computeSchedule().forEach(function(t) {
     const el = document.createElement('div');
-    el.className = 'block task' + (t.optional ? ' optional' : '') + (t.completed ? ' completed' : '');
+    let filterClass = '';
+    if (activeLabelFilter) filterClass = (t.label === activeLabelFilter) ? ' label-match' : ' label-dimmed';
+    el.className = 'block task' + (t.optional ? ' optional' : '') + (t.completed ? ' completed' : '') + filterClass;
     if (t.label) el.style.background = labelColor(t.label) + '33';
     else el.style.background = settings.secondary === '#ffffff' ? '#f4f6f5' : settings.secondary;
     const pLabel = t.priority === 3 ? 'Top' : t.priority === 2 ? 'Medium' : 'Low';
@@ -979,12 +1139,16 @@ function renderGrid() {
 function renderTaskList() {
   const ul = document.getElementById('taskListUI');
   ul.innerHTML = '';
-  tasks.filter(function(t) { return !t.tomorrow; }).forEach(function(t) {
+  const sorted = tasks.filter(function(t) { return !t.tomorrow; })
+    .slice()
+    .sort(function(a, b) { return (a.completed === b.completed) ? 0 : (a.completed ? 1 : -1); });
+  sorted.forEach(function(t) {
     const li = document.createElement('li');
+    if (t.completed) li.classList.add('task-done-row');
     const pLabel = t.priority === 3 ? 'Top' : t.priority === 2 ? 'Medium' : 'Low';
     const span = document.createElement('span');
     span.style.cursor = 'pointer';
-    span.innerHTML = (t.completed ? 'DONE ' : '') + t.title + ' <span class="badge">' + pLabel + '</span>' + (t.optional ? '<span class="badge">Optional</span>' : '') + (t.label ? '<span class="badge">' + t.label + '</span>' : '');
+    span.innerHTML = t.title + ' <span class="badge">' + pLabel + '</span>' + (t.optional ? '<span class="badge">Optional</span>' : '') + (t.label ? '<span class="badge">' + t.label + '</span>' : '');
     span.onclick = function() { startEditTask(t.id); };
     li.appendChild(span);
     const btn = document.createElement('button'); btn.className = 'remove'; btn.textContent = 'Remove';
@@ -1014,6 +1178,8 @@ function openSettings() {
   document.getElementById('secondaryColor').value = settings.secondary;
   document.getElementById('tertiaryColor').value = settings.tertiary;
   document.getElementById('soundToggle').checked = settings.sound;
+  const soundRadio = document.querySelector('input[name="completionSoundChoice"][value="' + (settings.completionSound || 'chime') + '"]');
+  if (soundRadio) soundRadio.checked = true;
   document.getElementById('sayingsToggle').checked = settings.sayings;
   document.getElementById('timeFormatSelect').value = settings.timeFormat;
   document.getElementById('shortWorkMin').value = settings.shortWorkMin;
@@ -1105,6 +1271,8 @@ function applyColorsToPage() {
 
 function saveSettings() {
   settings.sound = document.getElementById('soundToggle').checked;
+  const soundChoice = document.querySelector('input[name="completionSoundChoice"]:checked');
+  if (soundChoice) settings.completionSound = soundChoice.value;
   settings.sayings = document.getElementById('sayingsToggle').checked;
   settings.timeFormat = document.getElementById('timeFormatSelect').value;
   settings.shortWorkMin = parseInt(document.getElementById('shortWorkMin').value, 10) || 25;

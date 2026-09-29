@@ -39,24 +39,26 @@
   .icon-btn:hover { background: #f7f9f8; }
   #breakBtn { border: 1px solid var(--tertiary); background: var(--tertiary); color: #fff; border-radius: 8px; padding: 7px 14px; font-family: 'Lora', serif; font-size: 12.5px; cursor: pointer; white-space: nowrap; }
   #breakBtn.on { background: #fff; color: var(--tertiary); }
-  main { max-width: 1000px; margin: 0 auto; padding: 20px 24px 64px; display: grid; grid-template-columns: 1fr; gap: 22px; }
-  @media (min-width: 900px) { main { grid-template-columns: 1fr 320px; align-items: start; } }
+  main { max-width: 1240px; margin: 0 auto; padding: 20px 24px 64px; display: grid; grid-template-columns: 1fr; gap: 22px; }
+  @media (min-width: 900px) { main { grid-template-columns: 220px 1fr 320px; align-items: start; } }
+  .leftbar { display: flex; flex-direction: column; gap: 16px; }
+  .motivation-panel { background: #f2f9f5; border-color: #d7ecdf; }
   .panel { border: 1px solid var(--border); border-radius: 10px; background: #fff; }
   .schedule-panel { padding: 18px 18px 24px; }
   .schedule-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
   .schedule-header h2 { margin: 0; font-size: 16.5px; font-weight: 600; }
   .progress-pill { font-size: 12px; color: var(--ink-soft); background: #f4f6f5; border-radius: 20px; padding: 4px 10px; }
   .grid { position: relative; border-top: 1px solid var(--border); }
+  #nowLine { position: absolute; left: 56px; right: 0; height: 2px; background: #1e5631; z-index: 5; pointer-events: none; }
   .hour-row { position: relative; height: 60px; border-bottom: 1px solid var(--border); display: flex; }
   .hour-label { width: 56px; flex-shrink: 0; font-size: 11px; color: var(--ink-soft); padding-top: 3px; text-align: right; padding-right: 10px; }
   .hour-track { flex: 1; position: relative; }
   .block { position: absolute; left: 4px; right: 4px; border-radius: 7px; padding: 5px 9px; font-size: 12px; overflow: hidden; box-shadow: var(--shadow); border: 1px solid transparent; }
-  .block .title { font-weight: 600; display: block; padding-left: 20px; }
-  .task-checkbox-wrap { position: absolute; top: 6px; left: 8px; cursor: pointer; }
+  .block .title { font-weight: 600; display: block; text-align: center; }
+  .task-checkbox-wrap { position: absolute; top: 6px; left: 8px; cursor: pointer; z-index: 2; }
   .task-checkbox-wrap input { cursor: pointer; }
-  .block .meta { display: block; font-size: 10.5px; opacity: 0.8; margin-top: 1px; padding-left: 20px; }
+  .block .meta { display: block; font-size: 10.5px; opacity: 0.8; margin-top: 1px; text-align: center; }
   .block.event { background: repeating-linear-gradient(135deg, var(--event-bg), var(--event-bg) 6px, #dfe3e0 6px, #dfe3e0 12px); border: 1px dashed #9aa79f; }
-  .block.event .title, .block.event .meta { padding-left: 0; }
   .block.task { border-color: var(--border); cursor: pointer; }
   .block.task.optional { background: var(--optional-bg) !important; border-color: var(--optional-line); }
   .block.task.completed { opacity: 0.45; text-decoration: line-through; }
@@ -114,6 +116,8 @@
   .task-list li { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
   .task-list li.task-done-row { background: #eaf6ee; color: #4a7a5c; border-radius: 6px; padding-left: 6px; }
   .task-list li:last-child { border-bottom: none; }
+  .task-list li[draggable="true"] { cursor: grab; }
+  .task-list li.drag-over { background: #eaf3ee; }
   .task-list button.remove { background: none; border: none; color: #a3372f; cursor: pointer; font-size: 11.5px; }
   .tick.hit { background: var(--tertiary); }
   .saying-toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 10px 16px; border-radius: 30px; font-size: 13px; box-shadow: 0 4px 14px rgba(0,0,0,0.2); z-index: 300; opacity: 0; transition: opacity 0.4s ease; }
@@ -168,6 +172,21 @@
 </div>
 
 <main>
+  <div class="leftbar">
+    <div class="panel side-panel motivation-panel">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <h3 style="margin:0;">Motivation</h3>
+        <button type="button" class="icon-btn" onclick="refreshMotivationQuote()" title="Get a new quote">↻ Refresh</button>
+      </div>
+      <p id="motivationText" style="font-size:13px;margin:8px 0 0;font-style:italic;"></p>
+    </div>
+
+    <div class="panel side-panel" id="labelsSidebarPanel">
+      <h3>Labels</h3>
+      <div id="labelsSidebarList" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+    </div>
+  </div>
+
   <div>
     <div class="panel schedule-panel" id="dayView">
       <div class="schedule-header">
@@ -200,19 +219,6 @@
   </div>
 
   <div class="sidebar">
-    <div class="panel side-panel" id="labelsSidebarPanel">
-      <h3>Labels</h3>
-      <div id="labelsSidebarList" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
-    </div>
-
-    <div class="panel side-panel motivation-panel">
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <h3 style="margin:0;">Motivation</h3>
-        <button type="button" class="icon-btn" onclick="refreshMotivationQuote()" title="Get a new quote">↻ Refresh</button>
-      </div>
-      <p id="motivationText" style="font-size:13px;margin:8px 0 0;font-style:italic;"></p>
-    </div>
-
     <div class="panel side-panel" data-tut="addTaskPanel">
       <h3>Add a Task</h3>
       <p style="font-size:11px;color:var(--ink-soft);margin:0 0 10px;">Click any field, or use the fast keyboard shortcuts shown (type a number, hit Space, or press Enter to jump to the next field).</p>
@@ -291,7 +297,9 @@
     <div class="settings-section">
       <h4>Weekly Working Hours</h4>
       <div id="workingHoursUI"></div>
-      <p class="stub-note">Note: these are saved as a preference, but the schedule grid still uses a fixed 7am-9pm window in this version, full per-day integration is a later step.</p>
+      <label style="margin-top:10px;">End time (applies every day)</label>
+      <input type="time" id="workingHoursEndInput">
+      <p style="font-size:11px;color:var(--ink-soft);margin-top:6px;">If it's currently past your end time, the schedule just keeps extending (with a scrollbar) to include right now, instead of cutting off.</p>
     </div>
 
     <div class="settings-section">
@@ -445,9 +453,10 @@ let labels = JSON.parse(localStorage.getItem('flowgrove_labels') || 'null') || [
 let settings = JSON.parse(localStorage.getItem('flowgrove_settings') || 'null') || {
   theme: 'modern', primary: '#ffffff', secondary: '#ffffff', tertiary: '#6fa287',
   sound: true, sayings: true, timeFormat: '12', completionSound: 'chime',
-  quoteCategories: { Wellness: true, Encouragement: true, Inspirational: true },
+  quoteCategories: { Wellness: true, Encouragement: true, Bible: true },
   shortWorkMin: 25, shortBreakMin: 5, medBreakMin: 15, freeIntervalMin: 60,
-  workingHours: { Sun:{on:false,start:'09:00'}, Mon:{on:true,start:'09:00'}, Tue:{on:true,start:'09:00'}, Wed:{on:true,start:'09:00'}, Thu:{on:true,start:'09:00'}, Fri:{on:true,start:'09:00'}, Sat:{on:false,start:'09:00'} }
+  workingHours: { Sun:{on:false,start:'09:00'}, Mon:{on:true,start:'09:00'}, Tue:{on:true,start:'09:00'}, Wed:{on:true,start:'09:00'}, Thu:{on:true,start:'09:00'}, Fri:{on:true,start:'09:00'}, Sat:{on:false,start:'09:00'} },
+  workingHoursEnd: '21:00'
 };
 
 /* ---- Motivational quotes: default set across 3 categories (Wellness,
@@ -492,31 +501,57 @@ const DEFAULT_QUOTES = [
   { text: "You made that look easy.", category: "Encouragement" },
   { text: "Give yourself some credit for that one.", category: "Encouragement" },
 
-  { text: "God loves you!", category: "Inspirational" },
-  { text: "He made no mistakes making you or putting you where you are.", category: "Inspirational" },
-  { text: "You are fearfully and wonderfully made.", category: "Inspirational" },
-  { text: "You are loved beyond measure.", category: "Inspirational" },
-  { text: "You were made on purpose, for a purpose.", category: "Inspirational" },
-  { text: "\"I can do all things through Christ which strengtheneth me.\" — Philippians 4:13", category: "Inspirational" },
-  { text: "\"The Lord is my shepherd; I shall not want.\" — Psalm 23:1", category: "Inspirational" },
-  { text: "\"Be strong and of a good courage; be not afraid.\" — Joshua 1:9", category: "Inspirational" },
-  { text: "\"Fear thou not; for I am with thee.\" — Isaiah 41:10", category: "Inspirational" },
-  { text: "\"Be still, and know that I am God.\" — Psalm 46:10", category: "Inspirational" },
-  { text: "\"Trust in the Lord with all thine heart.\" — Proverbs 3:5", category: "Inspirational" },
-  { text: "\"This is the day which the Lord hath made; we will rejoice and be glad in it.\" — Psalm 118:24", category: "Inspirational" },
-  { text: "\"The joy of the Lord is your strength.\" — Nehemiah 8:10", category: "Inspirational" },
-  { text: "\"Cast all your care upon him; for he careth for you.\" — 1 Peter 5:7", category: "Inspirational" },
-  { text: "\"Let not your heart be troubled.\" — John 14:1", category: "Inspirational" },
-  { text: "\"The Lord will fight for you, and ye shall hold your peace.\" — Exodus 14:14", category: "Inspirational" }
+  { text: "God loves you!", category: "Bible" },
+  { text: "He made no mistakes making you or putting you where you are.", category: "Bible" },
+  { text: "You are fearfully and wonderfully made.", category: "Bible" },
+  { text: "You are loved beyond measure.", category: "Bible" },
+  { text: "You were made on purpose, for a purpose.", category: "Bible" },
+  { text: "With Christ's strength, there's nothing I can't handle. (Philippians 4:13)", category: "Bible" },
+  { text: "The Lord is my shepherd, I have everything I need. (Psalm 23:1)", category: "Bible" },
+  { text: "Be strong and brave. Don't be afraid. (Joshua 1:9)", category: "Bible" },
+  { text: "Don't be afraid, I am with you. (Isaiah 41:10)", category: "Bible" },
+  { text: "Be still, and know that I am God. (Psalm 46:10)", category: "Bible" },
+  { text: "Trust in the Lord with your whole heart. (Proverbs 3:5)", category: "Bible" },
+  { text: "This is the day the Lord has made; let's rejoice and be glad in it. (Psalm 118:24)", category: "Bible" },
+  { text: "The joy of the Lord is your strength. (Nehemiah 8:10)", category: "Bible" },
+  { text: "Give all your worries to him, because he cares for you. (1 Peter 5:7)", category: "Bible" },
+  { text: "Don't let your heart be troubled. (John 14:1)", category: "Bible" },
+  { text: "The Lord will fight for you; you only need to be still. (Exodus 14:14)", category: "Bible" }
 ];
-const QUOTE_CATEGORIES = ["Wellness", "Encouragement", "Inspirational"];
+const QUOTE_CATEGORIES = ["Wellness", "Encouragement", "Bible"];
 let quotes = JSON.parse(localStorage.getItem('flowgrove_quotes') || 'null') || DEFAULT_QUOTES.slice();
 function saveQuotes() { localStorage.setItem('flowgrove_quotes', JSON.stringify(quotes)); }
 
 const PRESET_COLORS = ['#6fa287','#e08e5b','#5b8ac9','#c96f9a','#d1b34a','#7b6fc9','#4fa89a','#c95b5b'];
 const COMMON_NAMES = ["sarah","tyler","emma","jacob","olivia","liam","ava","noah","sophia","mason","isabella","james","mia","logan","charlotte","lucas","amelia","ethan","harper","aiden","evelyn","jackson","abigail","carter","ella","adelynn","melissa","sonny"];
 
-const DAY_START = 7*60, DAY_END = 21*60;
+const DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+function parseTimeToMinutes(hhmm) {
+  const parts = (hhmm || '09:00').split(':');
+  return (parseInt(parts[0], 10) || 0) * 60 + (parseInt(parts[1], 10) || 0);
+}
+
+// Computes today's schedule window. Start comes from Settings' working hours
+// for today; if today is toggled off, it falls back to whatever time it
+// currently is when the page loads. End also comes from Settings, but if the
+// real current time has already passed it, the grid keeps extending to cover
+// right up to now (with a scrollbar), rather than cutting off mid-day.
+function getDayBounds() {
+  const todayName = DAY_NAMES[new Date().getDay()];
+  const todayHours = settings.workingHours[todayName] || { on: true, start: '07:00' };
+  let start;
+  if (todayHours.on) {
+    start = parseTimeToMinutes(todayHours.start);
+  } else {
+    start = nowMinutesSinceMidnight(); // day is off: start from whenever the user opens it
+  }
+  let end = parseTimeToMinutes(settings.workingHoursEnd || '21:00');
+  const nowMin = nowMinutesSinceMidnight();
+  if (nowMin > end) end = nowMin + 15; // extend a little past "now" so the current moment is visible
+  if (end <= start) end = start + 60; // safety floor so the grid is never empty/inverted
+  return { start: start, end: end };
+}
 
 function switchView(v) {
   ['day','weekdays','week','month'].forEach(function(name) {
@@ -567,7 +602,21 @@ function updateLiveClock() {
   }
   document.getElementById('liveClock').textContent = dateStr + ' · ' + timeStr;
 }
-setInterval(updateLiveClock, 1000);
+
+function positionNowLine() {
+  const line = document.getElementById('nowLine');
+  const grid = document.getElementById('grid');
+  if (!line || !grid) return;
+  const bounds = getDayBounds();
+  const gridStart = Math.floor(bounds.start / 60) * 60;
+  const nowMin = nowMinutesSinceMidnight();
+  if (nowMin < gridStart) { line.style.display = 'none'; return; }
+  line.style.display = 'block';
+  const rowHeight = 60;
+  line.style.top = ((nowMin - gridStart) / 60 * rowHeight) + 'px';
+}
+
+setInterval(function() { updateLiveClock(); positionNowLine(); }, 1000);
 
 /* ---- Unified Add Task form: click OR keyboard shortcut, same fields, no mode switch ---- */
 
@@ -1040,6 +1089,8 @@ function computeSchedule() {
   const optional = todays.filter(function(t) { return !t.completed && t.optional; });
 
   const sortFn = function(a, b) {
+    // A manual drag (today only) takes precedence over the automatic sort.
+    if (typeof a.manualOrder === 'number' && typeof b.manualOrder === 'number') return a.manualOrder - b.manualOrder;
     if (b.priority !== a.priority) return b.priority - a.priority;
     if (a.time !== b.time) return a.time - b.time;
     return a.motivation - b.motivation;
@@ -1053,13 +1104,14 @@ function computeSchedule() {
     .concat(completedFixed.map(function(t) { return { startMin: t.fixedStartMin, endMin: t.fixedEndMin }; }));
   busyBlocks.sort(function(a, b) { return a.startMin - b.startMin; });
 
+  const bounds = getDayBounds();
   let windows = [];
-  let cursor = DAY_START;
+  let cursor = bounds.start;
   busyBlocks.forEach(function(b) {
     if (b.startMin > cursor) windows.push({ start: cursor, end: b.startMin });
     cursor = Math.max(cursor, b.endMin);
   });
-  if (cursor < DAY_END) windows.push({ start: cursor, end: DAY_END });
+  if (cursor < bounds.end) windows.push({ start: cursor, end: bounds.end });
 
   const placed = completedFixed.map(function(t) {
     return Object.assign({}, t, { startMin: t.fixedStartMin, endMin: t.fixedEndMin });
@@ -1095,7 +1147,9 @@ function labelColor(name) {
 function renderGrid() {
   const grid = document.getElementById('grid');
   grid.innerHTML = '';
-  const startHour = DAY_START/60, endHour = DAY_END/60;
+  const bounds = getDayBounds();
+  const gridStart = Math.floor(bounds.start / 60) * 60; // round down to the start of that hour for clean row labels
+  const startHour = gridStart / 60, endHour = Math.ceil(bounds.end / 60);
   for (let h = startHour; h < endHour; h++) {
     const row = document.createElement('div'); row.className = 'hour-row';
     const label = document.createElement('div'); label.className = 'hour-label';
@@ -1108,7 +1162,7 @@ function renderGrid() {
   }
   const rowHeight = 60;
   function placeOnGrid(startMin, endMin, el) {
-    const offset = startMin - DAY_START;
+    const offset = startMin - gridStart;
     const hourIndex = Math.floor(offset/60);
     const within = offset % 60;
     const tracks = grid.querySelectorAll('.hour-track');
@@ -1117,6 +1171,12 @@ function renderGrid() {
     el.style.height = Math.max(20, (endMin-startMin)/60*rowHeight) + 'px';
     tracks[hourIndex].appendChild(el);
   }
+
+  // Dark green "now" line, like Google Calendar's day view.
+  const nowLine = document.createElement('div');
+  nowLine.id = 'nowLine';
+  grid.appendChild(nowLine);
+  positionNowLine();
   events.forEach(function(ev) {
     const el = document.createElement('div'); el.className = 'block event';
     el.innerHTML = '<span class="title">' + ev.title + '</span><span class="meta">Fixed event, never moves</span>';
@@ -1136,15 +1196,31 @@ function renderGrid() {
   });
 }
 
+let draggedTaskId = null;
+
 function renderTaskList() {
   const ul = document.getElementById('taskListUI');
   ul.innerHTML = '';
   const sorted = tasks.filter(function(t) { return !t.tomorrow; })
     .slice()
-    .sort(function(a, b) { return (a.completed === b.completed) ? 0 : (a.completed ? 1 : -1); });
+    .sort(function(a, b) {
+      if (a.completed !== b.completed) return a.completed ? 1 : -1;
+      if (typeof a.manualOrder === 'number' && typeof b.manualOrder === 'number') return a.manualOrder - b.manualOrder;
+      return 0;
+    });
   sorted.forEach(function(t) {
     const li = document.createElement('li');
     if (t.completed) li.classList.add('task-done-row');
+    li.draggable = true;
+    li.dataset.taskId = t.id;
+    li.ondragstart = function(e) { draggedTaskId = t.id; e.dataTransfer.effectAllowed = 'move'; };
+    li.ondragover = function(e) { e.preventDefault(); li.classList.add('drag-over'); };
+    li.ondragleave = function() { li.classList.remove('drag-over'); };
+    li.ondrop = function(e) {
+      e.preventDefault();
+      li.classList.remove('drag-over');
+      reorderTaskBefore(draggedTaskId, t.id);
+    };
     const pLabel = t.priority === 3 ? 'Top' : t.priority === 2 ? 'Medium' : 'Low';
     const span = document.createElement('span');
     span.style.cursor = 'pointer';
@@ -1156,13 +1232,51 @@ function renderTaskList() {
     li.appendChild(btn);
     ul.appendChild(li);
   });
+
+  // Dropping onto the list itself (not on a specific task) pulls it back from Tomorrow.
+  ul.ondragover = function(e) { e.preventDefault(); };
+  ul.ondrop = function(e) {
+    e.preventDefault();
+    const t = tasks.find(function(x) { return x.id === draggedTaskId; });
+    if (t && t.tomorrow) { t.tomorrow = false; saveTasks(); render(); }
+  };
+}
+
+function reorderTaskBefore(draggedId, targetId) {
+  if (draggedId === targetId) return;
+  const dragged = tasks.find(function(t) { return t.id === draggedId; });
+  const target = tasks.find(function(t) { return t.id === targetId; });
+  if (!dragged || !target || dragged.tomorrow || target.tomorrow) return;
+  // This is a today-only manual override — it does not carry forward to
+  // recurring task instances or future days, which stay fully automatic.
+  const todays = tasks.filter(function(t) { return !t.tomorrow && !t.completed; })
+    .slice()
+    .sort(function(a, b) { return (a.manualOrder || 0) - (b.manualOrder || 0); });
+  const withoutDragged = todays.filter(function(t) { return t.id !== draggedId; });
+  const targetIndex = withoutDragged.findIndex(function(t) { return t.id === targetId; });
+  withoutDragged.splice(targetIndex, 0, dragged);
+  withoutDragged.forEach(function(t, i) { t.manualOrder = i; });
+  saveTasks();
+  render();
 }
 
 function renderTomorrow() {
   const ul = document.getElementById('tomorrowListUI');
   const list = tasks.filter(function(t) { return t.tomorrow; });
-  ul.innerHTML = list.map(function(t) { return '<li style="padding:4px 0;border-bottom:1px solid var(--border);">' + t.title + '</li>'; }).join('');
+  ul.innerHTML = list.map(function(t) {
+    return '<li draggable="true" data-task-id="' + t.id + '" style="padding:4px 0;border-bottom:1px solid var(--border);cursor:grab;">' + t.title + '</li>';
+  }).join('');
   document.getElementById('tomorrowEmpty').style.display = list.length ? 'none' : 'block';
+
+  ul.querySelectorAll('li').forEach(function(li) {
+    li.ondragstart = function(e) { draggedTaskId = parseInt(li.dataset.taskId, 10); e.dataTransfer.effectAllowed = 'move'; };
+  });
+  ul.ondragover = function(e) { e.preventDefault(); };
+  ul.ondrop = function(e) {
+    e.preventDefault();
+    const t = tasks.find(function(x) { return x.id === draggedTaskId; });
+    if (t && !t.tomorrow) { t.tomorrow = true; saveTasks(); render(); }
+  };
 }
 
 function updateProgress() {
@@ -1188,6 +1302,7 @@ function openSettings() {
   document.getElementById('freeIntervalMin').value = settings.freeIntervalMin;
   document.getElementById('customColors').style.display = settings.theme === 'custom' ? 'block' : 'none';
   renderWorkingHoursUI();
+  document.getElementById('workingHoursEndInput').value = settings.workingHoursEnd || '21:00';
   renderQuoteSettingsUI();
   updateCalendarConnectionUI();
   const profile = JSON.parse(localStorage.getItem('flowgrove_profile') || 'null');
@@ -1284,6 +1399,7 @@ function saveSettings() {
     settings.workingHours[d].on = document.getElementById('wh_' + d + '_on').checked;
     settings.workingHours[d].start = document.getElementById('wh_' + d + '_start').value;
   });
+  settings.workingHoursEnd = document.getElementById('workingHoursEndInput').value || '21:00';
 
   const nickname = document.getElementById('settingsNickname').value.trim();
   const profile = JSON.parse(localStorage.getItem('flowgrove_profile') || 'null');

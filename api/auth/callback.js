@@ -7,6 +7,10 @@
 //   GOOGLE_CLIENT_ID
 //   GOOGLE_CLIENT_SECRET
 
+// Must exactly match the constant in api/auth/google.js and the URI
+// registered in Google Cloud Console.
+const APP_DOMAIN = 'https://flowgrove.vercel.app';
+
 export default async function handler(req, res) {
   const code = req.query.code;
   if (!code) {
@@ -14,9 +18,7 @@ export default async function handler(req, res) {
     return res.end();
   }
 
-  const protocol = req.headers['x-forwarded-proto'] || 'https';
-  const host = req.headers['host'];
-  const redirectUri = `${protocol}://${host}/api/auth/callback`;
+  const redirectUri = `${APP_DOMAIN}/api/auth/callback`;
 
   try {
     const tokenResp = await fetch('https://oauth2.googleapis.com/token', {
@@ -41,6 +43,8 @@ export default async function handler(req, res) {
     const cookies = [];
     cookies.push(`fg_access_token=${tokenData.access_token}; HttpOnly; Secure; Path=/; Max-Age=${tokenData.expires_in || 3600}; SameSite=Lax`);
     if (tokenData.refresh_token) {
+      // Refresh tokens are long-lived; only returned the first time a user
+      // consents (or after revoking access), so we only overwrite it if present.
       cookies.push(`fg_refresh_token=${tokenData.refresh_token}; HttpOnly; Secure; Path=/; Max-Age=31536000; SameSite=Lax`);
     }
     cookies.push(`fg_access_token_expires=${Date.now() + ((tokenData.expires_in || 3600) * 1000)}; HttpOnly; Secure; Path=/; Max-Age=${tokenData.expires_in || 3600}; SameSite=Lax`);

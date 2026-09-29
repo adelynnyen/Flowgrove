@@ -4,11 +4,14 @@
 // The redirect URI below must exactly match one added in Google Cloud Console
 // under the OAuth Client's "Authorized redirect URIs".
 
+// Hardcoded rather than derived from the request, since Vercel preview
+// deployments each get their own unique subdomain, and only the main
+// domain's callback URL is registered in Google Cloud Console.
+const APP_DOMAIN = 'https://flowgrove.vercel.app';
+
 export default function handler(req, res) {
   const clientId = process.env.GOOGLE_CLIENT_ID;
-  const protocol = req.headers['x-forwarded-proto'] || 'https';
-  const host = req.headers['host'];
-  const redirectUri = `${protocol}://${host}/api/auth/callback`;
+  const redirectUri = `${APP_DOMAIN}/api/auth/callback`;
 
   const params = new URLSearchParams({
     client_id: clientId,

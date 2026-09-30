@@ -26,8 +26,12 @@
   .topbar { display: flex; align-items: center; justify-content: space-between; padding: 14px 24px; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 10px; }
   .brand { font-size: 19px; font-weight: 700; }
   .live-clock { font-size: 11.5px; color: var(--ink-soft); margin-top: 1px; }
-  .week-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 8px; }
-  .week-col { border: 1px solid var(--border); border-radius: 8px; padding: 10px; text-align: center; }
+  .week-grid { display: grid; gap: 6px; }
+  .week-col { border: 1px solid var(--border); border-radius: 8px; padding: 8px 3px; text-align: center; align-self: start; }
+  .week-col-head { white-space: nowrap; font-weight: 600; font-size: 12px; margin-bottom: 6px; }
+  .week-task-row { font-size: 10.5px; padding: 4px 3px; margin-bottom: 3px; background: #f4f6f5; border-radius: 5px; word-break: break-word; }
+  .week-task-row.done { opacity: 0.5; text-decoration: line-through; }
+  .week-task-row.empty { background: none; color: var(--ink-soft); font-style: italic; }
   .week-col.today { border-color: var(--tertiary); background: #f3f8f5; }
   .week-col-head { font-size: 12px; font-weight: 600; margin-bottom: 6px; }
   .week-col-body { font-size: 11px; color: var(--ink-soft); }
@@ -53,7 +57,7 @@
   .hour-row { position: relative; height: 60px; border-bottom: 1px solid var(--border); display: flex; }
   .hour-label { width: 56px; flex-shrink: 0; font-size: 11px; color: var(--ink-soft); padding-top: 3px; text-align: right; padding-right: 10px; }
   .hour-track { flex: 1; position: relative; }
-  .block { position: absolute; left: 4px; right: 4px; border-radius: 7px; padding: 5px 9px; font-size: 12px; overflow: hidden; box-shadow: var(--shadow); border: 1px solid transparent; }
+  .block { position: absolute; left: 4px; right: 4px; border-radius: 7px; padding: 5px 9px; font-size: 12px; overflow: hidden; box-shadow: var(--shadow); border: 1px solid transparent; display: flex; flex-direction: column; justify-content: center; }
   .block .title { font-weight: 600; display: block; text-align: center; }
   .task-checkbox-wrap { position: absolute; top: 6px; left: 8px; cursor: pointer; z-index: 2; }
   .task-checkbox-wrap input { cursor: pointer; }
@@ -67,6 +71,7 @@
   .month-header-row { margin-bottom: 4px; }
   .month-header-row div { text-align: center; font-size: 11px; font-weight: 600; color: var(--ink-soft); }
   .month-cell { border: 1px solid var(--border); border-radius: 8px; min-height: 60px; padding: 6px; font-size: 11.5px; color: var(--ink-soft); }
+  .month-event-label { background: var(--event-bg); border-radius: 4px; padding: 1px 4px; margin-top: 3px; font-size: 9.5px; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .month-cell.today { border-color: var(--tertiary); background: #f3f8f5; font-weight: 600; color: var(--ink); }
   .month-note { font-size: 12px; color: var(--ink-soft); margin-top: 12px; padding: 10px 12px; background: #f4f6f5; border-radius: 8px; }
   .sidebar { display: flex; flex-direction: column; gap: 16px; }
@@ -109,6 +114,8 @@
   .qa-label-item.top-match { border-color: var(--tertiary); background: #f3f8f5; }
   .qa-label-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
   .checklist-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 8px; background: #fafbfa; border: 1px solid var(--border); border-radius: 7px; }
+  .checklist-two-col { display: flex; gap: 14px; padding: 8px; background: #fafbfa; border: 1px solid var(--border); border-radius: 7px; }
+  .checklist-col { display: flex; flex-direction: column; gap: 4px; flex: 1; }
   .checklist-item { font-size: 11.5px; display: flex; align-items: center; gap: 5px; }
   .checklist-item input { width: auto; }
   .task-list { padding: 12px 14px; }
@@ -183,7 +190,13 @@
 
     <div class="panel side-panel" id="labelsSidebarPanel">
       <h3>Labels</h3>
+      <p style="font-size:11px;color:var(--ink-soft);margin:0 0 6px;">Click a label to highlight matching tasks. Click × to delete.</p>
       <div id="labelsSidebarList" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+      <div style="margin-top:8px;display:flex;gap:5px;align-items:center;">
+        <input type="text" id="quickNewLabelName" placeholder="New label" style="flex:1;">
+        <input type="color" id="quickNewLabelColor" value="#6fa287" style="width:28px;height:28px;padding:0;border:none;">
+      </div>
+      <button type="button" class="icon-btn" style="margin-top:6px;width:100%;" onclick="addLabelFromSidebar()">Add Label</button>
     </div>
   </div>
 
@@ -297,9 +310,7 @@
     <div class="settings-section">
       <h4>Weekly Working Hours</h4>
       <div id="workingHoursUI"></div>
-      <label style="margin-top:10px;">End time (applies every day)</label>
-      <input type="time" id="workingHoursEndInput">
-      <p style="font-size:11px;color:var(--ink-soft);margin-top:6px;">If it's currently past your end time, the schedule just keeps extending (with a scrollbar) to include right now, instead of cutting off.</p>
+      <p style="font-size:11px;color:var(--ink-soft);margin-top:6px;">If it's currently past today's end time, the schedule just keeps extending (with a scrollbar) to include right now, instead of cutting off.</p>
     </div>
 
     <div class="settings-section">
@@ -312,29 +323,27 @@
     </div>
 
     <div class="settings-section">
-      <h4>Notifications &amp; Sound</h4>
-      <div class="toggle-row"><span>Task completion sound</span><input type="checkbox" id="soundToggle" checked></div>
+      <h4>Task Completion Sound</h4>
+      <div class="toggle-row"><span>Play a sound on completion</span><input type="checkbox" id="soundToggle" checked></div>
       <div style="margin:6px 0 4px;font-size:12px;color:var(--ink-soft);">Pick a sound (tap ▶ to preview):</div>
       <div class="sound-option"><label><input type="radio" name="completionSoundChoice" value="chime"> Soft Chime</label><button type="button" class="icon-btn" onclick="previewSound('chime')">▶</button></div>
       <div class="sound-option"><label><input type="radio" name="completionSoundChoice" value="bell"> Gentle Bell</label><button type="button" class="icon-btn" onclick="previewSound('bell')">▶</button></div>
-      <div class="sound-option"><label><input type="radio" name="completionSoundChoice" value="pop"> Warm Pop</label><button type="button" class="icon-btn" onclick="previewSound('pop')">▶</button></div>
-      <div class="toggle-row"><span>Motivation sayings</span><input type="checkbox" id="sayingsToggle" checked></div>
-      <p class="stub-note">Real push notifications need a backend/service worker and aren't wired up yet, these toggles control the in-app sound and messages only.</p>
+      <div class="sound-option"><label><input type="radio" name="completionSoundChoice" value="sparkle"> Bright Sparkle</label><button type="button" class="icon-btn" onclick="previewSound('sparkle')">▶</button></div>
+      <div class="sound-option"><label><input type="radio" name="completionSoundChoice" value="deep"> Deep Tone</label><button type="button" class="icon-btn" onclick="previewSound('deep')">▶</button></div>
+      <div class="sound-option"><label><input type="radio" name="completionSoundChoice" value="arpeggio"> Rising Arpeggio</label><button type="button" class="icon-btn" onclick="previewSound('arpeggio')">▶</button></div>
     </div>
 
     <div class="settings-section">
       <h4>Motivational Quotes</h4>
       <p style="font-size:11px;color:var(--ink-soft);margin:0 0 8px;">Turn a whole category off, delete a quote you don't love, or add your own.</p>
       <div id="quoteCategoryToggles"></div>
-      <details style="margin-top:8px;">
-        <summary style="cursor:pointer;font-size:12px;color:var(--tertiary);">View, edit, or delete individual quotes</summary>
-        <div id="quoteListUI" style="margin-top:8px;max-height:220px;overflow-y:auto;"></div>
-      </details>
+      <div id="quoteListByCategory" style="margin-top:8px;"></div>
       <div class="row2" style="margin-top:8px;">
         <input type="text" id="newQuoteText" placeholder="Add a new quote...">
         <select id="newQuoteCategory"></select>
       </div>
       <button type="button" class="icon-btn" style="margin-top:6px;" onclick="addQuote()">Add Quote</button>
+      <div class="toggle-row" style="margin-top:10px;"><span>Show motivation sayings</span><input type="checkbox" id="sayingsToggle" checked></div>
     </div>
 
     <div class="settings-section">
@@ -455,8 +464,12 @@ let settings = JSON.parse(localStorage.getItem('flowgrove_settings') || 'null') 
   sound: true, sayings: true, timeFormat: '12', completionSound: 'chime',
   quoteCategories: { Wellness: true, Encouragement: true, Bible: true },
   shortWorkMin: 25, shortBreakMin: 5, medBreakMin: 15, freeIntervalMin: 60,
-  workingHours: { Sun:{on:false,start:'09:00'}, Mon:{on:true,start:'09:00'}, Tue:{on:true,start:'09:00'}, Wed:{on:true,start:'09:00'}, Thu:{on:true,start:'09:00'}, Fri:{on:true,start:'09:00'}, Sat:{on:false,start:'09:00'} },
-  workingHoursEnd: '21:00'
+  workingHours: {
+    Sun:{on:false,start:'09:00',end:'21:00'}, Mon:{on:true,start:'09:00',end:'21:00'},
+    Tue:{on:true,start:'09:00',end:'21:00'}, Wed:{on:true,start:'09:00',end:'21:00'},
+    Thu:{on:true,start:'09:00',end:'21:00'}, Fri:{on:true,start:'09:00',end:'21:00'},
+    Sat:{on:false,start:'09:00',end:'21:00'}
+  }
 };
 
 /* ---- Motivational quotes: default set across 3 categories (Wellness,
@@ -539,17 +552,27 @@ function parseTimeToMinutes(hhmm) {
 // right up to now (with a scrollbar), rather than cutting off mid-day.
 function getDayBounds() {
   const todayName = DAY_NAMES[new Date().getDay()];
-  const todayHours = settings.workingHours[todayName] || { on: true, start: '07:00' };
+  const todayHours = settings.workingHours[todayName] || { on: true, start: '07:00', end: '21:00' };
   let start;
   if (todayHours.on) {
     start = parseTimeToMinutes(todayHours.start);
   } else {
     start = nowMinutesSinceMidnight(); // day is off: start from whenever the user opens it
   }
-  let end = parseTimeToMinutes(settings.workingHoursEnd || '21:00');
+  let end = parseTimeToMinutes(todayHours.end || '21:00');
   const nowMin = nowMinutesSinceMidnight();
   if (nowMin > end) end = nowMin + 15; // extend a little past "now" so the current moment is visible
   if (end <= start) end = start + 60; // safety floor so the grid is never empty/inverted
+
+  // Guarantee enough total room to fit every task still needing placement today
+  // (plus fixed events/completed blocks), so adding a task never silently fails
+  // to appear just because it's past the configured end time.
+  const todaysTasks = tasks.filter(function(t) { return !t.tomorrow && !t.completed; });
+  const taskMinutes = todaysTasks.reduce(function(sum, t) { return sum + t.time; }, 0);
+  const eventMinutes = events.reduce(function(sum, ev) { return sum + (ev.endMin - ev.startMin); }, 0);
+  const neededEnd = start + taskMinutes + eventMinutes + 30; // small buffer
+  if (neededEnd > end) end = neededEnd;
+
   return { start: start, end: end };
 }
 
@@ -563,10 +586,34 @@ function switchView(v) {
   if (v === 'week') renderWeekGrid('weekGrid', ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']);
 }
 
+let monthEventsByDay = {}; // 'YYYY-MM-DD' -> array of event titles, refreshed per month
+
 function renderMonth() {
   const now = new Date();
   const year = now.getFullYear(), month = now.getMonth();
   document.getElementById('monthTitle').textContent = now.toLocaleString('default', { month: 'long', year: 'numeric' });
+  buildMonthGrid(year, month);
+
+  const monthStr = year + '-' + String(month + 1).padStart(2, '0');
+  fetch('/api/calendar/events?month=' + monthStr)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      monthEventsByDay = {};
+      if (data.connected && data.events) {
+        data.events.forEach(function(ev) {
+          const dayKey = (ev.start || '').slice(0, 10); // 'YYYY-MM-DD'
+          if (!dayKey) return;
+          if (!monthEventsByDay[dayKey]) monthEventsByDay[dayKey] = [];
+          monthEventsByDay[dayKey].push(ev.title);
+        });
+      }
+      buildMonthGrid(year, month); // rebuild with event labels now that we have them
+    })
+    .catch(function() { /* leave the grid as-is if this fails */ });
+}
+
+function buildMonthGrid(year, month) {
+  const now = new Date();
   const grid = document.getElementById('monthGrid');
   grid.innerHTML = '';
   const firstDay = new Date(year, month, 1).getDay();
@@ -574,20 +621,49 @@ function renderMonth() {
   for (let i = 0; i < firstDay; i++) grid.appendChild(document.createElement('div'));
   for (let d = 1; d <= daysInMonth; d++) {
     const cell = document.createElement('div');
-    cell.className = 'month-cell' + (d === now.getDate() ? ' today' : '');
-    cell.textContent = d;
+    const isToday = (d === now.getDate() && month === now.getMonth() && year === now.getFullYear());
+    cell.className = 'month-cell' + (isToday ? ' today' : '');
+    const dayKey = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+    const dayEvents = monthEventsByDay[dayKey] || [];
+    const eventHtml = dayEvents.slice(0, 2).map(function(t) {
+      return '<div class="month-event-label" title="' + t.replace(/"/g, '&quot;') + '">' + t + '</div>';
+    }).join('') + (dayEvents.length > 2 ? '<div class="month-event-label">+' + (dayEvents.length - 2) + ' more</div>' : '');
+    cell.innerHTML = '<div>' + d + '</div>' + eventHtml;
     grid.appendChild(cell);
   }
 }
 
+const DAY_FULL_NAMES = { Mon:'Monday', Tue:'Tuesday', Wed:'Wednesday', Thu:'Thursday', Fri:'Friday', Sat:'Saturday', Sun:'Sunday' };
+
+function taskRepeatsOnDay(task, dayAbbrev) {
+  if (!task.repeatPattern || task.repeatPattern === 'none') return false;
+  const parts = task.repeatPattern.split(',').map(function(s) { return s.trim(); });
+  // Frequency options (Every day, Every weekday, Weekends) auto-check their
+  // matching specific days when selected, so checking the day name directly
+  // is now the single source of truth, no bundle special-casing needed.
+  return parts.indexOf(DAY_FULL_NAMES[dayAbbrev]) !== -1;
+}
+
 function renderWeekGrid(gridId, dayNames) {
   const grid = document.getElementById(gridId);
+  grid.style.gridTemplateColumns = 'repeat(' + dayNames.length + ', 1fr)';
   const todaysTasks = tasks.filter(function(t) { return !t.tomorrow; });
   const todayShort = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date().getDay()];
   grid.innerHTML = dayNames.map(function(d) {
     const isToday = d === todayShort;
-    const count = isToday ? todaysTasks.length : 0;
-    return '<div class="week-col' + (isToday ? ' today' : '') + '"><div class="week-col-head">' + d + '</div><div class="week-col-body">' + (isToday ? (count + ' task' + (count === 1 ? '' : 's') + ' today') : 'No data yet') + '</div></div>';
+    let listItems;
+    if (isToday) {
+      listItems = todaysTasks;
+    } else {
+      // Not today: only recurring tasks whose pattern matches this day of week show up,
+      // since one-time future tasks aren't stored against a specific date yet.
+      listItems = tasks.filter(function(t) { return taskRepeatsOnDay(t, d); });
+    }
+    const rows = listItems.map(function(t) {
+      return '<div class="week-task-row' + (t.completed ? ' done' : '') + '">' + t.title + '</div>';
+    }).join('');
+    const emptyMsg = isToday ? 'Nothing scheduled' : 'No repeating tasks';
+    return '<div class="week-col' + (isToday ? ' today' : '') + '"><div class="week-col-head">' + d + '</div><div class="week-col-body">' + (rows || '<div class="week-task-row empty">' + emptyMsg + '</div>') + '</div></div>';
   }).join('');
 }
 
@@ -722,11 +798,34 @@ function toggleRepeatChecklist() {
 
 function renderInlineRepeatChecklist() {
   const grid = document.getElementById('repeatChecklistGrid');
-  grid.innerHTML = REPEAT_CHECKLIST_ITEMS.map(function(item, i) {
+  grid.className = 'checklist-two-col';
+
+  function itemRow(item) {
+    const i = REPEAT_CHECKLIST_ITEMS.indexOf(item);
     const id = 'rc_' + i;
-    const nextId = (i < REPEAT_CHECKLIST_ITEMS.length - 1) ? ('rc_' + (i + 1)) : 'labelSearch';
-    return '<label class="checklist-item"><input type="checkbox" id="' + id + '" data-item="' + item + '" onkeydown="checkboxKey(event,\'' + nextId + '\')"> ' + item + '</label>';
-  }).join('');
+    const nextI = i < REPEAT_CHECKLIST_ITEMS.length - 1 ? i + 1 : null;
+    const nextId = nextI !== null ? ('rc_' + nextI) : 'labelSearch';
+    const onchangeAttr = (item === 'Every day' || item === 'Every weekday' || item === 'Weekends') ? ' onchange="applyRepeatBundle(this,\'' + item + '\')"' : '';
+    return '<label class="checklist-item"><input type="checkbox" id="' + id + '" data-item="' + item + '" onkeydown="checkboxKey(event,\'' + nextId + '\')"' + onchangeAttr + '> ' + item + '</label>';
+  }
+
+  grid.innerHTML =
+    '<div class="checklist-col">' + REPEAT_FREQUENCY_ITEMS.map(itemRow).join('') + '</div>' +
+    '<div class="checklist-col">' + REPEAT_DAY_ITEMS.map(itemRow).join('') + '</div>';
+}
+
+function applyRepeatBundle(checkbox, bundleName) {
+  if (!checkbox.checked) return; // unchecking the bundle doesn't un-check any days, in case they were customized
+  const bundleDays = {
+    'Every day': ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'],
+    'Every weekday': ['Monday','Tuesday','Wednesday','Thursday','Friday'],
+    'Weekends': ['Saturday','Sunday']
+  }[bundleName] || [];
+  bundleDays.forEach(function(dayName) {
+    const i = REPEAT_CHECKLIST_ITEMS.indexOf(dayName);
+    const box = document.getElementById('rc_' + i);
+    if (box) box.checked = true;
+  });
 }
 
 function getSelectedRepeatItems() {
@@ -771,10 +870,32 @@ function renderLabelsSidebar() {
     box.innerHTML = '<p style="font-size:12px;color:var(--ink-soft);margin:0;">No labels yet, create one when adding a task.</p>';
     return;
   }
-  box.innerHTML = labels.map(function(l) {
+  box.innerHTML = labels.map(function(l, i) {
     const active = activeLabelFilter === l.name;
-    return '<span class="label-chip" style="cursor:pointer;' + (active ? 'outline:2px solid ' + l.color + ';' : '') + '" onclick="toggleLabelFilter(\'' + l.name.replace(/'/g, "\\'") + '\')"><span class="label-swatch" style="background:' + l.color + '"></span>' + l.name + '</span>';
+    return '<span class="label-chip" style="' + (active ? 'outline:2px solid ' + l.color + ';' : '') + '">' +
+      '<input type="color" value="' + l.color + '" onchange="editLabelColor(' + i + ',this.value)" style="width:14px;height:14px;padding:0;border:none;vertical-align:middle;">' +
+      '<span style="cursor:pointer;" onclick="toggleLabelFilter(\'' + l.name.replace(/'/g, "\\'") + '\')">' + l.name + '</span>' +
+      '<input type="text" value="' + l.name + '" onchange="editLabelName(' + i + ',this.value)" style="display:none;width:70px;">' +
+      '<span style="cursor:pointer;margin-left:3px;" onclick="this.previousElementSibling.style.display=this.previousElementSibling.style.display===\'none\'?\'inline-block\':\'none\';" title="Rename">✎</span>' +
+      '<span style="cursor:pointer;margin-left:3px;color:#a3372f;" onclick="deleteLabel(' + i + ')" title="Delete label">×</span>' +
+    '</span>';
   }).join('');
+}
+
+function addLabelFromSidebar() {
+  const nameInput = document.getElementById('quickNewLabelName');
+  const colorInput = document.getElementById('quickNewLabelColor');
+  const name = nameInput.value.trim();
+  if (!name) return;
+  const clean = capitalizeFirst(name);
+  if (labels.find(function(l) { return l.name.toLowerCase() === clean.toLowerCase(); })) {
+    alert('A label with that name already exists.');
+    return;
+  }
+  labels.push({ name: clean, color: colorInput.value });
+  saveLabels();
+  nameInput.value = '';
+  refreshLabelUI();
 }
 
 function refreshLabelUI() {
@@ -983,7 +1104,9 @@ function toggleComplete(id) {
   render();
 }
 
-const REPEAT_CHECKLIST_ITEMS = ['Every day','Every week','Every biweekly','Days','Weekends','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+const REPEAT_FREQUENCY_ITEMS = ['Every weekday', 'Every day', 'Every week', 'Every biweekly', 'Weekends', 'Monthly'];
+const REPEAT_DAY_ITEMS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const REPEAT_CHECKLIST_ITEMS = REPEAT_FREQUENCY_ITEMS.concat(REPEAT_DAY_ITEMS); // kept for anything iterating the full flat list
 
 function refreshMotivationQuote() {
   const box = document.getElementById('motivationText');
@@ -1029,28 +1152,35 @@ function playSound_bell() {
   playTone(ctx, 1046.5, 0, 0.5, 'sine', 0.05);   // quiet octave overtone for warmth
 }
 
-function playSound_pop() {
-  // A short, satisfying downward "pop" instead of a ring.
-  try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(320, ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(140, ctx.currentTime + 0.16);
-    gain.gain.setValueAtTime(0.22, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
-    osc.connect(gain).connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + 0.2);
-  } catch (e) {}
+function playSound_sparkle() {
+  // A quick, bright 3-note rising sparkle.
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  playTone(ctx, 1318.5, 0,    0.12, 'sine', 0.12); // E6
+  playTone(ctx, 1568.0, 0.06, 0.12, 'sine', 0.12); // G6
+  playTone(ctx, 2093.0, 0.12, 0.20, 'sine', 0.14); // C7
+}
+
+function playSound_deep() {
+  // A low, warm, mellow single tone, satisfying without being bright.
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  playTone(ctx, 220.0, 0, 0.7, 'sine', 0.24);
+}
+
+function playSound_arpeggio() {
+  // A playful "level up" 3-note ascending run.
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  playTone(ctx, 523.25, 0,    0.16, 'triangle', 0.16); // C5
+  playTone(ctx, 659.25, 0.08, 0.16, 'triangle', 0.16); // E5
+  playTone(ctx, 783.99, 0.16, 0.30, 'triangle', 0.18); // G5
 }
 
 function previewSound(name) {
   try {
     if (name === 'chime') playSound_chime();
     else if (name === 'bell') playSound_bell();
-    else if (name === 'pop') playSound_pop();
+    else if (name === 'sparkle') playSound_sparkle();
+    else if (name === 'deep') playSound_deep();
+    else if (name === 'arpeggio') playSound_arpeggio();
   } catch (e) {}
 }
 
@@ -1144,6 +1274,8 @@ function labelColor(name) {
   return l ? l.color : settings.secondary;
 }
 
+let draggedTaskId = null;
+
 function renderGrid() {
   const grid = document.getElementById('grid');
   grid.innerHTML = '';
@@ -1192,11 +1324,19 @@ function renderGrid() {
     const pLabel = t.priority === 3 ? 'Top' : t.priority === 2 ? 'Medium' : 'Low';
     el.innerHTML = '<label class="task-checkbox-wrap" onclick="event.stopPropagation()"><input type="checkbox" ' + (t.completed ? 'checked' : '') + ' onchange="toggleComplete(' + t.id + ')"></label><span class="title">' + t.title + (t.optional ? '<span class="badge">Optional</span>' : '') + '</span><span class="meta">' + pLabel + ' - ' + t.time + 'm - Motivation ' + t.motivation + (t.label ? ' - ' + t.label : '') + '</span>';
     el.onclick = function() { startEditTask(t.id); };
+    el.draggable = true;
+    el.ondragstart = function(e) { draggedTaskId = t.id; e.dataTransfer.effectAllowed = 'move'; };
     placeOnGrid(t.startMin, t.endMin, el);
   });
-}
 
-let draggedTaskId = null;
+  // Dropping a task from Tomorrow back onto the schedule grid brings it back to today.
+  grid.ondragover = function(e) { e.preventDefault(); };
+  grid.ondrop = function(e) {
+    e.preventDefault();
+    const dragged = tasks.find(function(x) { return x.id === draggedTaskId; });
+    if (dragged && dragged.tomorrow) { dragged.tomorrow = false; saveTasks(); render(); }
+  };
+}
 
 function renderTaskList() {
   const ul = document.getElementById('taskListUI');
@@ -1302,7 +1442,6 @@ function openSettings() {
   document.getElementById('freeIntervalMin').value = settings.freeIntervalMin;
   document.getElementById('customColors').style.display = settings.theme === 'custom' ? 'block' : 'none';
   renderWorkingHoursUI();
-  document.getElementById('workingHoursEndInput').value = settings.workingHoursEnd || '21:00';
   renderQuoteSettingsUI();
   updateCalendarConnectionUI();
   const profile = JSON.parse(localStorage.getItem('flowgrove_profile') || 'null');
@@ -1317,9 +1456,16 @@ function renderQuoteSettingsUI() {
     return '<div class="toggle-row"><span>' + cat + '</span><input type="checkbox" onchange="toggleQuoteCategory(\'' + cat + '\', this.checked)" ' + (on ? 'checked' : '') + '></div>';
   }).join('');
 
-  const listBox = document.getElementById('quoteListUI');
-  listBox.innerHTML = quotes.map(function(q, i) {
-    return '<div class="qa-label-item"><span style="flex:1;">' + q.text + ' <span class="badge">' + q.category + '</span></span><button type="button" class="remove" onclick="deleteQuote(' + i + ')" style="background:none;border:none;color:#a3372f;cursor:pointer;">Delete</button></div>';
+  const byCategory = document.getElementById('quoteListByCategory');
+  byCategory.innerHTML = QUOTE_CATEGORIES.map(function(cat) {
+    const items = quotes.map(function(q, i) { return { q: q, i: i }; }).filter(function(x) { return x.q.category === cat; });
+    const rows = items.map(function(x) {
+      return '<div class="qa-label-item"><span style="flex:1;">' + x.q.text + '</span><button type="button" class="remove" onclick="deleteQuote(' + x.i + ')" style="background:none;border:none;color:#a3372f;cursor:pointer;">Delete</button></div>';
+    }).join('');
+    return '<details style="margin-bottom:6px;">' +
+      '<summary style="cursor:pointer;font-size:12.5px;color:var(--tertiary);">' + cat + ' (' + items.length + ')</summary>' +
+      '<div style="margin-top:6px;max-height:180px;overflow-y:auto;">' + (rows || '<p style="font-size:12px;color:var(--ink-soft);">No quotes in this category.</p>') + '</div>' +
+      '</details>';
   }).join('');
 
   const catSelect = document.getElementById('newQuoteCategory');
@@ -1350,7 +1496,12 @@ function renderWorkingHoursUI() {
   const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
   const el = document.getElementById('workingHoursUI');
   el.innerHTML = days.map(function(d) {
-    return '<div class="day-hours-row"><span class="day-name">' + d + '</span><input type="time" id="wh_' + d + '_start" value="' + settings.workingHours[d].start + '"><label style="margin:0;"><input type="checkbox" id="wh_' + d + '_on" ' + (settings.workingHours[d].on ? 'checked' : '') + '> On</label></div>';
+    const dh = settings.workingHours[d];
+    return '<div class="day-hours-row"><span class="day-name">' + d + '</span>' +
+      '<input type="time" id="wh_' + d + '_start" value="' + dh.start + '" title="Start">' +
+      '<span style="font-size:11px;color:var(--ink-soft);">to</span>' +
+      '<input type="time" id="wh_' + d + '_end" value="' + (dh.end || '21:00') + '" title="End">' +
+      '<label style="margin:0;"><input type="checkbox" id="wh_' + d + '_on" ' + (dh.on ? 'checked' : '') + '> On</label></div>';
   }).join('');
 }
 
@@ -1398,8 +1549,8 @@ function saveSettings() {
   ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].forEach(function(d) {
     settings.workingHours[d].on = document.getElementById('wh_' + d + '_on').checked;
     settings.workingHours[d].start = document.getElementById('wh_' + d + '_start').value;
+    settings.workingHours[d].end = document.getElementById('wh_' + d + '_end').value;
   });
-  settings.workingHoursEnd = document.getElementById('workingHoursEndInput').value || '21:00';
 
   const nickname = document.getElementById('settingsNickname').value.trim();
   const profile = JSON.parse(localStorage.getItem('flowgrove_profile') || 'null');

@@ -25,7 +25,7 @@
   body { margin: 0; font-family: 'Lora', serif; background: var(--primary); color: var(--ink); line-height: 1.5; }
   .topbar { display: flex; align-items: center; justify-content: space-between; padding: 14px 24px; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 10px; }
   .brand { font-size: 19px; font-weight: 700; }
-  .live-clock { font-size: 11.5px; color: var(--ink-soft); margin-top: 1px; }
+  .live-clock { font-size: 15px; font-weight: 600; color: #1e5631; margin-top: 2px; }
   .week-grid { display: grid; gap: 6px; }
   .week-col { border: 1px solid var(--border); border-radius: 8px; padding: 8px 3px; text-align: center; align-self: start; }
   .week-col-head { white-space: nowrap; font-weight: 600; font-size: 12px; margin-bottom: 6px; }
@@ -56,6 +56,7 @@
   .progress-pill { font-size: 12px; color: var(--ink-soft); background: #f4f6f5; border-radius: 20px; padding: 4px 10px; }
   .grid { position: relative; border-top: 1px solid var(--border); }
   #nowLine { position: absolute; left: 56px; right: 0; height: 2px; background: #1e5631; z-index: 5; pointer-events: none; }
+  #nowLineLabel { position: absolute; left: 2px; width: 52px; text-align: right; font-size: 10px; font-weight: 700; color: #1e5631; z-index: 6; pointer-events: none; }
   .hour-row { position: relative; height: 60px; border-bottom: 1px solid var(--border); display: flex; }
   .hour-label { width: 56px; flex-shrink: 0; font-size: 11px; color: var(--ink-soft); padding-top: 3px; text-align: right; padding-right: 10px; }
   .hour-track { flex: 1; position: relative; }
@@ -74,7 +75,7 @@
   .month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
   .month-header-row { margin-bottom: 4px; }
   .month-header-row div { text-align: center; font-size: 11px; font-weight: 600; color: var(--ink-soft); }
-  .month-cell { border: 1px solid var(--border); border-radius: 8px; min-height: 60px; padding: 6px; font-size: 11.5px; color: var(--ink-soft); overflow: hidden; width: 100%; box-sizing: border-box; }
+  .month-cell { border: 1px solid var(--border); border-radius: 8px; min-height: 60px; padding: 6px; font-size: 11.5px; color: var(--ink-soft); width: 100%; box-sizing: border-box; align-self: start; }
   .month-event-label { background: var(--event-bg); border-radius: 4px; padding: 1px 4px; margin-top: 3px; font-size: 9.5px; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; width: 100%; box-sizing: border-box; }
   .month-cell.today { border-color: var(--tertiary); background: #f3f8f5; font-weight: 600; color: var(--ink); }
   .month-note { font-size: 12px; color: var(--ink-soft); margin-top: 12px; padding: 10px 12px; background: #f4f6f5; border-radius: 8px; }
@@ -202,6 +203,12 @@
       </div>
       <button type="button" class="icon-btn" style="margin-top:6px;width:100%;" onclick="addLabelFromSidebar()">Add Label</button>
     </div>
+
+    <div class="panel side-panel" id="eventsSidebarPanel">
+      <h3>Events</h3>
+      <p style="font-size:11px;color:var(--ink-soft);margin:0 0 6px;">Fixed events you've created (not from Google Calendar). Drag one on the schedule to move it.</p>
+      <div id="eventsSidebarList"></div>
+    </div>
   </div>
 
   <div>
@@ -231,38 +238,52 @@
         <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
       </div>
       <div class="month-grid" id="monthGrid"></div>
-      <div class="month-note">This is a simplified month view for now, it shows the calendar and highlights today, but full day-by-day task planning across the month is a later addition. Use Day view for actual scheduling.</div>
     </div>
   </div>
 
   <div class="sidebar">
     <div class="panel side-panel" data-tut="addTaskPanel">
-      <h3>Add a Task</h3>
+      <h3>Add a Task/Event</h3>
       <p style="font-size:11px;color:var(--ink-soft);margin:0 0 10px;">Click any field, or use the fast keyboard shortcuts shown (type a number, hit Space, or press Enter to jump to the next field).</p>
 
       <form id="taskForm" onsubmit="return submitTaskForm(event)">
+        <label>Type <span class="hint-inline">(click, or type 1/2)</span></label>
+        <div class="seg-group" id="typeSeg" tabindex="0" onkeydown="typeSegKey(event)">
+          <button type="button" class="seg-btn selected" data-val="task" onclick="setEntryType('task')">1 Task</button>
+          <button type="button" class="seg-btn" data-val="event" onclick="setEntryType('event')">2 Event</button>
+        </div>
+
         <label for="title">Title</label>
         <input type="text" id="title" placeholder="e.g. Finish reading chapter" onkeydown="titleKey(event)" oninput="liveCapitalizeFirst(this)">
 
-        <label>Priority <span class="hint-inline">(click, or type 1/2/3)</span></label>
-        <div class="seg-group" id="prioritySeg" tabindex="0" onkeydown="prioritySegKey(event)">
-          <button type="button" class="seg-btn" data-val="1" onclick="setPriority(1)">1 Low</button>
-          <button type="button" class="seg-btn" data-val="2" onclick="setPriority(2)">2 Medium</button>
-          <button type="button" class="seg-btn selected" data-val="3" onclick="setPriority(3)">3 Top</button>
+        <div id="taskOnlyFields">
+          <label>Priority <span class="hint-inline">(click, or type 1/2/3)</span></label>
+          <div class="seg-group" id="prioritySeg" tabindex="0" onkeydown="prioritySegKey(event)">
+            <button type="button" class="seg-btn" data-val="1" onclick="setPriority(1)">1 Low</button>
+            <button type="button" class="seg-btn" data-val="2" onclick="setPriority(2)">2 Medium</button>
+            <button type="button" class="seg-btn selected" data-val="3" onclick="setPriority(3)">3 Top</button>
+          </div>
+
+          <div class="row2">
+            <div><label for="time">Time (min) <span class="hint-inline">(↑↓ or type)</span></label>
+              <input type="number" id="time" value="15" min="1" onkeydown="timeKey(event)"></div>
+            <div><label for="motivation">Motivation (1-10)</label>
+              <input type="number" id="motivation" value="5" min="1" max="10" onkeydown="fieldEnterAdvance(event,'labelSearch')"></div>
+          </div>
         </div>
 
-        <div class="row2">
-          <div><label for="time">Time (min) <span class="hint-inline">(↑↓ or type)</span></label>
-            <input type="number" id="time" value="15" min="1" onkeydown="timeKey(event)"></div>
-          <div><label for="motivation">Motivation (1-10)</label>
-            <input type="number" id="motivation" value="5" min="1" max="10" onkeydown="fieldEnterAdvance(event,'labelSearch')"></div>
+        <div id="eventOnlyFields" style="display:none;">
+          <div class="row2">
+            <div><label for="eventStart">Start time</label><input type="time" id="eventStart"></div>
+            <div><label for="eventEnd">End time</label><input type="time" id="eventEnd"></div>
+          </div>
         </div>
 
         <label for="labelSearch">Label <span class="hint-inline">(type to search or create)</span></label>
         <input type="text" id="labelSearch" placeholder="Type a label name, or leave blank" autocomplete="off" oninput="renderInlineLabelResults(this.value)" onkeydown="labelSearchKey(event)">
         <div id="inlineLabelResults" style="display:none;margin-top:4px;"></div>
 
-        <div class="checkbox-row"><input type="checkbox" id="optional" onkeydown="checkboxKey(event,'repeatCheck')"><label for="optional">Optional task <span class="hint-inline">(Space toggles)</span></label></div>
+        <div id="optionalRow" class="checkbox-row"><input type="checkbox" id="optional" onkeydown="checkboxKey(event,'repeatCheck')"><label for="optional">Optional <span class="hint-inline">(Space toggles)</span></label></div>
         <div class="checkbox-row"><input type="checkbox" id="repeatCheck" onchange="toggleRepeatChecklist()" onkeydown="repeatCheckEnterKey(event)"><label for="repeatCheck">Repeat <span class="hint-inline">(Space toggles)</span></label></div>
 
         <div id="repeatChecklistInline" style="display:none;margin:8px 0;">
@@ -357,8 +378,7 @@
         <div><label>Short break length (min)</label><input type="number" id="shortBreakMin" value="5"></div>
       </div>
       <div class="row2">
-        <div><label>Medium break length (min)</label><input type="number" id="medBreakMin" value="15"></div>
-        <div><label>Free-time interval (min)</label><input type="number" id="freeIntervalMin" value="60"></div>
+        <div><label>Long break length (min)</label><input type="number" id="medBreakMin" value="15"></div>
       </div>
     </div>
 
@@ -406,6 +426,13 @@
 
 <script>
 let events = []; // populated by loadGoogleCalendarEvents() below; empty until connected
+
+// Local fixed events: created directly in the app (e.g. "Lunch", "Pick up Adelynn"),
+// never synced to or from Google Calendar. Unlike Google events, these CAN be
+// dragged to a new time by the user.
+let localEvents = JSON.parse(localStorage.getItem('flowgrove_local_events') || 'null') || [];
+let nextLocalEventId = Math.max(0, ...localEvents.map(function(e) { return e.id; })) + 1;
+function saveLocalEvents() { localStorage.setItem('flowgrove_local_events', JSON.stringify(localEvents)); }
 let calendarConnected = false;
 
 function isoToMinutesSinceMidnight(iso) {
@@ -462,12 +489,21 @@ let tasks = JSON.parse(localStorage.getItem('flowgrove_tasks') || 'null') || [
 ];
 let nextId = Math.max(0, ...tasks.map(t => t.id)) + 1;
 
+const SYSTEM_LABEL_DEFAULTS = [
+  { name: 'Short Break', color: '#d9c8f0' },
+  { name: 'Long Break', color: '#b7a5d9' },
+  { name: 'Google Calendar', color: '#c9cfcc' },
+  { name: 'Fixed Events', color: '#f0ddb8' }
+];
 let labels = JSON.parse(localStorage.getItem('flowgrove_labels') || 'null') || [];
+SYSTEM_LABEL_DEFAULTS.forEach(function(def) {
+  if (!labels.find(function(l) { return l.name === def.name; })) labels.push({ name: def.name, color: def.color });
+});
 let settings = JSON.parse(localStorage.getItem('flowgrove_settings') || 'null') || {
   theme: 'modern', primary: '#ffffff', secondary: '#ffffff', tertiary: '#6fa287',
   sound: true, sayings: true, timeFormat: '12', completionSound: 'chime',
   quoteCategories: { Wellness: true, Encouragement: true, Bible: true },
-  shortWorkMin: 25, shortBreakMin: 5, medBreakMin: 15, freeIntervalMin: 60,
+  shortWorkMin: 25, shortBreakMin: 5, medBreakMin: 15,
   workingHours: {
     Sun:{on:false,start:'09:00',end:'21:00'}, Mon:{on:true,start:'09:00',end:'21:00'},
     Tue:{on:true,start:'09:00',end:'21:00'}, Wed:{on:true,start:'09:00',end:'21:00'},
@@ -629,9 +665,9 @@ function buildMonthGrid(year, month) {
     cell.className = 'month-cell' + (isToday ? ' today' : '');
     const dayKey = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
     const dayEvents = monthEventsByDay[dayKey] || [];
-    const eventHtml = dayEvents.slice(0, 2).map(function(t) {
+    const eventHtml = dayEvents.map(function(t) {
       return '<div class="month-event-label" title="' + t.replace(/"/g, '&quot;') + '">' + t + '</div>';
-    }).join('') + (dayEvents.length > 2 ? '<div class="month-event-label">+' + (dayEvents.length - 2) + ' more</div>' : '');
+    }).join('');
     cell.innerHTML = '<div>' + d + '</div>' + eventHtml;
     grid.appendChild(cell);
   }
@@ -666,7 +702,8 @@ function renderWeekGrid(gridId, dayNames) {
     const rows = listItems.map(function(t) {
       const bg = t.label ? (labelColor(t.label) + '55') : '';
       const style = bg ? ' style="background:' + bg + ';"' : '';
-      return '<div class="week-task-row' + (t.completed ? ' done' : '') + '"' + style + '>' + t.title + '</div>';
+      const showDone = isToday && t.completed; // completion only applies to today's real instance
+      return '<div class="week-task-row' + (showDone ? ' done' : '') + '"' + style + '>' + t.title + '</div>';
     }).join('');
     const emptyMsg = isToday ? 'Nothing scheduled' : 'No repeating tasks';
     return '<div class="week-col' + (isToday ? ' today' : '') + '"><div class="week-col-head">' + d + '</div><div class="week-col-body">' + (rows || '<div class="week-task-row empty">' + emptyMsg + '</div>') + '</div></div>';
@@ -687,15 +724,26 @@ function updateLiveClock() {
 
 function positionNowLine() {
   const line = document.getElementById('nowLine');
+  const label = document.getElementById('nowLineLabel');
   const grid = document.getElementById('grid');
   if (!line || !grid) return;
   const bounds = getDayBounds();
   const gridStart = Math.floor(bounds.start / 60) * 60;
   const nowMin = nowMinutesSinceMidnight();
-  if (nowMin < gridStart) { line.style.display = 'none'; return; }
+  if (nowMin < gridStart) {
+    line.style.display = 'none';
+    if (label) label.style.display = 'none';
+    return;
+  }
   line.style.display = 'block';
   const rowHeight = 60;
-  line.style.top = ((nowMin - gridStart) / 60 * rowHeight) + 'px';
+  const topPx = (nowMin - gridStart) / 60 * rowHeight;
+  line.style.top = topPx + 'px';
+  if (label) {
+    label.style.display = 'block';
+    label.style.top = (topPx - 8) + 'px';
+    label.textContent = formatClockTime(nowMin);
+  }
 }
 
 setInterval(function() { updateLiveClock(); positionNowLine(); }, 1000);
@@ -703,6 +751,24 @@ setInterval(function() { updateLiveClock(); positionNowLine(); }, 1000);
 /* ---- Unified Add Task form: click OR keyboard shortcut, same fields, no mode switch ---- */
 
 let currentPriority = 3; // default Top
+let currentEntryType = 'task'; // default Task
+
+function setEntryType(type) {
+  currentEntryType = type;
+  document.querySelectorAll('#typeSeg .seg-btn').forEach(function(b) {
+    b.classList.toggle('selected', b.dataset.val === type);
+  });
+  document.getElementById('taskOnlyFields').style.display = (type === 'task') ? 'block' : 'none';
+  document.getElementById('eventOnlyFields').style.display = (type === 'event') ? 'block' : 'none';
+  document.getElementById('optionalRow').style.display = (type === 'task') ? 'flex' : 'none';
+  document.getElementById('taskSubmitBtn').textContent = (editingTaskId !== null) ? 'Save Changes' : (type === 'event' ? 'Add Event' : 'Add & Reschedule');
+}
+
+function typeSegKey(e) {
+  if (e.key === '1') { e.preventDefault(); setEntryType('task'); document.getElementById('title').focus(); }
+  else if (e.key === '2') { e.preventDefault(); setEntryType('event'); document.getElementById('title').focus(); }
+  else if (e.key === 'Enter') { e.preventDefault(); document.getElementById('title').focus(); }
+}
 
 function setPriority(val) {
   currentPriority = val;
@@ -1009,15 +1075,29 @@ function submitTaskForm(e) {
   const titleRaw = document.getElementById('title').value.trim();
   if (!titleRaw) return false;
   const title = autoCapitalizeTitle(titleRaw);
-  const time = parseInt(document.getElementById('time').value, 10) || 15;
-  const motivation = Math.min(10, Math.max(1, parseInt(document.getElementById('motivation').value, 10) || 5));
-  const optional = document.getElementById('optional').checked;
   const repeatSelections = getSelectedRepeatItems();
   const repeatPattern = repeatSelections.length ? repeatSelections.join(', ') : 'none';
-
   const labelName = document.getElementById('labelSearch').value.trim();
   let label = null;
   if (labelName) { label = findOrCreateLabel(labelName); }
+
+  if (currentEntryType === 'event') {
+    const startVal = document.getElementById('eventStart').value;
+    const endVal = document.getElementById('eventEnd').value;
+    if (!startVal || !endVal) { alert('Please set both a start and end time for the event.'); return false; }
+    const startMin = parseTimeToMinutes(startVal);
+    const endMin = parseTimeToMinutes(endVal);
+    const ev = { id: nextLocalEventId++, title: title, startMin: startMin, endMin: endMin, repeatPattern: repeatPattern, label: label ? label.name : null };
+    localEvents.push(ev);
+    saveLocalEvents();
+    resetTaskForm();
+    render();
+    return false;
+  }
+
+  const time = parseInt(document.getElementById('time').value, 10) || 15;
+  const motivation = Math.min(10, Math.max(1, parseInt(document.getElementById('motivation').value, 10) || 5));
+  const optional = document.getElementById('optional').checked;
 
   if (editingTaskId !== null) {
     const existing = tasks.find(function(t) { return t.id === editingTaskId; });
@@ -1048,7 +1128,10 @@ function resetTaskForm() {
   document.getElementById('repeatChecklistInline').style.display = 'none';
   document.getElementById('time').value = 15;
   document.getElementById('motivation').value = 5;
+  document.getElementById('eventStart').value = '';
+  document.getElementById('eventEnd').value = '';
   setPriority(3);
+  setEntryType('task');
   document.getElementById('taskSubmitBtn').textContent = 'Add & Reschedule';
   document.getElementById('cancelEditBtn').style.display = 'none';
 }
@@ -1057,6 +1140,7 @@ function startEditTask(id) {
   const t = tasks.find(function(x) { return x.id === id; });
   if (!t) return;
   editingTaskId = id;
+  setEntryType('task');
   document.getElementById('title').value = t.title;
   setPriority(t.priority);
   document.getElementById('time').value = t.time;
@@ -1139,13 +1223,17 @@ function personalizeQuote(text) {
   return text.replace(/,?\s*\{name\}/, '').replace(/\s+!/, '!');
 }
 
-function refreshMotivationQuote() {
+function refreshMotivationQuote(excludeBible) {
   const box = document.getElementById('motivationText');
   if (!settings.sayings) {
     box.textContent = "Motivational quotes are turned off in Settings.";
     return;
   }
-  const pool = quotes.filter(function(q) { return settings.quoteCategories[q.category] !== false; });
+  const pool = quotes.filter(function(q) {
+    if (settings.quoteCategories[q.category] === false) return false;
+    if (excludeBible && q.category === 'Bible') return false;
+    return true;
+  });
   if (pool.length === 0) { box.textContent = "No quote categories are turned on right now."; return; }
   const msg = pool[Math.floor(Math.random() * pool.length)].text;
   box.textContent = personalizeQuote(msg);
@@ -1153,8 +1241,9 @@ function refreshMotivationQuote() {
 
 function maybeShowSaying() {
   // Called after completing a task: refreshes the persistent quote widget
-  // instead of an interruptive popup.
-  refreshMotivationQuote();
+  // (instead of an interruptive popup), and specifically never shows a Bible
+  // verse here — those are reserved for the general/manual refresh only.
+  refreshMotivationQuote(true);
 }
 
 function playTone(ctx, freq, start, dur, type, peakVol) {
@@ -1261,8 +1350,12 @@ function computeSchedule() {
 
   // Build the busy-block list from BOTH real calendar events and
   // already-completed tasks, so new tasks only ever land in genuinely open time.
+  const todaysLocalEvents = localEvents.filter(function(ev) {
+    return !ev.repeatPattern || ev.repeatPattern === 'none' || taskRepeatsOnDay(ev, DAY_NAMES[new Date().getDay()]);
+  });
   const busyBlocks = events.map(function(ev) { return { startMin: ev.startMin, endMin: ev.endMin }; })
-    .concat(completedFixed.map(function(t) { return { startMin: t.fixedStartMin, endMin: t.fixedEndMin }; }));
+    .concat(completedFixed.map(function(t) { return { startMin: t.fixedStartMin, endMin: t.fixedEndMin }; }))
+    .concat(todaysLocalEvents.map(function(ev) { return { startMin: ev.startMin, endMin: ev.endMin }; }));
   busyBlocks.sort(function(a, b) { return a.startMin - b.startMin; });
 
   const bounds = getDayBounds();
@@ -1296,11 +1389,18 @@ function computeSchedule() {
     return false;
   }
 
+  // A task can be bumped by an automatic break only if ALL of these are true:
+  // it's optional, it's under 5 minutes, AND its motivation is 3 or higher.
+  // Low-motivation (<3) tasks and anything 5+ minutes are always protected.
+  function isBreakOverlappable(task) {
+    return task.optional && task.time < 5 && task.motivation >= 3;
+  }
+
   let breakIdCounter = 1;
   function placeBreak(len, kind) {
     for (let w of windows) {
       if (w.end - w.start >= len) {
-        placed.push({ id: 'break-' + (breakIdCounter++), type: 'break', breakType: kind, title: (kind === 'medium' ? 'Medium Break' : 'Short Break'), startMin: w.start, endMin: w.start + len });
+        placed.push({ id: 'break-' + (breakIdCounter++), type: 'break', breakType: kind, title: (kind === 'long' ? 'Long Break' : 'Short Break'), startMin: w.start, endMin: w.start + len });
         w.start += len;
         return true;
       }
@@ -1309,16 +1409,27 @@ function computeSchedule() {
   }
 
   // Real automatic break insertion: after enough accumulated work minutes,
-  // insert a short break; every 2nd short break becomes a medium break instead.
+  // insert a short break; every 2nd short break becomes a long break instead.
+  // If the next required task is flexible (per isBreakOverlappable), the
+  // break is inserted ahead of it even without extra free room, bumping that
+  // task slightly later — protected tasks never get bumped this way.
   let workSinceBreak = 0, shortBreakCount = 0;
   const workThreshold = settings.shortWorkMin || 25;
   required.forEach(function(task) {
+    if (workSinceBreak >= workThreshold && isBreakOverlappable(task)) {
+      const isLong = (shortBreakCount % 2 === 1);
+      const breakLen = isLong ? (settings.medBreakMin || 15) : (settings.shortBreakMin || 5);
+      if (placeBreak(breakLen, isLong ? 'long' : 'short')) {
+        workSinceBreak = 0;
+        shortBreakCount++;
+      }
+    }
     if (!place(task)) return;
     workSinceBreak += task.time;
     if (workSinceBreak >= workThreshold) {
-      const isMedium = (shortBreakCount % 2 === 1);
-      const breakLen = isMedium ? (settings.medBreakMin || 15) : (settings.shortBreakMin || 5);
-      if (placeBreak(breakLen, isMedium ? 'medium' : 'short')) {
+      const isLong = (shortBreakCount % 2 === 1);
+      const breakLen = isLong ? (settings.medBreakMin || 15) : (settings.shortBreakMin || 5);
+      if (placeBreak(breakLen, isLong ? 'long' : 'short')) {
         workSinceBreak = 0;
         shortBreakCount++;
       }
@@ -1333,7 +1444,26 @@ function render() {
   renderTaskList();
   renderTomorrow();
   refreshLabelUI();
+  renderEventsSidebar();
   updateProgress();
+}
+
+function renderEventsSidebar() {
+  const box = document.getElementById('eventsSidebarList');
+  if (!localEvents.length) {
+    box.innerHTML = '<p style="font-size:12px;color:var(--ink-soft);margin:0;">No fixed events yet. Create one by choosing "Event" above Title.</p>';
+    return;
+  }
+  box.innerHTML = localEvents.map(function(ev, i) {
+    return '<div class="qa-label-item"><span style="flex:1;">' + ev.title + ' <span class="badge">' + formatClockTime(ev.startMin) + '</span></span><button type="button" class="remove" onclick="deleteLocalEvent(' + i + ')" style="background:none;border:none;color:#a3372f;cursor:pointer;">Delete</button></div>';
+  }).join('');
+}
+
+function deleteLocalEvent(index) {
+  if (!localEvents[index]) return;
+  localEvents.splice(index, 1);
+  saveLocalEvents();
+  render();
 }
 
 function labelColor(name) {
@@ -1342,6 +1472,7 @@ function labelColor(name) {
 }
 
 let draggedTaskId = null;
+let draggedLocalEventId = null;
 
 function renderGrid() {
   const grid = document.getElementById('grid');
@@ -1375,10 +1506,23 @@ function renderGrid() {
   const nowLine = document.createElement('div');
   nowLine.id = 'nowLine';
   grid.appendChild(nowLine);
+  const nowLineLabel = document.createElement('div');
+  nowLineLabel.id = 'nowLineLabel';
+  grid.appendChild(nowLineLabel);
   positionNowLine();
   events.forEach(function(ev) {
     const el = document.createElement('div'); el.className = 'block event';
-    el.innerHTML = '<span class="title">' + ev.title + '</span><span class="meta">Fixed event, never moves</span>';
+    el.style.background = labelColor('Google Calendar');
+    el.innerHTML = '<span class="title">' + ev.title + '</span><span class="meta">Google Calendar, never moves</span>';
+    placeOnGrid(ev.startMin, ev.endMin, el);
+  });
+  localEvents.forEach(function(ev) {
+    if (ev.repeatPattern && ev.repeatPattern !== 'none' && !taskRepeatsOnDay(ev, DAY_NAMES[new Date().getDay()])) return;
+    const el = document.createElement('div'); el.className = 'block event local-event';
+    el.style.background = labelColor(ev.label || 'Fixed Events');
+    el.innerHTML = '<span class="title">' + ev.title + '</span><span class="meta">Fixed event (drag to move)</span>';
+    el.draggable = true;
+    el.ondragstart = function(e) { draggedLocalEventId = ev.id; e.dataTransfer.effectAllowed = 'move'; };
     placeOnGrid(ev.startMin, ev.endMin, el);
   });
   computeSchedule().forEach(function(t) {
@@ -1386,6 +1530,8 @@ function renderGrid() {
 
     if (t.type === 'break') {
       el.className = 'block break-block';
+      const breakLabelName = t.breakType === 'long' ? 'Long Break' : 'Short Break';
+      el.style.background = labelColor(breakLabelName);
       el.innerHTML = '<span class="title">' + t.title + '</span>';
       placeOnGrid(t.startMin, t.endMin, el);
       return;
@@ -1410,14 +1556,41 @@ function renderGrid() {
     el.innerHTML = '<label class="task-checkbox-wrap" onclick="event.stopPropagation()"><input type="checkbox" ' + (t.completed ? 'checked' : '') + ' onchange="toggleComplete(' + t.id + ')"></label><span class="title">' + t.title + (t.optional ? '<span class="badge">Optional</span>' : '') + '</span>' + (showMeta ? '<span class="meta">' + metaText + '</span>' : '');
     el.onclick = function() { startEditTask(t.id); };
     el.draggable = true;
-    el.ondragstart = function(e) { draggedTaskId = t.id; e.dataTransfer.effectAllowed = 'move'; };
+    el.ondragstart = function(e) { draggedTaskId = t.id; e.dataTransfer.effectAllowed = 'move'; e.stopPropagation(); };
+    el.ondragover = function(e) { e.preventDefault(); e.stopPropagation(); };
+    el.ondrop = function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      const dragged = tasks.find(function(x) { return x.id === draggedTaskId; });
+      if (dragged && dragged.tomorrow) { dragged.tomorrow = false; saveTasks(); render(); return; }
+      reorderTaskBefore(draggedTaskId, t.id);
+    };
     placeOnGrid(t.startMin, t.endMin, el);
   });
 
   // Dropping a task from Tomorrow back onto the schedule grid brings it back to today.
+  // Dropping a local event repositions it to wherever it was dropped.
   grid.ondragover = function(e) { e.preventDefault(); };
   grid.ondrop = function(e) {
     e.preventDefault();
+    if (draggedLocalEventId !== null) {
+      const ev = localEvents.find(function(x) { return x.id === draggedLocalEventId; });
+      if (ev) {
+        const gridRect = grid.getBoundingClientRect();
+        const dropY = e.clientY - gridRect.top;
+        const bounds2 = getDayBounds();
+        const gridStart2 = Math.floor(bounds2.start / 60) * 60;
+        const duration = ev.endMin - ev.startMin;
+        let newStart = gridStart2 + Math.round(dropY / 60 * 60); // 60px per hour row
+        newStart = Math.round(newStart / 5) * 5; // snap to 5-minute increments
+        ev.startMin = newStart;
+        ev.endMin = newStart + duration;
+        saveLocalEvents();
+      }
+      draggedLocalEventId = null;
+      render();
+      return;
+    }
     const dragged = tasks.find(function(x) { return x.id === draggedTaskId; });
     if (dragged && dragged.tomorrow) { dragged.tomorrow = false; saveTasks(); render(); }
   };
@@ -1524,7 +1697,6 @@ function openSettings() {
   document.getElementById('shortWorkMin').value = settings.shortWorkMin;
   document.getElementById('shortBreakMin').value = settings.shortBreakMin;
   document.getElementById('medBreakMin').value = settings.medBreakMin;
-  document.getElementById('freeIntervalMin').value = settings.freeIntervalMin;
   document.getElementById('customColors').style.display = settings.theme === 'custom' ? 'block' : 'none';
   renderWorkingHoursUI();
   renderQuoteSettingsUI();
@@ -1629,7 +1801,6 @@ function saveSettings() {
   settings.shortWorkMin = parseInt(document.getElementById('shortWorkMin').value, 10) || 25;
   settings.shortBreakMin = parseInt(document.getElementById('shortBreakMin').value, 10) || 5;
   settings.medBreakMin = parseInt(document.getElementById('medBreakMin').value, 10) || 15;
-  settings.freeIntervalMin = parseInt(document.getElementById('freeIntervalMin').value, 10) || 60;
 
   ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].forEach(function(d) {
     settings.workingHours[d].on = document.getElementById('wh_' + d + '_on').checked;

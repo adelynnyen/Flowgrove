@@ -46,7 +46,9 @@
   main { max-width: 1240px; margin: 0 auto; padding: 20px 24px 64px; display: grid; grid-template-columns: 1fr; gap: 22px; }
   @media (min-width: 900px) { main { grid-template-columns: 220px 1fr 320px; align-items: start; } }
   .leftbar { display: flex; flex-direction: column; gap: 16px; }
-  .motivation-panel { background: #f2f9f5; border-color: #d7ecdf; }
+  .motivation-panel { background: #f2f9f5; border-color: #d7ecdf; border-left: 4px solid var(--tertiary); box-shadow: 0 2px 10px rgba(111,162,135,0.15); }
+  .motivation-panel h3::before { content: "✦ "; }
+  #motivationText { font-size: 14.5px; line-height: 1.4; }
   .panel { border: 1px solid var(--border); border-radius: 10px; background: #fff; }
   .schedule-panel { padding: 18px 18px 24px; }
   .schedule-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
@@ -63,6 +65,8 @@
   .task-checkbox-wrap input { cursor: pointer; }
   .block .meta { display: block; font-size: 10.5px; opacity: 0.8; margin-top: 1px; text-align: center; }
   .block.event { background: repeating-linear-gradient(135deg, var(--event-bg), var(--event-bg) 6px, #dfe3e0 6px, #dfe3e0 12px); border: 1px dashed #9aa79f; }
+  .block.break-block { background: #f0ebf8; border: 1px dashed #b7a5d9; color: #5d4e78; }
+  .block.break-block .title { font-size: 11px; font-weight: 500; }
   .block.task { border-color: var(--border); cursor: pointer; }
   .block.task.optional { background: var(--optional-bg) !important; border-color: var(--optional-line); }
   .block.task.completed { opacity: 0.45; text-decoration: line-through; }
@@ -70,8 +74,8 @@
   .month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
   .month-header-row { margin-bottom: 4px; }
   .month-header-row div { text-align: center; font-size: 11px; font-weight: 600; color: var(--ink-soft); }
-  .month-cell { border: 1px solid var(--border); border-radius: 8px; min-height: 60px; padding: 6px; font-size: 11.5px; color: var(--ink-soft); }
-  .month-event-label { background: var(--event-bg); border-radius: 4px; padding: 1px 4px; margin-top: 3px; font-size: 9.5px; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .month-cell { border: 1px solid var(--border); border-radius: 8px; min-height: 60px; padding: 6px; font-size: 11.5px; color: var(--ink-soft); overflow: hidden; width: 100%; box-sizing: border-box; }
+  .month-event-label { background: var(--event-bg); border-radius: 4px; padding: 1px 4px; margin-top: 3px; font-size: 9.5px; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; width: 100%; box-sizing: border-box; }
   .month-cell.today { border-color: var(--tertiary); background: #f3f8f5; font-weight: 600; color: var(--ink); }
   .month-note { font-size: 12px; color: var(--ink-soft); margin-top: 12px; padding: 10px 12px; background: #f4f6f5; border-radius: 8px; }
   .sidebar { display: flex; flex-direction: column; gap: 16px; }
@@ -259,13 +263,13 @@
         <div id="inlineLabelResults" style="display:none;margin-top:4px;"></div>
 
         <div class="checkbox-row"><input type="checkbox" id="optional" onkeydown="checkboxKey(event,'repeatCheck')"><label for="optional">Optional task <span class="hint-inline">(Space toggles)</span></label></div>
-        <div class="checkbox-row"><input type="checkbox" id="repeatCheck" onchange="toggleRepeatChecklist()" onkeydown="checkboxKey(event,'assignTomorrow')"><label for="repeatCheck">Repeat <span class="hint-inline">(Space toggles)</span></label></div>
+        <div class="checkbox-row"><input type="checkbox" id="repeatCheck" onchange="toggleRepeatChecklist()" onkeydown="repeatCheckEnterKey(event)"><label for="repeatCheck">Repeat <span class="hint-inline">(Space toggles)</span></label></div>
 
         <div id="repeatChecklistInline" style="display:none;margin:8px 0;">
           <div class="checklist-grid" id="repeatChecklistGrid"></div>
         </div>
 
-        <div class="checkbox-row"><input type="checkbox" id="assignTomorrow" onkeydown="checkboxKey(event,'taskSubmitBtn')"><label for="assignTomorrow">Add to Tomorrow</label></div>
+        <p style="font-size:11px;color:var(--ink-soft);margin:4px 0 0;">To send this to Tomorrow instead, drag it onto the Tomorrow panel after adding it.</p>
 
         <button type="submit" class="primary" id="taskSubmitBtn">Add &amp; Reschedule</button>
         <button type="button" class="icon-btn" id="cancelEditBtn" style="display:none;width:100%;margin-top:6px;" onclick="cancelEditTask()">Cancel Edit</button>
@@ -491,25 +495,25 @@ const DEFAULT_QUOTES = [
   { text: "It's okay to slow down for a minute.", category: "Wellness" },
   { text: "Take a breath before your next task.", category: "Wellness" },
 
-  { text: "You've got this.", category: "Encouragement" },
+  { text: "You've got this, {name}!", category: "Encouragement" },
   { text: "Look at you, getting things done.", category: "Encouragement" },
   { text: "You're doing better than you think.", category: "Encouragement" },
   { text: "One step at a time.", category: "Encouragement" },
   { text: "Small steps still count.", category: "Encouragement" },
   { text: "You're basically unstoppable right now.", category: "Encouragement" },
-  { text: "Look at you, crushing it.", category: "Encouragement" },
+  { text: "Look at you, crushing it, {name}!", category: "Encouragement" },
   { text: "That's one for the win column.", category: "Encouragement" },
   { text: "Task? Defeated.", category: "Encouragement" },
   { text: "You just leveled up.", category: "Encouragement" },
   { text: "That was smooth.", category: "Encouragement" },
   { text: "Go you.", category: "Encouragement" },
-  { text: "Nice work, seriously.", category: "Encouragement" },
+  { text: "Nice work, {name}!", category: "Encouragement" },
   { text: "You showed up, that counts.", category: "Encouragement" },
   { text: "That's progress, plain and simple.", category: "Encouragement" },
   { text: "You're on a roll.", category: "Encouragement" },
   { text: "Consider that officially handled.", category: "Encouragement" },
   { text: "Every bit of effort adds up.", category: "Encouragement" },
-  { text: "Proud of you for tackling that.", category: "Encouragement" },
+  { text: "Proud of you for tackling that, {name}.", category: "Encouragement" },
   { text: "That took focus, and you had it.", category: "Encouragement" },
   { text: "You made that look easy.", category: "Encouragement" },
   { text: "Give yourself some credit for that one.", category: "Encouragement" },
@@ -660,7 +664,9 @@ function renderWeekGrid(gridId, dayNames) {
       listItems = tasks.filter(function(t) { return taskRepeatsOnDay(t, d); });
     }
     const rows = listItems.map(function(t) {
-      return '<div class="week-task-row' + (t.completed ? ' done' : '') + '">' + t.title + '</div>';
+      const bg = t.label ? (labelColor(t.label) + '55') : '';
+      const style = bg ? ' style="background:' + bg + ';"' : '';
+      return '<div class="week-task-row' + (t.completed ? ' done' : '') + '"' + style + '>' + t.title + '</div>';
     }).join('');
     const emptyMsg = isToday ? 'Nothing scheduled' : 'No repeating tasks';
     return '<div class="week-col' + (isToday ? ' today' : '') + '"><div class="week-col-head">' + d + '</div><div class="week-col-body">' + (rows || '<div class="week-task-row empty">' + emptyMsg + '</div>') + '</div></div>';
@@ -740,6 +746,16 @@ function timeKey(e) {
   }
 }
 
+function repeatCheckEnterKey(e) {
+  if (e.key !== 'Enter') return;
+  e.preventDefault();
+  if (document.getElementById('repeatCheck').checked) {
+    document.getElementById('rc_0').focus(); // first item: "Every weekday"
+  } else {
+    document.getElementById('taskSubmitBtn').focus();
+  }
+}
+
 function checkboxKey(e, nextId) {
   if (e.key === 'Enter') {
     e.preventDefault();
@@ -804,7 +820,7 @@ function renderInlineRepeatChecklist() {
     const i = REPEAT_CHECKLIST_ITEMS.indexOf(item);
     const id = 'rc_' + i;
     const nextI = i < REPEAT_CHECKLIST_ITEMS.length - 1 ? i + 1 : null;
-    const nextId = nextI !== null ? ('rc_' + nextI) : 'labelSearch';
+    const nextId = nextI !== null ? ('rc_' + nextI) : 'taskSubmitBtn';
     const onchangeAttr = (item === 'Every day' || item === 'Every weekday' || item === 'Weekends') ? ' onchange="applyRepeatBundle(this,\'' + item + '\')"' : '';
     return '<label class="checklist-item"><input type="checkbox" id="' + id + '" data-item="' + item + '" onkeydown="checkboxKey(event,\'' + nextId + '\')"' + onchangeAttr + '> ' + item + '</label>';
   }
@@ -996,7 +1012,6 @@ function submitTaskForm(e) {
   const time = parseInt(document.getElementById('time').value, 10) || 15;
   const motivation = Math.min(10, Math.max(1, parseInt(document.getElementById('motivation').value, 10) || 5));
   const optional = document.getElementById('optional').checked;
-  const tomorrow = document.getElementById('assignTomorrow').checked;
   const repeatSelections = getSelectedRepeatItems();
   const repeatPattern = repeatSelections.length ? repeatSelections.join(', ') : 'none';
 
@@ -1007,12 +1022,14 @@ function submitTaskForm(e) {
   if (editingTaskId !== null) {
     const existing = tasks.find(function(t) { return t.id === editingTaskId; });
     if (existing) {
+      // Tomorrow status is intentionally left untouched here — it's only
+      // ever changed by dragging a task to/from the Tomorrow panel.
       existing.title = title; existing.priority = currentPriority; existing.time = time;
-      existing.motivation = motivation; existing.optional = optional; existing.tomorrow = tomorrow;
+      existing.motivation = motivation; existing.optional = optional;
       existing.repeatPattern = repeatPattern; existing.label = label ? label.name : null;
     }
   } else {
-    const task = { id: nextId++, title: title, priority: currentPriority, time: time, motivation: motivation, optional: optional, completed: false, label: label ? label.name : null, tomorrow: tomorrow, repeatPattern: repeatPattern };
+    const task = { id: nextId++, title: title, priority: currentPriority, time: time, motivation: motivation, optional: optional, completed: false, label: label ? label.name : null, tomorrow: false, repeatPattern: repeatPattern };
     tasks.push(task);
   }
   saveTasks();
@@ -1027,7 +1044,6 @@ function resetTaskForm() {
   document.getElementById('labelSearch').value = '';
   document.getElementById('inlineLabelResults').style.display = 'none';
   document.getElementById('optional').checked = false;
-  document.getElementById('assignTomorrow').checked = false;
   document.getElementById('repeatCheck').checked = false;
   document.getElementById('repeatChecklistInline').style.display = 'none';
   document.getElementById('time').value = 15;
@@ -1047,7 +1063,6 @@ function startEditTask(id) {
   document.getElementById('motivation').value = t.motivation;
   document.getElementById('labelSearch').value = t.label || '';
   document.getElementById('optional').checked = t.optional;
-  document.getElementById('assignTomorrow').checked = t.tomorrow;
 
   const hasRepeat = t.repeatPattern && t.repeatPattern !== 'none';
   document.getElementById('repeatCheck').checked = hasRepeat;
@@ -1071,6 +1086,13 @@ function cancelEditTask() {
 }
 
 function removeTask(id) { tasks = tasks.filter(t => t.id !== id); saveTasks(); render(); }
+
+function formatClockTime(mins) {
+  let h = Math.floor(mins / 60), m = mins % 60;
+  const ampm = h < 12 ? 'AM' : 'PM';
+  h = h % 12; if (h === 0) h = 12;
+  return h + ':' + (m < 10 ? '0' : '') + m + ' ' + ampm;
+}
 
 function nowMinutesSinceMidnight() {
   const n = new Date();
@@ -1108,6 +1130,15 @@ const REPEAT_FREQUENCY_ITEMS = ['Every weekday', 'Every day', 'Every week', 'Eve
 const REPEAT_DAY_ITEMS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const REPEAT_CHECKLIST_ITEMS = REPEAT_FREQUENCY_ITEMS.concat(REPEAT_DAY_ITEMS); // kept for anything iterating the full flat list
 
+function personalizeQuote(text) {
+  if (text.indexOf('{name}') === -1) return text;
+  const profile = JSON.parse(localStorage.getItem('flowgrove_profile') || 'null');
+  const name = profile && profile.nickname ? profile.nickname : '';
+  if (name) return text.replace('{name}', name);
+  // No nickname set: drop the placeholder gracefully instead of showing a blank gap.
+  return text.replace(/,?\s*\{name\}/, '').replace(/\s+!/, '!');
+}
+
 function refreshMotivationQuote() {
   const box = document.getElementById('motivationText');
   if (!settings.sayings) {
@@ -1117,7 +1148,7 @@ function refreshMotivationQuote() {
   const pool = quotes.filter(function(q) { return settings.quoteCategories[q.category] !== false; });
   if (pool.length === 0) { box.textContent = "No quote categories are turned on right now."; return; }
   const msg = pool[Math.floor(Math.random() * pool.length)].text;
-  box.textContent = msg;
+  box.textContent = personalizeQuote(msg);
 }
 
 function maybeShowSaying() {
@@ -1243,6 +1274,14 @@ function computeSchedule() {
   });
   if (cursor < bounds.end) windows.push({ start: cursor, end: bounds.end });
 
+  // Nothing new (tasks or breaks) gets placed before the current moment —
+  // once time has passed, that gap is gone, so new/incomplete work always
+  // starts from "now" forward, not backfilled into an earlier empty gap.
+  const nowMin = nowMinutesSinceMidnight();
+  windows = windows
+    .map(function(w) { return { start: Math.max(w.start, nowMin), end: w.end }; })
+    .filter(function(w) { return w.end > w.start; });
+
   const placed = completedFixed.map(function(t) {
     return Object.assign({}, t, { startMin: t.fixedStartMin, endMin: t.fixedEndMin });
   });
@@ -1256,7 +1295,35 @@ function computeSchedule() {
     }
     return false;
   }
-  required.forEach(place);
+
+  let breakIdCounter = 1;
+  function placeBreak(len, kind) {
+    for (let w of windows) {
+      if (w.end - w.start >= len) {
+        placed.push({ id: 'break-' + (breakIdCounter++), type: 'break', breakType: kind, title: (kind === 'medium' ? 'Medium Break' : 'Short Break'), startMin: w.start, endMin: w.start + len });
+        w.start += len;
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // Real automatic break insertion: after enough accumulated work minutes,
+  // insert a short break; every 2nd short break becomes a medium break instead.
+  let workSinceBreak = 0, shortBreakCount = 0;
+  const workThreshold = settings.shortWorkMin || 25;
+  required.forEach(function(task) {
+    if (!place(task)) return;
+    workSinceBreak += task.time;
+    if (workSinceBreak >= workThreshold) {
+      const isMedium = (shortBreakCount % 2 === 1);
+      const breakLen = isMedium ? (settings.medBreakMin || 15) : (settings.shortBreakMin || 5);
+      if (placeBreak(breakLen, isMedium ? 'medium' : 'short')) {
+        workSinceBreak = 0;
+        shortBreakCount++;
+      }
+    }
+  });
   optional.forEach(place);
   return placed;
 }
@@ -1316,13 +1383,31 @@ function renderGrid() {
   });
   computeSchedule().forEach(function(t) {
     const el = document.createElement('div');
+
+    if (t.type === 'break') {
+      el.className = 'block break-block';
+      el.innerHTML = '<span class="title">' + t.title + '</span>';
+      placeOnGrid(t.startMin, t.endMin, el);
+      return;
+    }
+
     let filterClass = '';
     if (activeLabelFilter) filterClass = (t.label === activeLabelFilter) ? ' label-match' : ' label-dimmed';
     el.className = 'block task' + (t.optional ? ' optional' : '') + (t.completed ? ' completed' : '') + filterClass;
     if (t.label) el.style.background = labelColor(t.label) + '33';
     else el.style.background = settings.secondary === '#ffffff' ? '#f4f6f5' : settings.secondary;
+
+    const duration = t.endMin - t.startMin;
     const pLabel = t.priority === 3 ? 'Top' : t.priority === 2 ? 'Medium' : 'Low';
-    el.innerHTML = '<label class="task-checkbox-wrap" onclick="event.stopPropagation()"><input type="checkbox" ' + (t.completed ? 'checked' : '') + ' onchange="toggleComplete(' + t.id + ')"></label><span class="title">' + t.title + (t.optional ? '<span class="badge">Optional</span>' : '') + '</span><span class="meta">' + pLabel + ' - ' + t.time + 'm - Motivation ' + t.motivation + (t.label ? ' - ' + t.label : '') + '</span>';
+    let metaText;
+    if (t.completed) {
+      metaText = 'Done: ' + formatClockTime(t.startMin) + ' - ' + formatClockTime(t.endMin);
+    } else {
+      metaText = pLabel + ' - ' + t.time + 'm - Motivation ' + t.motivation + (t.label ? ' - ' + t.label : '');
+    }
+    // Short blocks only show the title — there isn't room for a second line without cutting something off.
+    const showMeta = duration >= 30;
+    el.innerHTML = '<label class="task-checkbox-wrap" onclick="event.stopPropagation()"><input type="checkbox" ' + (t.completed ? 'checked' : '') + ' onchange="toggleComplete(' + t.id + ')"></label><span class="title">' + t.title + (t.optional ? '<span class="badge">Optional</span>' : '') + '</span>' + (showMeta ? '<span class="meta">' + metaText + '</span>' : '');
     el.onclick = function() { startEditTask(t.id); };
     el.draggable = true;
     el.ondragstart = function(e) { draggedTaskId = t.id; e.dataTransfer.effectAllowed = 'move'; };
@@ -1587,7 +1672,7 @@ const TUTORIAL_STEPS = [
   { target: '[data-tut="scheduleGrid"]', title: "How your day gets ordered", text: "Priority comes first, then time estimate, then motivation as the tiebreaker. Low-motivation tasks get placed earlier in the day, while your energy's higher." },
   { target: '[data-tut="scheduleGrid"]', title: "Marking things done", text: "Just click a task block to complete it, and watch the rest of your day adjust automatically if something ran long or short." },
   { target: '[data-tut="breakBtn"]', title: "Need a breather?", text: "Tap this anytime for an instant break. It'll keep time for you, tap again whenever you're ready to jump back in." },
-  { target: '[data-tut="tomorrowPanel"]', title: "Tomorrow's got your back", text: "Anything that doesn't fit today lands here instead of vanishing, or you can send a task straight to Tomorrow yourself." },
+  { target: '[data-tut="tomorrowPanel"]', title: "Tomorrow's got your back", text: "Anything that doesn't fit today lands here instead of vanishing. You can also drag any task straight onto this panel to send it to Tomorrow yourself, or drag one back out to bring it into today." },
   { target: '[data-tut="addTaskPanel"]', title: "Make it yours with Labels", text: "Give a label its own name and color to keep things visually organized, don't worry, labels never change your schedule order." },
   { target: null, title: "That's it, you're ready!", text: "Go ahead and start adding your day. You can always pull this tour back up with the Help button whenever you want a refresher." }
 ];

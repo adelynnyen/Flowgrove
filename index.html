@@ -87,8 +87,8 @@
   .tab-row button.active { background: var(--tertiary); color: #fff; border-color: var(--tertiary); }
   label { display: block; font-size: 11.5px; color: var(--ink-soft); margin: 8px 0 3px; }
   label:first-of-type { margin-top: 0; }
-  input[type="text"], input[type="number"], select { width: 100%; padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; font-family: 'Lora', serif; font-size: 13px; background: #fff; color: var(--ink); }
-  input:focus, select:focus { outline: 2px solid #cfe3d8; border-color: var(--tertiary); }
+  input[type="text"], input[type="number"], input[type="time"], select { width: 100%; padding: 7px 9px; border: 1.5px solid var(--border); border-radius: 8px; font-family: 'Lora', serif; font-size: 13px; background: #fff; color: var(--ink); transition: border-color 0.15s ease, box-shadow 0.15s ease; }
+  input:focus, select:focus { outline: none; border-color: var(--tertiary); box-shadow: 0 0 0 3px rgba(111,162,135,0.25); border-radius: 8px; }
   .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
   .checkbox-row { display: flex; align-items: center; gap: 6px; margin: 8px 0 0; }
   .checkbox-row input { width: auto; }
@@ -178,7 +178,7 @@
   </div>
   <div class="topbar-actions">
     <button class="icon-btn" onclick="openSettings()" data-tut="settingsBtn">Settings</button>
-    <button class="icon-btn" onclick="startTutorial()" data-tut="helpBtn">? Help</button>
+    <button class="icon-btn" onclick="startTutorial()" data-tut="helpBtn">Tutorial</button>
     <button id="breakBtn" onclick="toggleBreak()" data-tut="breakBtn">Click me to have an auto break</button>
   </div>
 </div>
@@ -223,13 +223,11 @@
     <div class="panel schedule-panel" id="weekdaysView" style="display:none;">
       <div class="schedule-header"><h2>This Week's Weekdays</h2></div>
       <div class="week-grid" id="weekdaysGrid"></div>
-      <div class="month-note">This is a simplified weekdays view for now, it shows Monday through Friday side by side, but each day's own separate task list isn't wired up yet, everything you add currently lives in "today." Use Day view for actual scheduling.</div>
     </div>
 
     <div class="panel schedule-panel" id="weekView" style="display:none;">
       <div class="schedule-header"><h2>This Week</h2></div>
       <div class="week-grid" id="weekGrid"></div>
-      <div class="month-note">This is a simplified week view for now, showing Sunday through Saturday, with the same limitation as Weekdays view: full day-by-day scheduling is a later addition. Use Day view for actual scheduling.</div>
     </div>
 
     <div class="panel schedule-panel" id="monthView" style="display:none;">
@@ -246,7 +244,7 @@
       <h3>Add a Task/Event</h3>
       <p style="font-size:11px;color:var(--ink-soft);margin:0 0 10px;">Click any field, or use the fast keyboard shortcuts shown (type a number, hit Space, or press Enter to jump to the next field).</p>
 
-      <form id="taskForm" onsubmit="return submitTaskForm(event)">
+      <form id="taskForm" onsubmit="return submitTaskForm(event)" onkeydown="formBackKey(event)">
         <label>Type <span class="hint-inline">(click, or type 1/2)</span></label>
         <div class="seg-group" id="typeSeg" tabindex="0" onkeydown="typeSegKey(event)">
           <button type="button" class="seg-btn selected" data-val="task" onclick="setEntryType('task')">1 Task</button>
@@ -290,7 +288,6 @@
           <div class="checklist-grid" id="repeatChecklistGrid"></div>
         </div>
 
-        <p style="font-size:11px;color:var(--ink-soft);margin:4px 0 0;">To send this to Tomorrow instead, drag it onto the Tomorrow panel after adding it.</p>
 
         <button type="submit" class="primary" id="taskSubmitBtn">Add &amp; Reschedule</button>
         <button type="button" class="icon-btn" id="cancelEditBtn" style="display:none;width:100%;margin-top:6px;" onclick="cancelEditTask()">Cancel Edit</button>
@@ -492,13 +489,16 @@ let nextId = Math.max(0, ...tasks.map(t => t.id)) + 1;
 const SYSTEM_LABEL_DEFAULTS = [
   { name: 'Short Break', color: '#d9c8f0' },
   { name: 'Long Break', color: '#b7a5d9' },
-  { name: 'Google Calendar', color: '#c9cfcc' },
+  { name: 'Google Calendar', color: '#347CFE' },
   { name: 'Fixed Events', color: '#f0ddb8' }
 ];
 let labels = JSON.parse(localStorage.getItem('flowgrove_labels') || 'null') || [];
-SYSTEM_LABEL_DEFAULTS.forEach(function(def) {
-  if (!labels.find(function(l) { return l.name === def.name; })) labels.push({ name: def.name, color: def.color });
-});
+// Defaults go at the front (only the first time they're created); after that,
+// the user can freely drag any label, including defaults, into any order they like.
+for (let i = SYSTEM_LABEL_DEFAULTS.length - 1; i >= 0; i--) {
+  const def = SYSTEM_LABEL_DEFAULTS[i];
+  if (!labels.find(function(l) { return l.name === def.name; })) labels.unshift({ name: def.name, color: def.color });
+}
 let settings = JSON.parse(localStorage.getItem('flowgrove_settings') || 'null') || {
   theme: 'modern', primary: '#ffffff', secondary: '#ffffff', tertiary: '#6fa287',
   sound: true, sayings: true, timeFormat: '12', completionSound: 'chime',
@@ -762,6 +762,19 @@ function setEntryType(type) {
   document.getElementById('eventOnlyFields').style.display = (type === 'event') ? 'block' : 'none';
   document.getElementById('optionalRow').style.display = (type === 'task') ? 'flex' : 'none';
   document.getElementById('taskSubmitBtn').textContent = (editingTaskId !== null) ? 'Save Changes' : (type === 'event' ? 'Add Event' : 'Add & Reschedule');
+  document.getElementById('title').focus();
+}
+
+function formBackKey(e) {
+  if (e.key !== 'Enter' || !e.shiftKey) return;
+  e.preventDefault();
+  const form = document.getElementById('taskForm');
+  const focusable = Array.from(form.querySelectorAll('input, [tabindex]'))
+    .filter(function(el) {
+      return el.offsetParent !== null && !el.classList.contains('seg-btn') && el.id !== 'cancelEditBtn';
+    });
+  const idx = focusable.indexOf(document.activeElement);
+  if (idx > 0) focusable[idx - 1].focus();
 }
 
 function typeSegKey(e) {
@@ -772,9 +785,11 @@ function typeSegKey(e) {
 
 function setPriority(val) {
   currentPriority = val;
-  document.querySelectorAll('.seg-btn').forEach(function(b) {
+  document.querySelectorAll('#prioritySeg .seg-btn').forEach(function(b) {
     b.classList.toggle('selected', parseInt(b.dataset.val, 10) === val);
   });
+  document.getElementById('time').focus();
+  document.getElementById('time').select();
 }
 
 function prioritySegKey(e) {
@@ -897,7 +912,7 @@ function renderInlineRepeatChecklist() {
 }
 
 function applyRepeatBundle(checkbox, bundleName) {
-  if (!checkbox.checked) return; // unchecking the bundle doesn't un-check any days, in case they were customized
+  // Fully two-way: checking the bundle checks its days, unchecking it unchecks them.
   const bundleDays = {
     'Every day': ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'],
     'Every weekday': ['Monday','Tuesday','Wednesday','Thursday','Friday'],
@@ -906,7 +921,7 @@ function applyRepeatBundle(checkbox, bundleName) {
   bundleDays.forEach(function(dayName) {
     const i = REPEAT_CHECKLIST_ITEMS.indexOf(dayName);
     const box = document.getElementById('rc_' + i);
-    if (box) box.checked = true;
+    if (box) box.checked = checkbox.checked;
   });
 }
 
@@ -954,7 +969,7 @@ function renderLabelsSidebar() {
   }
   box.innerHTML = labels.map(function(l, i) {
     const active = activeLabelFilter === l.name;
-    return '<span class="label-chip" style="' + (active ? 'outline:2px solid ' + l.color + ';' : '') + '">' +
+    return '<span class="label-chip" draggable="true" data-label-index="' + i + '" style="cursor:grab;' + (active ? 'outline:2px solid ' + l.color + ';' : '') + '">' +
       '<input type="color" value="' + l.color + '" onchange="editLabelColor(' + i + ',this.value)" style="width:14px;height:14px;padding:0;border:none;vertical-align:middle;">' +
       '<span style="cursor:pointer;" onclick="toggleLabelFilter(\'' + l.name.replace(/'/g, "\\'") + '\')">' + l.name + '</span>' +
       '<input type="text" value="' + l.name + '" onchange="editLabelName(' + i + ',this.value)" style="display:none;width:70px;">' +
@@ -962,6 +977,25 @@ function renderLabelsSidebar() {
       '<span style="cursor:pointer;margin-left:3px;color:#a3372f;" onclick="deleteLabel(' + i + ')" title="Delete label">×</span>' +
     '</span>';
   }).join('');
+  wireLabelDrag(box, '.label-chip');
+}
+
+let draggedLabelIndex = null;
+function wireLabelDrag(container, selector) {
+  container.querySelectorAll(selector).forEach(function(el) {
+    el.ondragstart = function(e) { draggedLabelIndex = parseInt(el.dataset.labelIndex, 10); e.dataTransfer.effectAllowed = 'move'; };
+    el.ondragover = function(e) { e.preventDefault(); };
+    el.ondrop = function(e) {
+      e.preventDefault();
+      const targetIndex = parseInt(el.dataset.labelIndex, 10);
+      if (draggedLabelIndex === null || draggedLabelIndex === targetIndex) return;
+      const moved = labels.splice(draggedLabelIndex, 1)[0];
+      labels.splice(targetIndex, 0, moved);
+      saveLabels();
+      refreshLabelUI();
+      render();
+    };
+  });
 }
 
 function addLabelFromSidebar() {
@@ -988,7 +1022,7 @@ function refreshLabelUI() {
     return;
   }
   list.innerHTML = labels.map(function(l, i) {
-    return '<div class="sound-option">' +
+    return '<div class="sound-option" draggable="true" data-label-index="' + i + '" style="cursor:grab;">' +
       '<span style="display:flex;align-items:center;gap:6px;">' +
         '<input type="color" value="' + l.color + '" onchange="editLabelColor(' + i + ',this.value)" style="width:24px;height:24px;padding:0;border:none;">' +
         '<input type="text" value="' + l.name + '" onchange="editLabelName(' + i + ',this.value)" style="width:120px;">' +
@@ -996,6 +1030,7 @@ function refreshLabelUI() {
       '<button type="button" class="remove" onclick="deleteLabel(' + i + ')" style="background:none;border:none;color:#a3372f;cursor:pointer;">Delete</button>' +
     '</div>';
   }).join('');
+  wireLabelDrag(list, '.sound-option');
 }
 
 function addLabelFromSettings() {
@@ -1513,7 +1548,7 @@ function renderGrid() {
   events.forEach(function(ev) {
     const el = document.createElement('div'); el.className = 'block event';
     el.style.background = labelColor('Google Calendar');
-    el.innerHTML = '<span class="title">' + ev.title + '</span><span class="meta">Google Calendar, never moves</span>';
+    el.innerHTML = '<span class="title">' + ev.title + '</span><span class="meta">Google Calendar</span>';
     placeOnGrid(ev.startMin, ev.endMin, el);
   });
   localEvents.forEach(function(ev) {
@@ -1844,6 +1879,7 @@ const TUTORIAL_STEPS = [
   { target: '[data-tut="scheduleGrid"]', title: "Marking things done", text: "Just click a task block to complete it, and watch the rest of your day adjust automatically if something ran long or short." },
   { target: '[data-tut="breakBtn"]', title: "Need a breather?", text: "Tap this anytime for an instant break. It'll keep time for you, tap again whenever you're ready to jump back in." },
   { target: '[data-tut="tomorrowPanel"]', title: "Tomorrow's got your back", text: "Anything that doesn't fit today lands here instead of vanishing. You can also drag any task straight onto this panel to send it to Tomorrow yourself, or drag one back out to bring it into today." },
+  { target: '#typeSeg', title: "Tasks vs. Events", text: "Switch to Event for fixed things like Lunch or Pick up, these aren't synced from Google Calendar, they're yours. Unlike Google Calendar events, you can drag a fixed event to a new time whenever you need to." },
   { target: '[data-tut="addTaskPanel"]', title: "Make it yours with Labels", text: "Give a label its own name and color to keep things visually organized, don't worry, labels never change your schedule order." },
   { target: null, title: "That's it, you're ready!", text: "Go ahead and start adding your day. You can always pull this tour back up with the Help button whenever you want a refresher." }
 ];

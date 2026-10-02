@@ -46,7 +46,7 @@
   main { max-width: 1240px; margin: 0 auto; padding: 20px 24px 64px; display: grid; grid-template-columns: 1fr; gap: 22px; }
   @media (min-width: 900px) { main { grid-template-columns: 220px 1fr 320px; align-items: start; } }
   .leftbar { display: flex; flex-direction: column; gap: 16px; }
-  .motivation-panel { background: #f2f9f5; border-color: #d7ecdf; border-left: 4px solid var(--tertiary); box-shadow: 0 2px 10px rgba(111,162,135,0.15); }
+  .motivation-panel { background: #dff0e5; border-color: #bfe0cc; border-left: 4px solid var(--tertiary); box-shadow: 0 2px 10px rgba(111,162,135,0.2); }
   .motivation-panel h3::before { content: "✦ "; }
   #motivationText { font-size: 14.5px; line-height: 1.4; }
   .panel { border: 1px solid var(--border); border-radius: 10px; background: #fff; }
@@ -57,6 +57,8 @@
   .grid { position: relative; border-top: 1px solid var(--border); }
   #nowLine { position: absolute; left: 56px; right: 0; height: 2px; background: #1e5631; z-index: 5; pointer-events: none; }
   #nowLineLabel { position: absolute; left: 2px; width: 52px; text-align: right; font-size: 10px; font-weight: 700; color: #1e5631; z-index: 6; pointer-events: none; }
+  #completionPopup { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(0.9); background: #1e5631; color: #fff; padding: 20px 32px; border-radius: 14px; font-size: 18px; font-weight: 600; text-align: center; max-width: 80vw; box-shadow: 0 12px 40px rgba(0,0,0,0.25); z-index: 700; opacity: 0; pointer-events: none; transition: opacity 0.25s ease, transform 0.25s ease; }
+  #completionPopup.show { opacity: 1; transform: translate(-50%,-50%) scale(1); }
   .hour-row { position: relative; height: 60px; border-bottom: 1px solid var(--border); display: flex; }
   .hour-label { width: 56px; flex-shrink: 0; font-size: 11px; color: var(--ink-soft); padding-top: 3px; text-align: right; padding-right: 10px; }
   .hour-track { flex: 1; position: relative; }
@@ -407,6 +409,31 @@
   </div>
 </div>
 
+<div id="completionPopup"></div>
+
+<div class="modal-overlay" id="breakLengthOverlay">
+  <div class="modal" style="max-width:320px;">
+    <h2>Break Length</h2>
+    <label>Length (min) <span class="hint-inline">(↑↓ or type)</span></label>
+    <input type="number" id="breakLengthInput" min="1" onkeydown="breakLengthKey(event)">
+    <button type="button" class="primary" onclick="saveBreakLength()">Save</button>
+    <button type="button" class="icon-btn" style="width:100%;margin-top:6px;" onclick="document.getElementById('breakLengthOverlay').classList.remove('show');">Cancel</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="deleteChoiceOverlay">
+  <div class="modal" style="max-width:360px;">
+    <h2>Delete repeating task</h2>
+    <p style="font-size:13px;color:var(--ink-soft);margin:0 0 14px;">This task repeats. What would you like to delete?</p>
+    <button type="button" class="icon-btn" style="width:100%;margin-bottom:6px;" onclick="deleteChoice(1)">1. This task only</button>
+    <button type="button" class="icon-btn" style="width:100%;margin-bottom:6px;" onclick="deleteChoice(2)">2. This and following</button>
+    <button type="button" class="icon-btn" style="width:100%;margin-bottom:6px;" onclick="deleteChoice(3)">3. All tasks</button>
+    <button type="button" class="icon-btn" style="width:100%;" onclick="document.getElementById('deleteChoiceOverlay').classList.remove('show');pendingDeleteId=null;">Cancel</button>
+  </div>
+</div>
+
+<div id="durationTooltip" style="display:none;position:absolute;background:#1c2b22;color:#fff;padding:6px 10px;border-radius:6px;font-size:12px;z-index:600;pointer-events:none;"></div>
+
 <div id="tutorialOverlay">
   <div id="tutorialDim"></div>
   <div id="tutorialSpot"></div>
@@ -487,8 +514,7 @@ let tasks = JSON.parse(localStorage.getItem('flowgrove_tasks') || 'null') || [
 let nextId = Math.max(0, ...tasks.map(t => t.id)) + 1;
 
 const SYSTEM_LABEL_DEFAULTS = [
-  { name: 'Short Break', color: '#d9c8f0' },
-  { name: 'Long Break', color: '#b7a5d9' },
+  { name: 'Break', color: '#d9c8f0' },
   { name: 'Google Calendar', color: '#347CFE' },
   { name: 'Fixed Events', color: '#f0ddb8' }
 ];
@@ -684,6 +710,15 @@ function taskRepeatsOnDay(task, dayAbbrev) {
   return parts.indexOf(DAY_FULL_NAMES[dayAbbrev]) !== -1;
 }
 
+function getDateForDayInCurrentWeek(dayAbbrev) {
+  const targetIdx = DAY_NAMES.indexOf(dayAbbrev);
+  const today = new Date();
+  const diff = targetIdx - today.getDay();
+  const d = new Date(today);
+  d.setDate(d.getDate() + diff);
+  return d.toISOString().slice(0, 10);
+}
+
 function renderWeekGrid(gridId, dayNames) {
   const grid = document.getElementById(gridId);
   grid.style.gridTemplateColumns = 'repeat(' + dayNames.length + ', 1fr)';
@@ -695,9 +730,13 @@ function renderWeekGrid(gridId, dayNames) {
     if (isToday) {
       listItems = todaysTasks;
     } else {
-      // Not today: only recurring tasks whose pattern matches this day of week show up,
-      // since one-time future tasks aren't stored against a specific date yet.
-      listItems = tasks.filter(function(t) { return taskRepeatsOnDay(t, d); });
+      // Not today: only recurring tasks whose pattern matches this day of week
+      // AND existed by that day's actual date (not shown on days before the
+      // task was created, even if the pattern would otherwise match).
+      const colDate = getDateForDayInCurrentWeek(d);
+      listItems = tasks.filter(function(t) {
+        return taskRepeatsOnDay(t, d) && (!t.createdDate || t.createdDate <= colDate) && !(t.skipDates && t.skipDates.indexOf(colDate) !== -1);
+      });
     }
     const rows = listItems.map(function(t) {
       const bg = t.label ? (labelColor(t.label) + '55') : '';
@@ -760,13 +799,13 @@ function setEntryType(type) {
   });
   document.getElementById('taskOnlyFields').style.display = (type === 'task') ? 'block' : 'none';
   document.getElementById('eventOnlyFields').style.display = (type === 'event') ? 'block' : 'none';
-  document.getElementById('optionalRow').style.display = (type === 'task') ? 'flex' : 'none';
+  document.getElementById('optionalRow').style.display = 'flex';
   document.getElementById('taskSubmitBtn').textContent = (editingTaskId !== null) ? 'Save Changes' : (type === 'event' ? 'Add Event' : 'Add & Reschedule');
   document.getElementById('title').focus();
 }
 
 function formBackKey(e) {
-  if (e.key !== 'Enter' || !e.shiftKey) return;
+  if (e.key !== 'Tab') return;
   e.preventDefault();
   const form = document.getElementById('taskForm');
   const focusable = Array.from(form.querySelectorAll('input, [tabindex]'))
@@ -1122,7 +1161,8 @@ function submitTaskForm(e) {
     if (!startVal || !endVal) { alert('Please set both a start and end time for the event.'); return false; }
     const startMin = parseTimeToMinutes(startVal);
     const endMin = parseTimeToMinutes(endVal);
-    const ev = { id: nextLocalEventId++, title: title, startMin: startMin, endMin: endMin, repeatPattern: repeatPattern, label: label ? label.name : null };
+    const optionalEv = document.getElementById('optional').checked;
+    const ev = { id: nextLocalEventId++, title: title, startMin: startMin, endMin: endMin, repeatPattern: repeatPattern, label: label ? label.name : null, optional: optionalEv };
     localEvents.push(ev);
     saveLocalEvents();
     resetTaskForm();
@@ -1144,7 +1184,7 @@ function submitTaskForm(e) {
       existing.repeatPattern = repeatPattern; existing.label = label ? label.name : null;
     }
   } else {
-    const task = { id: nextId++, title: title, priority: currentPriority, time: time, motivation: motivation, optional: optional, completed: false, label: label ? label.name : null, tomorrow: false, repeatPattern: repeatPattern };
+    const task = { id: nextId++, title: title, priority: currentPriority, time: time, motivation: motivation, optional: optional, completed: false, label: label ? label.name : null, tomorrow: false, repeatPattern: repeatPattern, createdDate: new Date().toISOString().slice(0, 10) };
     tasks.push(task);
   }
   saveTasks();
@@ -1169,6 +1209,9 @@ function resetTaskForm() {
   setEntryType('task');
   document.getElementById('taskSubmitBtn').textContent = 'Add & Reschedule';
   document.getElementById('cancelEditBtn').style.display = 'none';
+  // Start focused on the Type selector itself (not Title), so 1/2 work
+  // immediately without needing to click into anything first.
+  document.getElementById('typeSeg').focus();
 }
 
 function startEditTask(id) {
@@ -1204,7 +1247,84 @@ function cancelEditTask() {
   resetTaskForm();
 }
 
-function removeTask(id) { tasks = tasks.filter(t => t.id !== id); saveTasks(); render(); }
+function removeTask(id) {
+  const t = tasks.find(function(x) { return x.id === id; });
+  if (!t) return;
+  const isRepeating = t.repeatPattern && t.repeatPattern !== 'none';
+  if (!isRepeating) {
+    tasks = tasks.filter(function(x) { return x.id !== id; });
+    saveTasks();
+    render();
+    return;
+  }
+  pendingDeleteId = id;
+  document.getElementById('deleteChoiceOverlay').classList.add('show');
+}
+
+let pendingBreakEditId = null;
+function openBreakLengthEditor(breakId) {
+  pendingBreakEditId = breakId;
+  const b = manualBreaks.find(function(x) { return x.id === breakId; });
+  const current = b ? (b.endMin - b.startMin) : (settings.shortBreakMin || 5);
+  document.getElementById('breakLengthInput').value = current;
+  document.getElementById('breakLengthOverlay').classList.add('show');
+}
+
+function breakLengthKey(e) {
+  const input = document.getElementById('breakLengthInput');
+  if (e.key === 'ArrowUp') { e.preventDefault(); input.value = (parseInt(input.value, 10) || 0) + 1; }
+  else if (e.key === 'ArrowDown') { e.preventDefault(); input.value = Math.max(1, (parseInt(input.value, 10) || 1) - 1); }
+  else if (e.key === 'Enter') { e.preventDefault(); saveBreakLength(); }
+}
+
+function saveBreakLength() {
+  const b = manualBreaks.find(function(x) { return x.id === pendingBreakEditId; });
+  const len = Math.max(1, parseInt(document.getElementById('breakLengthInput').value, 10) || 5);
+  if (b) { b.endMin = b.startMin + len; saveManualBreaks(); }
+  document.getElementById('breakLengthOverlay').classList.remove('show');
+  pendingBreakEditId = null;
+  render();
+}
+
+let pendingDeleteId = null;
+function deleteChoice(option) {
+  const t = tasks.find(function(x) { return x.id === pendingDeleteId; });
+  document.getElementById('deleteChoiceOverlay').classList.remove('show');
+  if (!t) { pendingDeleteId = null; return; }
+
+  if (option === 1) {
+    // Just today's occurrence: skip today, keep the recurring definition for other days.
+    if (!t.skipDates) t.skipDates = [];
+    t.skipDates.push(new Date().toISOString().slice(0, 10));
+    saveTasks();
+  } else {
+    // "This and following" and "All" both remove the recurring definition entirely —
+    // this build doesn't keep separate historical instances to distinguish them further.
+    tasks = tasks.filter(function(x) { return x.id !== pendingDeleteId; });
+    saveTasks();
+  }
+  pendingDeleteId = null;
+  render();
+}
+
+function formatDuration(startMin, endMin) {
+  const total = endMin - startMin;
+  const h = Math.floor(total / 60), m = total % 60;
+  if (h === 0) return m + ' min';
+  if (m === 0) return h + 'h';
+  return h + 'h ' + m + 'm';
+}
+
+function showDurationTooltip(e, title, startMin, endMin) {
+  e.preventDefault();
+  const tip = document.getElementById('durationTooltip');
+  tip.textContent = title + ': ' + formatDuration(startMin, endMin) + ' (' + formatClockTime(startMin) + ' - ' + formatClockTime(endMin) + ')';
+  tip.style.left = e.pageX + 'px';
+  tip.style.top = e.pageY + 'px';
+  tip.style.display = 'block';
+  clearTimeout(window._durationTooltipTimer);
+  window._durationTooltipTimer = setTimeout(function() { tip.style.display = 'none'; }, 3000);
+}
 
 function formatClockTime(mins) {
   let h = Math.floor(mins / 60), m = mins % 60;
@@ -1229,8 +1349,12 @@ function toggleComplete(id) {
     // at 9:00 gets checked off at 9:43, the locked block is 9:00-9:43, not 9:00-9:45.
     const current = computeSchedule().find(function(s) { return s.id === id; });
     if (current) {
-      t.fixedStartMin = current.startMin;
-      t.fixedEndMin = Math.max(current.startMin + 1, nowMinutesSinceMidnight());
+      const nowMin = nowMinutesSinceMidnight();
+      // If the task's auto-assigned slot hadn't arrived yet (completed early/out
+      // of order), the real start can't be later than right now either — a
+      // completed block must never render past the now-line.
+      t.fixedStartMin = Math.min(current.startMin, nowMin);
+      t.fixedEndMin = Math.max(t.fixedStartMin + 1, nowMin);
     }
     t.completed = true;
     if (settings.sound) playCompletionSound();
@@ -1275,10 +1399,19 @@ function refreshMotivationQuote(excludeBible) {
 }
 
 function maybeShowSaying() {
-  // Called after completing a task: refreshes the persistent quote widget
-  // (instead of an interruptive popup), and specifically never shows a Bible
-  // verse here — those are reserved for the general/manual refresh only.
+  // Called after completing a task: shows a center-screen popup (not just a
+  // silent panel refresh), and specifically never shows a Bible verse here,
+  // that's reserved for the general/manual refresh only — doesn't fit a
+  // task-completion moment.
   refreshMotivationQuote(true);
+  if (!settings.sayings) return;
+  const pool = quotes.filter(function(q) { return settings.quoteCategories[q.category] !== false && q.category !== 'Bible'; });
+  if (pool.length === 0) return;
+  const msg = personalizeQuote(pool[Math.floor(Math.random() * pool.length)].text);
+  const popup = document.getElementById('completionPopup');
+  popup.textContent = msg;
+  popup.classList.add('show');
+  setTimeout(function() { popup.classList.remove('show'); }, 2200);
 }
 
 function playTone(ctx, freq, start, dur, type, peakVol) {
@@ -1343,12 +1476,17 @@ function playCompletionSound() {
   try { previewSound(settings.completionSound || 'chime'); } catch (e) {}
 }
 
-let breakActive = false, breakStart = null, breakInterval = null;
+let manualBreaks = JSON.parse(localStorage.getItem('flowgrove_manual_breaks') || 'null') || [];
+function saveManualBreaks() { localStorage.setItem('flowgrove_manual_breaks', JSON.stringify(manualBreaks)); }
+
+let breakActive = false, breakStart = null, breakStartMin = null, breakInterval = null;
 function toggleBreak() {
   const btn = document.getElementById('breakBtn');
   if (!breakActive) {
-    breakActive = true; breakStart = Date.now();
+    breakActive = true; breakStart = Date.now(); breakStartMin = nowMinutesSinceMidnight();
     btn.classList.add('on');
+    btn.style.background = labelColor('Break');
+    btn.style.color = '#3a2e4d';
     breakInterval = setInterval(function() {
       const totalSec = Math.floor((Date.now() - breakStart) / 1000);
       const mins = Math.floor(totalSec / 60);
@@ -1359,12 +1497,21 @@ function toggleBreak() {
     breakActive = false;
     clearInterval(breakInterval);
     btn.classList.remove('on');
+    btn.style.background = '';
+    btn.style.color = '';
     btn.textContent = 'Click me to have an auto break';
+    const endMin = nowMinutesSinceMidnight();
+    if (endMin > breakStartMin) {
+      manualBreaks.push({ id: 'manual-' + Date.now(), startMin: breakStartMin, endMin: endMin });
+      saveManualBreaks();
+      render();
+    }
   }
 }
 
 function computeSchedule() {
-  const todays = tasks.filter(function(t) { return !t.tomorrow; });
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const todays = tasks.filter(function(t) { return !t.tomorrow && !(t.skipDates && t.skipDates.indexOf(todayStr) !== -1); });
 
   // Completed tasks are already locked into a specific time (set once, in
   // toggleComplete) — they behave like a fixed calendar event from here on:
@@ -1549,7 +1696,17 @@ function renderGrid() {
     const el = document.createElement('div'); el.className = 'block event';
     el.style.background = labelColor('Google Calendar');
     el.innerHTML = '<span class="title">' + ev.title + '</span><span class="meta">Google Calendar</span>';
+    el.oncontextmenu = function(e) { showDurationTooltip(e, ev.title, ev.startMin, ev.endMin); };
     placeOnGrid(ev.startMin, ev.endMin, el);
+  });
+  manualBreaks.forEach(function(b) {
+    const el = document.createElement('div'); el.className = 'block break-block';
+    el.style.background = labelColor('Break');
+    el.innerHTML = '<span class="title">Break</span>';
+    el.style.cursor = 'pointer';
+    el.oncontextmenu = function(e) { showDurationTooltip(e, 'Break', b.startMin, b.endMin); };
+    el.onclick = function() { openBreakLengthEditor(b.id); };
+    placeOnGrid(b.startMin, b.endMin, el);
   });
   localEvents.forEach(function(ev) {
     if (ev.repeatPattern && ev.repeatPattern !== 'none' && !taskRepeatsOnDay(ev, DAY_NAMES[new Date().getDay()])) return;
@@ -1557,6 +1714,7 @@ function renderGrid() {
     el.style.background = labelColor(ev.label || 'Fixed Events');
     el.innerHTML = '<span class="title">' + ev.title + '</span><span class="meta">Fixed event (drag to move)</span>';
     el.draggable = true;
+    el.oncontextmenu = function(e) { showDurationTooltip(e, ev.title, ev.startMin, ev.endMin); };
     el.ondragstart = function(e) { draggedLocalEventId = ev.id; e.dataTransfer.effectAllowed = 'move'; };
     placeOnGrid(ev.startMin, ev.endMin, el);
   });
@@ -1565,9 +1723,10 @@ function renderGrid() {
 
     if (t.type === 'break') {
       el.className = 'block break-block';
-      const breakLabelName = t.breakType === 'long' ? 'Long Break' : 'Short Break';
+      const breakLabelName = 'Break';
       el.style.background = labelColor(breakLabelName);
       el.innerHTML = '<span class="title">' + t.title + '</span>';
+      el.oncontextmenu = function(e) { showDurationTooltip(e, t.title, t.startMin, t.endMin); };
       placeOnGrid(t.startMin, t.endMin, el);
       return;
     }
@@ -1590,6 +1749,7 @@ function renderGrid() {
     const showMeta = duration >= 30;
     el.innerHTML = '<label class="task-checkbox-wrap" onclick="event.stopPropagation()"><input type="checkbox" ' + (t.completed ? 'checked' : '') + ' onchange="toggleComplete(' + t.id + ')"></label><span class="title">' + t.title + (t.optional ? '<span class="badge">Optional</span>' : '') + '</span>' + (showMeta ? '<span class="meta">' + metaText + '</span>' : '');
     el.onclick = function() { startEditTask(t.id); };
+    el.oncontextmenu = function(e) { showDurationTooltip(e, t.title, t.startMin, t.endMin); };
     el.draggable = true;
     el.ondragstart = function(e) { draggedTaskId = t.id; e.dataTransfer.effectAllowed = 'move'; e.stopPropagation(); };
     el.ondragover = function(e) { e.preventDefault(); e.stopPropagation(); };
@@ -1874,14 +2034,13 @@ const TUTORIAL_STEPS = [
   { target: '#weekTabBtn', title: "Week view", text: "Prefer seeing your whole week, weekends included? This one's for you." },
   { target: '#monthTabBtn', title: "Month view", text: "Zoom all the way out for the big picture of your month." },
   { target: '[data-tut="addTaskPanel"]', title: "Adding a task is easy", text: "Give it a title, a priority, a time estimate, a motivation level, a label, maybe a repeat pattern, whatever you need." },
-  { target: '#prioritySeg', title: "Go however feels fastest", text: "Click Top, Medium, or Low, or just type 1, 2, or 3, totally up to you! Time and motivation work the same way, type a number or tap the arrow keys. Checkboxes toggle with a click or a quick tap of the Space bar. Hit Enter to hop to the next field." },
+  { target: '#prioritySeg', title: "Go however feels fastest", text: "Up top, choose 1 for Task or 2 for Event. Events are for fixed things like Lunch or Pick up, not synced from Google Calendar, just yours, and you can drag one to a new time anytime. For priority, click Top, Medium, or Low, or just type 1, 2, or 3, totally up to you! Time and motivation work the same way, type a number or tap the arrow keys. Checkboxes toggle with a click or a quick tap of the Space bar. Hit Enter to hop to the next field." },
   { target: '[data-tut="scheduleGrid"]', title: "How your day gets ordered", text: "Priority comes first, then time estimate, then motivation as the tiebreaker. Low-motivation tasks get placed earlier in the day, while your energy's higher." },
   { target: '[data-tut="scheduleGrid"]', title: "Marking things done", text: "Just click a task block to complete it, and watch the rest of your day adjust automatically if something ran long or short." },
   { target: '[data-tut="breakBtn"]', title: "Need a breather?", text: "Tap this anytime for an instant break. It'll keep time for you, tap again whenever you're ready to jump back in." },
   { target: '[data-tut="tomorrowPanel"]', title: "Tomorrow's got your back", text: "Anything that doesn't fit today lands here instead of vanishing. You can also drag any task straight onto this panel to send it to Tomorrow yourself, or drag one back out to bring it into today." },
-  { target: '#typeSeg', title: "Tasks vs. Events", text: "Switch to Event for fixed things like Lunch or Pick up, these aren't synced from Google Calendar, they're yours. Unlike Google Calendar events, you can drag a fixed event to a new time whenever you need to." },
   { target: '[data-tut="addTaskPanel"]', title: "Make it yours with Labels", text: "Give a label its own name and color to keep things visually organized, don't worry, labels never change your schedule order." },
-  { target: null, title: "That's it, you're ready!", text: "Go ahead and start adding your day. You can always pull this tour back up with the Help button whenever you want a refresher." }
+  { target: null, title: "That's it, you're ready!", text: "Go ahead and start adding your day. You can always pull this tour back up with the Tutorial button whenever you want a refresher." }
 ];
 let tutStep = 0;
 
@@ -1907,6 +2066,12 @@ function showTutorialStep() {
   const card = document.getElementById('tutorialCard');
   if (step.target) {
     const el = document.querySelector(step.target);
+    if (el && el.getBoundingClientRect().width === 0 && el.getBoundingClientRect().height === 0) {
+      // Not actually rendered/visible yet (e.g. layout hasn't settled). Retry
+      // shortly rather than positioning the card at a broken (0,0) spot.
+      setTimeout(showTutorialStep, 150);
+      return;
+    }
     if (el) {
       // The overlay is position:fixed (locked to the viewport), so its children
       // must use plain viewport-relative coordinates, NOT scrollX/scrollY added on
@@ -1944,15 +2109,48 @@ function showTutorialStep() {
 // Require account setup before showing the schedule. If no profile exists yet
 // on this device, send the person to account-setup.html first. Once that's
 // done and they land back here, the tutorial (below) layers on top automatically.
+function checkDayRollover() {
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const lastStr = localStorage.getItem('flowgrove_last_date');
+  if (lastStr === todayStr) return; // same day, nothing to do
+
+  // A new day has started. Completed one-off tasks from before are done and
+  // gone, they shouldn't linger. Repeating tasks keep existing, but their
+  // completed/fixed-time/manual-order status resets so today starts fresh.
+  tasks = tasks.filter(function(t) {
+    const isRepeating = t.repeatPattern && t.repeatPattern !== 'none';
+    return isRepeating || !t.completed;
+  });
+  tasks.forEach(function(t) {
+    const isRepeating = t.repeatPattern && t.repeatPattern !== 'none';
+    if (isRepeating) {
+      t.completed = false;
+      delete t.fixedStartMin;
+      delete t.fixedEndMin;
+    }
+    delete t.manualOrder;
+  });
+  saveTasks();
+
+  // Yesterday's manual breaks are history now too, clear them so they don't
+  // keep showing on today's grid.
+  manualBreaks = [];
+  saveManualBreaks();
+
+  localStorage.setItem('flowgrove_last_date', todayStr);
+}
+
 if (!localStorage.getItem('flowgrove_profile')) {
   window.location.href = 'account-setup.html';
 } else {
+  checkDayRollover();
   applyColorsToPage();
   refreshLabelUI();
   render();
   refreshMotivationQuote();
   updateLiveClock();
   loadGoogleCalendarEvents();
+  document.getElementById('typeSeg').focus();
 
   // If we just came back from the Google OAuth redirect, show a quick status
   // message and clean the URL so refreshing the page doesn't repeat it.

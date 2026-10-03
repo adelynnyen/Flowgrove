@@ -46,7 +46,7 @@
   main { max-width: 1240px; margin: 0 auto; padding: 20px 24px 64px; display: grid; grid-template-columns: 1fr; gap: 22px; }
   @media (min-width: 900px) { main { grid-template-columns: 220px 1fr 320px; align-items: start; } }
   .leftbar { display: flex; flex-direction: column; gap: 16px; }
-  .motivation-panel { background: #dff0e5; border-color: #bfe0cc; border-left: 4px solid var(--tertiary); box-shadow: 0 2px 10px rgba(111,162,135,0.2); }
+  .panel.motivation-panel { background: #dff0e5; border-color: #bfe0cc; border-left: 4px solid var(--tertiary); box-shadow: 0 2px 10px rgba(111,162,135,0.2); }
   .motivation-panel h3::before { content: "✦ "; }
   #motivationText { font-size: 14.5px; line-height: 1.4; }
   .panel { border: 1px solid var(--border); border-radius: 10px; background: #fff; }
@@ -78,7 +78,7 @@
   .month-header-row { margin-bottom: 4px; }
   .month-header-row div { text-align: center; font-size: 11px; font-weight: 600; color: var(--ink-soft); }
   .month-cell { border: 1px solid var(--border); border-radius: 8px; min-height: 60px; padding: 6px; font-size: 11.5px; color: var(--ink-soft); width: 100%; box-sizing: border-box; align-self: start; }
-  .month-event-label { background: var(--event-bg); border-radius: 4px; padding: 1px 4px; margin-top: 3px; font-size: 9.5px; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; width: 100%; box-sizing: border-box; }
+  .month-event-label { background: #e8ebe8; border-radius: 4px; padding: 2px 4px; margin-top: 3px; font-size: 9.5px; color: #1c2b22; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; width: 100%; box-sizing: border-box; display: block; line-height: 1.4; }
   .month-cell.today { border-color: var(--tertiary); background: #f3f8f5; font-weight: 600; color: var(--ink); }
   .month-note { font-size: 12px; color: var(--ink-soft); margin-top: 12px; padding: 10px 12px; background: #f4f6f5; border-radius: 8px; }
   .sidebar { display: flex; flex-direction: column; gap: 16px; }
@@ -242,7 +242,7 @@
   </div>
 
   <div class="sidebar">
-    <div class="panel side-panel" data-tut="addTaskPanel">
+    <div class="panel side-panel" data-tut="addTaskPanel" onclick="focusTypeIfPanelBackground(event)">
       <h3>Add a Task/Event</h3>
       <p style="font-size:11px;color:var(--ink-soft);margin:0 0 10px;">Click any field, or use the fast keyboard shortcuts shown (type a number, hit Space, or press Enter to jump to the next field).</p>
 
@@ -792,6 +792,15 @@ setInterval(function() { updateLiveClock(); positionNowLine(); }, 1000);
 let currentPriority = 3; // default Top
 let currentEntryType = 'task'; // default Task
 
+function focusTypeIfPanelBackground(e) {
+  // Only kick in when clicking the panel's own background/heading/description —
+  // if the click landed on an actual field, that field's native focus already
+  // took over, and we don't want to steal it away.
+  const tag = e.target.tagName;
+  if (tag === 'INPUT' || tag === 'BUTTON' || tag === 'SELECT' || tag === 'TEXTAREA') return;
+  document.getElementById('typeSeg').focus();
+}
+
 function setEntryType(type) {
   currentEntryType = type;
   document.querySelectorAll('#typeSeg .seg-btn').forEach(function(b) {
@@ -847,7 +856,11 @@ function prioritySegKey(e) {
 function titleKey(e) {
   if (e.key === 'Enter') {
     e.preventDefault();
-    document.getElementById('prioritySeg').focus();
+    if (currentEntryType === 'event') {
+      document.getElementById('eventStart').focus();
+    } else {
+      document.getElementById('prioritySeg').focus();
+    }
   }
 }
 
@@ -1509,9 +1522,26 @@ function toggleBreak() {
   }
 }
 
-function computeSchedule() {
+function taskSortFn(a, b) {
+  // A manual drag (today only) takes precedence over the automatic sort.
+  if (typeof a.manualOrder === 'number' && typeof b.manualOrder === 'number') return a.manualOrder - b.manualOrder;
+  if (b.priority !== a.priority) return b.priority - a.priority;
+  if (a.time !== b.time) return a.time - b.time;
+  return a.motivation - b.motivation;
+}
+
+function isTaskActiveToday(t) {
   const todayStr = new Date().toISOString().slice(0, 10);
-  const todays = tasks.filter(function(t) { return !t.tomorrow && !(t.skipDates && t.skipDates.indexOf(todayStr) !== -1); });
+  const todayAbbrev = DAY_NAMES[new Date().getDay()];
+  if (t.tomorrow) return false;
+  if (t.skipDates && t.skipDates.indexOf(todayStr) !== -1) return false;
+  const isRepeating = t.repeatPattern && t.repeatPattern !== 'none';
+  if (isRepeating && !taskRepeatsOnDay(t, todayAbbrev)) return false;
+  return true;
+}
+
+function computeSchedule() {
+  const todays = tasks.filter(isTaskActiveToday);
 
   // Completed tasks are already locked into a specific time (set once, in
   // toggleComplete) — they behave like a fixed calendar event from here on:
@@ -1520,15 +1550,8 @@ function computeSchedule() {
   const required = todays.filter(function(t) { return !t.completed && !t.optional; });
   const optional = todays.filter(function(t) { return !t.completed && t.optional; });
 
-  const sortFn = function(a, b) {
-    // A manual drag (today only) takes precedence over the automatic sort.
-    if (typeof a.manualOrder === 'number' && typeof b.manualOrder === 'number') return a.manualOrder - b.manualOrder;
-    if (b.priority !== a.priority) return b.priority - a.priority;
-    if (a.time !== b.time) return a.time - b.time;
-    return a.motivation - b.motivation;
-  };
-  required.sort(sortFn);
-  optional.sort(sortFn);
+  required.sort(taskSortFn);
+  optional.sort(taskSortFn);
 
   // Build the busy-block list from BOTH real calendar events and
   // already-completed tasks, so new tasks only ever land in genuinely open time.
@@ -1794,12 +1817,11 @@ function renderGrid() {
 function renderTaskList() {
   const ul = document.getElementById('taskListUI');
   ul.innerHTML = '';
-  const sorted = tasks.filter(function(t) { return !t.tomorrow; })
+  const sorted = tasks.filter(isTaskActiveToday)
     .slice()
     .sort(function(a, b) {
       if (a.completed !== b.completed) return a.completed ? 1 : -1;
-      if (typeof a.manualOrder === 'number' && typeof b.manualOrder === 'number') return a.manualOrder - b.manualOrder;
-      return 0;
+      return taskSortFn(a, b);
     });
   sorted.forEach(function(t) {
     const li = document.createElement('li');
@@ -2034,12 +2056,12 @@ const TUTORIAL_STEPS = [
   { target: '#weekTabBtn', title: "Week view", text: "Prefer seeing your whole week, weekends included? This one's for you." },
   { target: '#monthTabBtn', title: "Month view", text: "Zoom all the way out for the big picture of your month." },
   { target: '[data-tut="addTaskPanel"]', title: "Adding a task is easy", text: "Give it a title, a priority, a time estimate, a motivation level, a label, maybe a repeat pattern, whatever you need." },
-  { target: '#prioritySeg', title: "Go however feels fastest", text: "Up top, choose 1 for Task or 2 for Event. Events are for fixed things like Lunch or Pick up, not synced from Google Calendar, just yours, and you can drag one to a new time anytime. For priority, click Top, Medium, or Low, or just type 1, 2, or 3, totally up to you! Time and motivation work the same way, type a number or tap the arrow keys. Checkboxes toggle with a click or a quick tap of the Space bar. Hit Enter to hop to the next field." },
+  { target: '#prioritySeg', title: "Go however feels fastest", text: "Up top, choose 1 for Task or 2 for Event. Events are for fixed things like Lunch or Pick up, not synced from Google Calendar, just yours, and you can drag one to a new time anytime. For priority, click Top, Medium, or Low, or just type 1, 2, or 3, totally up to you! Time and motivation work the same way, type a number or tap the arrow keys. Checkboxes toggle with a click or a quick tap of the Space bar. Hit Enter to hop to the next field, or Tab to go back a step." },
   { target: '[data-tut="scheduleGrid"]', title: "How your day gets ordered", text: "Priority comes first, then time estimate, then motivation as the tiebreaker. Low-motivation tasks get placed earlier in the day, while your energy's higher." },
   { target: '[data-tut="scheduleGrid"]', title: "Marking things done", text: "Just click a task block to complete it, and watch the rest of your day adjust automatically if something ran long or short." },
   { target: '[data-tut="breakBtn"]', title: "Need a breather?", text: "Tap this anytime for an instant break. It'll keep time for you, tap again whenever you're ready to jump back in." },
   { target: '[data-tut="tomorrowPanel"]', title: "Tomorrow's got your back", text: "Anything that doesn't fit today lands here instead of vanishing. You can also drag any task straight onto this panel to send it to Tomorrow yourself, or drag one back out to bring it into today." },
-  { target: '[data-tut="addTaskPanel"]', title: "Make it yours with Labels", text: "Give a label its own name and color to keep things visually organized, don't worry, labels never change your schedule order." },
+  { target: '#labelsSidebarPanel', title: "Make it yours with Labels", text: "Give a label its own name and color to keep things visually organized, don't worry, labels never change your schedule order." },
   { target: null, title: "That's it, you're ready!", text: "Go ahead and start adding your day. You can always pull this tour back up with the Tutorial button whenever you want a refresher." }
 ];
 let tutStep = 0;

@@ -43,8 +43,11 @@
   .icon-btn:hover { background: #f7f9f8; }
   #breakBtn { border: 1px solid var(--tertiary); background: var(--tertiary); color: #fff; border-radius: 8px; padding: 7px 14px; font-family: 'Lora', serif; font-size: 12.5px; cursor: pointer; white-space: nowrap; }
   #breakBtn.on { background: #fff; color: var(--tertiary); }
-  main { max-width: 1240px; margin: 0 auto; padding: 20px 24px 64px; display: grid; grid-template-columns: 1fr; gap: 22px; }
-  @media (min-width: 900px) { main { grid-template-columns: 220px 1fr 320px; align-items: start; } }
+  main { --left-w: 220px; --right-w: 320px; max-width: 1240px; margin: 0 auto; padding: 20px 24px 64px; display: grid; grid-template-columns: 1fr; gap: 22px; }
+  main > div { min-width: 0; }
+  main.left-collapsed { --left-w: 44px; }
+  main.right-collapsed { --right-w: 44px; }
+  @media (min-width: 900px) { main { grid-template-columns: var(--left-w) 1fr var(--right-w); align-items: start; } }
   .leftbar { display: flex; flex-direction: column; gap: 16px; }
   .panel.motivation-panel { background: #dff0e5; border-color: #bfe0cc; border-left: 4px solid var(--tertiary); box-shadow: 0 2px 10px rgba(111,162,135,0.2); }
   .motivation-panel h3::before { content: "✦ "; }
@@ -68,6 +71,15 @@
   .task-checkbox-wrap input { cursor: pointer; }
   .block .meta { display: block; font-size: 10.5px; opacity: 0.8; margin-top: 1px; text-align: center; }
   .block.event { background: repeating-linear-gradient(135deg, var(--event-bg), var(--event-bg) 6px, #dfe3e0 6px, #dfe3e0 12px); border: 1px dashed #9aa79f; }
+  .block.local-event { cursor: pointer; }
+  .blocks-layer { position: absolute; top: 0; left: 56px; right: 0; pointer-events: none; }
+  .blocks-layer .block { pointer-events: auto; }
+  .block.compact { padding: 1px 8px; font-size: 11px; }
+  .block.compact .title { line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .block.compact .meta { display: none; }
+  .block.task.compact { padding-left: 26px; }
+  .block.compact .task-checkbox-wrap { top: 2px; left: 6px; }
+  .block.compact .task-checkbox-wrap input { margin: 0; width: 13px; height: 13px; }
   .block.break-block { background: #f0ebf8; border: 1px dashed #b7a5d9; color: #5d4e78; }
   .block.break-block .title { font-size: 11px; font-weight: 500; }
   .block.task { border-color: var(--border); cursor: pointer; }
@@ -77,11 +89,19 @@
   .month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
   .month-header-row { margin-bottom: 4px; }
   .month-header-row div { text-align: center; font-size: 11px; font-weight: 600; color: var(--ink-soft); }
-  .month-cell { border: 1px solid var(--border); border-radius: 8px; min-height: 60px; padding: 6px; font-size: 11.5px; color: var(--ink-soft); width: 100%; box-sizing: border-box; align-self: start; }
+  .month-cell { border: 1px solid var(--border); border-radius: 8px; min-height: 60px; padding: 6px; font-size: 11.5px; color: var(--ink-soft); width: 100%; box-sizing: border-box; align-self: start; min-width: 0; }
   .month-event-label { background: #e8ebe8; border-radius: 4px; padding: 2px 4px; margin-top: 3px; font-size: 9.5px; color: #1c2b22; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; width: 100%; box-sizing: border-box; display: block; line-height: 1.4; }
+  .month-more { font-size: 9.5px; color: var(--ink-soft); margin-top: 3px; }
   .month-cell.today { border-color: var(--tertiary); background: #f3f8f5; font-weight: 600; color: var(--ink); }
   .month-note { font-size: 12px; color: var(--ink-soft); margin-top: 12px; padding: 10px 12px; background: #f4f6f5; border-radius: 8px; }
   .sidebar { display: flex; flex-direction: column; gap: 16px; }
+  .sb-content { display: flex; flex-direction: column; gap: 16px; }
+  .collapse-btn { align-self: flex-end; border: 1px solid var(--border); background: #fff; border-radius: 8px; width: 34px; height: 28px; cursor: pointer; font-size: 15px; line-height: 1; color: var(--ink-soft); }
+  .collapse-btn:hover { background: #f7f9f8; color: var(--ink); }
+  .rail-label { display: none; writing-mode: vertical-rl; font-size: 12px; color: var(--ink-soft); margin: 10px auto 0; letter-spacing: 0.03em; }
+  .collapsed-side .sb-content { display: none; }
+  .collapsed-side .rail-label { display: block; }
+  .collapsed-side .collapse-btn { align-self: center; }
   .side-panel { padding: 14px 16px 16px; }
   .side-panel h3 { margin: 0 0 10px; font-size: 13.5px; font-weight: 600; }
   .tab-row { display: flex; gap: 6px; margin-bottom: 10px; }
@@ -91,6 +111,9 @@
   label:first-of-type { margin-top: 0; }
   input[type="text"], input[type="number"], input[type="time"], select { width: 100%; padding: 7px 9px; border: 1.5px solid var(--border); border-radius: 8px; font-family: 'Lora', serif; font-size: 13px; background: #fff; color: var(--ink); transition: border-color 0.15s ease, box-shadow 0.15s ease; }
   input:focus, select:focus { outline: none; border-color: var(--tertiary); box-shadow: 0 0 0 3px rgba(111,162,135,0.25); border-radius: 8px; }
+  .time-trio { display: flex; align-items: center; gap: 3px; }
+  .time-trio input { width: 34px; padding: 7px 2px; text-align: center; }
+  .time-trio input.ap { width: 44px; cursor: pointer; }
   .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
   .checkbox-row { display: flex; align-items: center; gap: 6px; margin: 8px 0 0; }
   .checkbox-row input { width: auto; }
@@ -126,6 +149,7 @@
   .checklist-item { font-size: 11.5px; display: flex; align-items: center; gap: 5px; }
   .checklist-item input { width: auto; }
   .task-list { padding: 12px 14px; }
+  .task-list h3 { margin: 0 0 10px; font-size: 13.5px; font-weight: 600; }
   .task-list ul { list-style: none; margin: 0; padding: 0; }
   .task-list li { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
   .task-list li.task-done-row { background: #eaf6ee; color: #4a7a5c; border-radius: 6px; padding-left: 6px; }
@@ -134,7 +158,7 @@
   .task-list li.drag-over { background: #eaf3ee; }
   .task-list button.remove { background: none; border: none; color: #a3372f; cursor: pointer; font-size: 11.5px; }
   .tick.hit { background: var(--tertiary); }
-  .saying-toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 10px 16px; border-radius: 30px; font-size: 13px; box-shadow: 0 4px 14px rgba(0,0,0,0.2); z-index: 300; opacity: 0; transition: opacity 0.4s ease; }
+  .saying-toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 10px 16px; border-radius: 30px; font-size: 13px; box-shadow: 0 4px 14px rgba(0,0,0,0.2); z-index: 300; opacity: 0; pointer-events: none; transition: opacity 0.4s ease; max-width: 90vw; text-align: center; }
   .saying-toast.show { opacity: 1; }
   .modal-overlay { position: fixed; inset: 0; background: rgba(28,43,34,0.35); display: none; align-items: flex-start; justify-content: center; padding: 40px 16px; overflow-y: auto; z-index: 200; }
   .modal-overlay.show { display: flex; }
@@ -186,30 +210,34 @@
 </div>
 
 <main>
-  <div class="leftbar">
-    <div class="panel side-panel motivation-panel">
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <h3 style="margin:0;">Motivation</h3>
-        <button type="button" class="icon-btn" onclick="refreshMotivationQuote()" title="Get a new quote">↻ Refresh</button>
+  <div class="leftbar" id="leftbar">
+    <button type="button" class="collapse-btn" id="leftToggle" onclick="toggleSidebar('left')" title="Collapse" aria-label="Collapse or expand the left panels">&laquo;</button>
+    <div class="rail-label">Motivation · Labels · Events</div>
+    <div class="sb-content">
+      <div class="panel side-panel motivation-panel">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <h3 style="margin:0;">Motivation</h3>
+          <button type="button" class="icon-btn" onclick="refreshMotivationQuote()" title="Get a new quote">↻ Refresh</button>
+        </div>
+        <p id="motivationText" style="font-size:13px;margin:8px 0 0;font-style:italic;"></p>
       </div>
-      <p id="motivationText" style="font-size:13px;margin:8px 0 0;font-style:italic;"></p>
-    </div>
 
-    <div class="panel side-panel" id="labelsSidebarPanel">
-      <h3>Labels</h3>
-      <p style="font-size:11px;color:var(--ink-soft);margin:0 0 6px;">Click a label to highlight matching tasks. Click × to delete.</p>
-      <div id="labelsSidebarList" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
-      <div style="margin-top:8px;display:flex;gap:5px;align-items:center;">
-        <input type="text" id="quickNewLabelName" placeholder="New label" style="flex:1;">
-        <input type="color" id="quickNewLabelColor" value="#6fa287" style="width:28px;height:28px;padding:0;border:none;">
+      <div class="panel side-panel" id="labelsSidebarPanel">
+        <h3>Labels</h3>
+        <p style="font-size:11px;color:var(--ink-soft);margin:0 0 6px;">Click a label to highlight matching tasks. Click × to delete.</p>
+        <div id="labelsSidebarList" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+        <div style="margin-top:8px;display:flex;gap:5px;align-items:center;">
+          <input type="text" id="quickNewLabelName" placeholder="New label" style="flex:1;">
+          <input type="color" id="quickNewLabelColor" value="#6fa287" style="width:28px;height:28px;padding:0;border:none;">
+        </div>
+        <button type="button" class="icon-btn" style="margin-top:6px;width:100%;" onclick="addLabelFromSidebar()">Add Label</button>
       </div>
-      <button type="button" class="icon-btn" style="margin-top:6px;width:100%;" onclick="addLabelFromSidebar()">Add Label</button>
-    </div>
 
-    <div class="panel side-panel" id="eventsSidebarPanel">
-      <h3>Events</h3>
-      <p style="font-size:11px;color:var(--ink-soft);margin:0 0 6px;">Fixed events you've created (not from Google Calendar). Drag one on the schedule to move it.</p>
-      <div id="eventsSidebarList"></div>
+      <div class="panel side-panel" id="eventsSidebarPanel">
+        <h3>Events</h3>
+        <p style="font-size:11px;color:var(--ink-soft);margin:0 0 6px;">Fixed events you've created (not from Google Calendar). Click one to edit it, or drag it on the schedule to move it.</p>
+        <div id="eventsSidebarList"></div>
+      </div>
     </div>
   </div>
 
@@ -241,70 +269,91 @@
     </div>
   </div>
 
-  <div class="sidebar">
-    <div class="panel side-panel" data-tut="addTaskPanel" onclick="focusTypeIfPanelBackground(event)">
-      <h3>Add a Task/Event</h3>
-      <p style="font-size:11px;color:var(--ink-soft);margin:0 0 10px;">Click any field, or use the fast keyboard shortcuts shown (type a number, hit Space, or press Enter to jump to the next field).</p>
+  <div class="sidebar" id="rightbar">
+    <button type="button" class="collapse-btn" id="rightToggle" onclick="toggleSidebar('right')" title="Collapse" aria-label="Collapse or expand the right panels">&raquo;</button>
+    <div class="rail-label">Add · Tomorrow · Tasks</div>
+    <div class="sb-content">
+      <div class="panel side-panel" data-tut="addTaskPanel" onclick="focusTypeIfPanelBackground(event)">
+        <h3>Add a Task/Event</h3>
+        <p style="font-size:11px;color:var(--ink-soft);margin:0 0 10px;">Click any field, or use the fast keyboard shortcuts shown (type a number, hit Space, or press Enter to jump to the next field).</p>
 
-      <form id="taskForm" onsubmit="return submitTaskForm(event)" onkeydown="formBackKey(event)">
-        <label>Type <span class="hint-inline">(click, or type 1/2)</span></label>
-        <div class="seg-group" id="typeSeg" tabindex="0" onkeydown="typeSegKey(event)">
-          <button type="button" class="seg-btn selected" data-val="task" onclick="setEntryType('task')">1 Task</button>
-          <button type="button" class="seg-btn" data-val="event" onclick="setEntryType('event')">2 Event</button>
-        </div>
-
-        <label for="title">Title</label>
-        <input type="text" id="title" placeholder="e.g. Finish reading chapter" onkeydown="titleKey(event)" oninput="liveCapitalizeFirst(this)">
-
-        <div id="taskOnlyFields">
-          <label>Priority <span class="hint-inline">(click, or type 1/2/3)</span></label>
-          <div class="seg-group" id="prioritySeg" tabindex="0" onkeydown="prioritySegKey(event)">
-            <button type="button" class="seg-btn" data-val="1" onclick="setPriority(1)">1 Low</button>
-            <button type="button" class="seg-btn" data-val="2" onclick="setPriority(2)">2 Medium</button>
-            <button type="button" class="seg-btn selected" data-val="3" onclick="setPriority(3)">3 Top</button>
+        <form id="taskForm" onsubmit="return submitTaskForm(event)" onkeydown="formBackKey(event)">
+          <label>Type <span class="hint-inline">(click, or type 1/2)</span></label>
+          <div class="seg-group" id="typeSeg" tabindex="0" onkeydown="typeSegKey(event)">
+            <button type="button" class="seg-btn selected" data-val="task" onclick="setEntryType('task')">1 Task</button>
+            <button type="button" class="seg-btn" data-val="event" onclick="setEntryType('event')">2 Event</button>
           </div>
 
-          <div class="row2">
-            <div><label for="time">Time (min) <span class="hint-inline">(↑↓ or type)</span></label>
-              <input type="number" id="time" value="15" min="1" onkeydown="timeKey(event)"></div>
-            <div><label for="motivation">Motivation (1-10)</label>
-              <input type="number" id="motivation" value="5" min="1" max="10" onkeydown="fieldEnterAdvance(event,'labelSearch')"></div>
+          <label for="title">Title</label>
+          <input type="text" id="title" placeholder="e.g. Finish reading chapter" onkeydown="titleKey(event)" oninput="liveCapitalizeFirst(this)">
+
+          <div id="taskOnlyFields">
+            <label>Priority <span class="hint-inline">(click, or type 1/2/3)</span></label>
+            <div class="seg-group" id="prioritySeg" tabindex="0" onkeydown="prioritySegKey(event)">
+              <button type="button" class="seg-btn" data-val="1" onclick="setPriority(1)">1 Low</button>
+              <button type="button" class="seg-btn" data-val="2" onclick="setPriority(2)">2 Medium</button>
+              <button type="button" class="seg-btn selected" data-val="3" onclick="setPriority(3)">3 Top</button>
+            </div>
+
+            <div class="row2">
+              <div><label for="time">Time (min) <span class="hint-inline">(↑↓ or type)</span></label>
+                <input type="number" id="time" value="15" min="1" onkeydown="timeKey(event)"></div>
+              <div><label for="motivation">Motivation (1-10)</label>
+                <input type="number" id="motivation" value="5" min="1" max="10" onkeydown="fieldEnterAdvance(event,'labelSearch')"></div>
+            </div>
           </div>
-        </div>
 
-        <div id="eventOnlyFields" style="display:none;">
-          <div class="row2">
-            <div><label for="eventStart">Start time</label><input type="time" id="eventStart"></div>
-            <div><label for="eventEnd">End time</label><input type="time" id="eventEnd"></div>
+          <div id="eventOnlyFields" style="display:none;">
+            <div class="row2">
+              <div>
+                <label>Start time</label>
+                <div class="time-trio">
+                  <input type="text" inputmode="numeric" maxlength="2" id="eventStart_h" placeholder="12" autocomplete="off" aria-label="Start hour" onfocus="this.select()" oninput="trioInput(event,'eventStart','h')" onkeydown="trioKey(event,'eventStart','h')">
+                  <span>:</span>
+                  <input type="text" inputmode="numeric" maxlength="2" id="eventStart_m" placeholder="00" autocomplete="off" aria-label="Start minute" onfocus="this.select()" oninput="trioInput(event,'eventStart','m')" onkeydown="trioKey(event,'eventStart','m')" onblur="trioPadMinute('eventStart')">
+                  <input type="text" class="ap" id="eventStart_ap" value="AM" readonly aria-label="Start AM or PM" onfocus="this.select()" onkeydown="trioKey(event,'eventStart','ap')">
+                </div>
+              </div>
+              <div>
+                <label>End time</label>
+                <div class="time-trio">
+                  <input type="text" inputmode="numeric" maxlength="2" id="eventEnd_h" placeholder="12" autocomplete="off" aria-label="End hour" onfocus="this.select()" oninput="trioInput(event,'eventEnd','h')" onkeydown="trioKey(event,'eventEnd','h')">
+                  <span>:</span>
+                  <input type="text" inputmode="numeric" maxlength="2" id="eventEnd_m" placeholder="00" autocomplete="off" aria-label="End minute" onfocus="this.select()" oninput="trioInput(event,'eventEnd','m')" onkeydown="trioKey(event,'eventEnd','m')" onblur="trioPadMinute('eventEnd')">
+                  <input type="text" class="ap" id="eventEnd_ap" value="AM" readonly aria-label="End AM or PM" onfocus="this.select()" onkeydown="trioKey(event,'eventEnd','ap')">
+                </div>
+              </div>
+            </div>
+            <p style="font-size:10.5px;color:var(--ink-soft);margin:6px 0 0;">Press Enter (or the right arrow) to move from hour to minutes to AM/PM. Type A or P to set AM/PM. Up and down arrows change values.</p>
           </div>
-        </div>
 
-        <label for="labelSearch">Label <span class="hint-inline">(type to search or create)</span></label>
-        <input type="text" id="labelSearch" placeholder="Type a label name, or leave blank" autocomplete="off" oninput="renderInlineLabelResults(this.value)" onkeydown="labelSearchKey(event)">
-        <div id="inlineLabelResults" style="display:none;margin-top:4px;"></div>
+          <label for="labelSearch">Label <span class="hint-inline">(type to search or create)</span></label>
+          <input type="text" id="labelSearch" placeholder="Type a label name, or leave blank" autocomplete="off" oninput="renderInlineLabelResults(this.value)" onkeydown="labelSearchKey(event)">
+          <div id="inlineLabelResults" style="display:none;margin-top:4px;"></div>
 
-        <div id="optionalRow" class="checkbox-row"><input type="checkbox" id="optional" onkeydown="checkboxKey(event,'repeatCheck')"><label for="optional">Optional <span class="hint-inline">(Space toggles)</span></label></div>
-        <div class="checkbox-row"><input type="checkbox" id="repeatCheck" onchange="toggleRepeatChecklist()" onkeydown="repeatCheckEnterKey(event)"><label for="repeatCheck">Repeat <span class="hint-inline">(Space toggles)</span></label></div>
+          <div id="optionalRow" class="checkbox-row"><input type="checkbox" id="optional" onkeydown="checkboxKey(event,'repeatCheck')"><label for="optional">Optional <span class="hint-inline">(Space toggles)</span></label></div>
+          <div class="checkbox-row"><input type="checkbox" id="repeatCheck" onchange="toggleRepeatChecklist()" onkeydown="repeatCheckEnterKey(event)"><label for="repeatCheck">Repeat <span class="hint-inline">(Space toggles)</span></label></div>
 
-        <div id="repeatChecklistInline" style="display:none;margin:8px 0;">
-          <div class="checklist-grid" id="repeatChecklistGrid"></div>
-        </div>
+          <div id="repeatChecklistInline" style="display:none;margin:8px 0;">
+            <div class="checklist-grid" id="repeatChecklistGrid"></div>
+          </div>
 
 
-        <button type="submit" class="primary" id="taskSubmitBtn">Add &amp; Reschedule</button>
-        <button type="button" class="icon-btn" id="cancelEditBtn" style="display:none;width:100%;margin-top:6px;" onclick="cancelEditTask()">Cancel Edit</button>
-      </form>
-    </div>
+          <button type="submit" class="primary" id="taskSubmitBtn">Add &amp; Reschedule</button>
+          <button type="button" class="icon-btn" id="cancelEditBtn" style="display:none;width:100%;margin-top:6px;" onclick="cancelEditTask()">Cancel Edit</button>
+        </form>
+      </div>
 
-    <div class="panel side-panel" data-tut="tomorrowPanel">
-      <h3>Tomorrow</h3>
-      <ul id="tomorrowListUI" style="list-style:none;margin:0;padding:0;font-size:12.5px;"></ul>
-      <p id="tomorrowEmpty" style="font-size:12px;color:var(--ink-soft);margin:6px 0 0;">Nothing here yet.</p>
-    </div>
+      <div class="panel side-panel" data-tut="tomorrowPanel">
+        <h3>Tomorrow</h3>
+        <ul id="tomorrowListUI" style="list-style:none;margin:0;padding:0;font-size:12.5px;"></ul>
+        <p id="tomorrowEmpty" style="font-size:12px;color:var(--ink-soft);margin:6px 0 0;">Nothing here yet.</p>
+      </div>
 
-    <div class="panel task-list" data-tut="taskListPanel">
-      <h3>All Tasks Today</h3>
-      <ul id="taskListUI"></ul>
+      <div class="panel task-list" data-tut="taskListPanel">
+        <h3>All Tasks Today</h3>
+        <ul id="taskListUI"></ul>
+      </div>
     </div>
   </div>
 </main>
@@ -334,7 +383,7 @@
     <div class="settings-section">
       <h4>Weekly Working Hours</h4>
       <div id="workingHoursUI"></div>
-      <p style="font-size:11px;color:var(--ink-soft);margin-top:6px;">If it's currently past today's end time, the schedule just keeps extending (with a scrollbar) to include right now, instead of cutting off.</p>
+      <p style="font-size:11px;color:var(--ink-soft);margin-top:6px;">Tasks that don't fit before your end time move to Tomorrow. If it's already past today's end time, the schedule extends a little past right now.</p>
     </div>
 
     <div class="settings-section">
@@ -410,6 +459,7 @@
 </div>
 
 <div id="completionPopup"></div>
+<div id="infoToast" class="saying-toast"></div>
 
 <div class="modal-overlay" id="breakLengthOverlay">
   <div class="modal" style="max-width:320px;">
@@ -451,13 +501,43 @@
 <script>
 let events = []; // populated by loadGoogleCalendarEvents() below; empty until connected
 
+// Local date as YYYY-MM-DD. IMPORTANT: this uses the device's own clock/timezone.
+// (toISOString() gives the UTC date, which flips to "tomorrow" every evening in Houston.)
+function localDateStr(d) {
+  d = d || new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+let editingTaskId = null;
+let editingEventId = null;
+
 // Local fixed events: created directly in the app (e.g. "Lunch", "Pick up Adelynn"),
 // never synced to or from Google Calendar. Unlike Google events, these CAN be
-// dragged to a new time by the user.
+// dragged to a new time by the user. One-time events remember the date they were
+// made for (createdDate); repeating events follow their repeat pattern.
 let localEvents = JSON.parse(localStorage.getItem('flowgrove_local_events') || 'null') || [];
+localEvents.forEach(function(ev) { if (!ev.createdDate) ev.createdDate = localDateStr(); });
 let nextLocalEventId = Math.max(0, ...localEvents.map(function(e) { return e.id; })) + 1;
 function saveLocalEvents() { localStorage.setItem('flowgrove_local_events', JSON.stringify(localEvents)); }
 let calendarConnected = false;
+
+function localEventOnDate(ev, dayKey, abbrev) {
+  const rep = ev.repeatPattern && ev.repeatPattern !== 'none';
+  if (rep) return taskRepeatsOnDay(ev, abbrev) && (!ev.createdDate || ev.createdDate <= dayKey);
+  return ev.createdDate === dayKey;
+}
+
+function showToast(msg) {
+  const t = document.getElementById('infoToast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(function() { t.classList.remove('show'); }, 5000);
+}
 
 function isoToMinutesSinceMidnight(iso) {
   const d = new Date(iso);
@@ -465,15 +545,23 @@ function isoToMinutesSinceMidnight(iso) {
 }
 
 function loadGoogleCalendarEvents() {
-  const todayStr = new Date().toISOString().slice(0, 10);
-  fetch('/api/calendar/events?date=' + todayStr)
+  // Ask Google for exactly this device's "today" (midnight to midnight in YOUR timezone).
+  // The server runs on UTC, so it can't be trusted to work out where your day starts.
+  const dayStart = new Date(); dayStart.setHours(0, 0, 0, 0);
+  const dayEnd = new Date(dayStart); dayEnd.setDate(dayEnd.getDate() + 1);
+  const url = '/api/calendar/events?timeMin=' + encodeURIComponent(dayStart.toISOString()) + '&timeMax=' + encodeURIComponent(dayEnd.toISOString());
+  fetch(url)
     .then(function(r) { return r.json(); })
     .then(function(data) {
       calendarConnected = !!data.connected;
       if (data.connected && data.events) {
         events = data.events.filter(function(e) { return !e.allDay; }).map(function(e) {
-          return { title: e.title, startMin: isoToMinutesSinceMidnight(e.start), endMin: isoToMinutesSinceMidnight(e.end) };
-        });
+          // Minutes since midnight, clamped so events that start before or run past
+          // midnight don't produce negative or wrapped-around times.
+          const s = Math.max(0, Math.round((new Date(e.start) - dayStart) / 60000));
+          const en = Math.min(1440, Math.round((new Date(e.end) - dayStart) / 60000));
+          return { title: e.title, startMin: s, endMin: en };
+        }).filter(function(e) { return e.endMin > e.startMin; });
       } else {
         events = [];
       }
@@ -527,7 +615,7 @@ for (let i = SYSTEM_LABEL_DEFAULTS.length - 1; i >= 0; i--) {
 }
 let settings = JSON.parse(localStorage.getItem('flowgrove_settings') || 'null') || {
   theme: 'modern', primary: '#ffffff', secondary: '#ffffff', tertiary: '#6fa287',
-  sound: true, sayings: true, timeFormat: '12', completionSound: 'chime',
+  sound: true, sayings: true, timeFormat: '12', completionSound: 'sparkle',
   quoteCategories: { Wellness: true, Encouragement: true, Bible: true },
   shortWorkMin: 25, shortBreakMin: 5, medBreakMin: 15,
   workingHours: {
@@ -537,6 +625,14 @@ let settings = JSON.parse(localStorage.getItem('flowgrove_settings') || 'null') 
     Sat:{on:false,start:'09:00',end:'21:00'}
   }
 };
+
+// One-time switch: Bright Sparkle is now the default completion sound. Anyone still on the
+// old default (Soft Chime) gets moved over once; after that, whatever they pick sticks.
+if (!localStorage.getItem('flowgrove_sparkle_default_v1')) {
+  if (!settings.completionSound || settings.completionSound === 'chime') settings.completionSound = 'sparkle';
+  localStorage.setItem('flowgrove_settings', JSON.stringify(settings));
+  localStorage.setItem('flowgrove_sparkle_default_v1', '1');
+}
 
 /* ---- Motivational quotes: default set across 3 categories (Wellness,
    Encouragement, Inspirational/Bible), editable by the user (add/delete
@@ -601,10 +697,45 @@ const QUOTE_CATEGORIES = ["Wellness", "Encouragement", "Bible"];
 let quotes = JSON.parse(localStorage.getItem('flowgrove_quotes') || 'null') || DEFAULT_QUOTES.slice();
 function saveQuotes() { localStorage.setItem('flowgrove_quotes', JSON.stringify(quotes)); }
 
+// Quotes added after the first release. Added once to existing saved lists (and to
+// brand-new lists), without bringing back anything the user already deleted.
+const QUOTES_ADDED_V2 = [
+  { text: "Whatever you do, do it with all your heart, as if you're working for the Lord. (Colossians 3:23)", category: "Bible" },
+  { text: "The Lord is waiting with His arms open wide.", category: "Bible" }
+];
+if (!localStorage.getItem('flowgrove_quotes_v2')) {
+  QUOTES_ADDED_V2.forEach(function(nq) {
+    if (!quotes.some(function(q) { return q.text === nq.text; })) quotes.push(nq);
+  });
+  saveQuotes();
+  localStorage.setItem('flowgrove_quotes_v2', '1');
+}
+
 const PRESET_COLORS = ['#6fa287','#e08e5b','#5b8ac9','#c96f9a','#d1b34a','#7b6fc9','#4fa89a','#c95b5b'];
 const COMMON_NAMES = ["sarah","tyler","emma","jacob","olivia","liam","ava","noah","sophia","mason","isabella","james","mia","logan","charlotte","lucas","amelia","ethan","harper","aiden","evelyn","jackson","abigail","carter","ella","adelynn","melissa","sonny"];
 
 const DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+/* ---- Collapsible side panels (remembered between visits) ---- */
+let sidebarState = JSON.parse(localStorage.getItem('flowgrove_sidebars') || 'null') || { left: false, right: false };
+function applySidebars() {
+  const main = document.querySelector('main');
+  ['left', 'right'].forEach(function(side) {
+    const collapsed = !!sidebarState[side];
+    main.classList.toggle(side + '-collapsed', collapsed);
+    const bar = document.getElementById(side === 'left' ? 'leftbar' : 'rightbar');
+    bar.classList.toggle('collapsed-side', collapsed);
+    const btn = document.getElementById(side + 'Toggle');
+    btn.innerHTML = side === 'left' ? (collapsed ? '&raquo;' : '&laquo;') : (collapsed ? '&laquo;' : '&raquo;');
+    btn.title = collapsed ? 'Expand' : 'Collapse';
+  });
+}
+function setSidebar(side, collapsed) {
+  sidebarState[side] = collapsed;
+  localStorage.setItem('flowgrove_sidebars', JSON.stringify(sidebarState));
+  applySidebars();
+}
+function toggleSidebar(side) { setSidebar(side, !sidebarState[side]); }
 
 function parseTimeToMinutes(hhmm) {
   const parts = (hhmm || '09:00').split(':');
@@ -613,9 +744,10 @@ function parseTimeToMinutes(hhmm) {
 
 // Computes today's schedule window. Start comes from Settings' working hours
 // for today; if today is toggled off, it falls back to whatever time it
-// currently is when the page loads. End also comes from Settings, but if the
-// real current time has already passed it, the grid keeps extending to cover
-// right up to now (with a scrollbar), rather than cutting off mid-day.
+// currently is when the page loads. End also comes from Settings. If the real
+// current time has already passed it, the window stretches a little past "now"
+// so the current moment is still visible. Tasks that don't fit inside this window
+// are moved to Tomorrow (see bumpOverflowToTomorrow).
 function getDayBounds() {
   const todayName = DAY_NAMES[new Date().getDay()];
   const todayHours = settings.workingHours[todayName] || { on: true, start: '07:00', end: '21:00' };
@@ -629,16 +761,6 @@ function getDayBounds() {
   const nowMin = nowMinutesSinceMidnight();
   if (nowMin > end) end = nowMin + 15; // extend a little past "now" so the current moment is visible
   if (end <= start) end = start + 60; // safety floor so the grid is never empty/inverted
-
-  // Guarantee enough total room to fit every task still needing placement today
-  // (plus fixed events/completed blocks), so adding a task never silently fails
-  // to appear just because it's past the configured end time.
-  const todaysTasks = tasks.filter(function(t) { return !t.tomorrow && !t.completed; });
-  const taskMinutes = todaysTasks.reduce(function(sum, t) { return sum + t.time; }, 0);
-  const eventMinutes = events.reduce(function(sum, ev) { return sum + (ev.endMin - ev.startMin); }, 0);
-  const neededEnd = start + taskMinutes + eventMinutes + 30; // small buffer
-  if (neededEnd > end) end = neededEnd;
-
   return { start: start, end: end };
 }
 
@@ -652,7 +774,7 @@ function switchView(v) {
   if (v === 'week') renderWeekGrid('weekGrid', ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']);
 }
 
-let monthEventsByDay = {}; // 'YYYY-MM-DD' -> array of event titles, refreshed per month
+let monthEventsByDay = {}; // 'YYYY-MM-DD' -> array of Google event titles, refreshed per month
 
 function renderMonth() {
   const now = new Date();
@@ -660,22 +782,66 @@ function renderMonth() {
   document.getElementById('monthTitle').textContent = now.toLocaleString('default', { month: 'long', year: 'numeric' });
   buildMonthGrid(year, month);
 
-  const monthStr = year + '-' + String(month + 1).padStart(2, '0');
-  fetch('/api/calendar/events?month=' + monthStr)
+  // Ask for the WHOLE month (first day 12:00 AM up to the first of next month), in your timezone.
+  const monthStart = new Date(year, month, 1);
+  const monthEnd = new Date(year, month + 1, 1);
+  const url = '/api/calendar/events?timeMin=' + encodeURIComponent(monthStart.toISOString()) + '&timeMax=' + encodeURIComponent(monthEnd.toISOString());
+  fetch(url)
     .then(function(r) { return r.json(); })
     .then(function(data) {
       monthEventsByDay = {};
+      function addTo(dayKey, title) {
+        if (!monthEventsByDay[dayKey]) monthEventsByDay[dayKey] = [];
+        monthEventsByDay[dayKey].push(title);
+      }
       if (data.connected && data.events) {
         data.events.forEach(function(ev) {
-          const dayKey = (ev.start || '').slice(0, 10); // 'YYYY-MM-DD'
-          if (!dayKey) return;
-          if (!monthEventsByDay[dayKey]) monthEventsByDay[dayKey] = [];
-          monthEventsByDay[dayKey].push(ev.title);
+          if (ev.allDay) {
+            // All-day events come back as plain dates, and the end date is the day AFTER the last day.
+            const d = new Date(ev.start + 'T00:00:00');
+            const endD = new Date((ev.end || ev.start) + 'T00:00:00');
+            let added = 0;
+            while (d < endD && added < 62) { addTo(localDateStr(d), ev.title); d.setDate(d.getDate() + 1); added++; }
+            if (!added) addTo(ev.start.slice(0, 10), ev.title);
+          } else {
+            addTo(localDateStr(new Date(ev.start)), ev.title);
+          }
         });
       }
       buildMonthGrid(year, month); // rebuild with event labels now that we have them
     })
     .catch(function() { /* leave the grid as-is if this fails */ });
+}
+
+// Everything that belongs on a given calendar day, for the Month view:
+// Google Calendar events, your own fixed events, and tasks (repeating tasks on
+// their repeat days, plus today's and tomorrow's one-time tasks).
+function itemsForDate(dateObj) {
+  const dayKey = localDateStr(dateObj);
+  const abbrev = DAY_NAMES[dateObj.getDay()];
+  const todayKey = localDateStr();
+  const tomorrowD = new Date(); tomorrowD.setDate(tomorrowD.getDate() + 1);
+  const tomorrowKey = localDateStr(tomorrowD);
+  const out = [];
+  (monthEventsByDay[dayKey] || []).forEach(function(title) {
+    out.push({ title: title, color: labelColor('Google Calendar') });
+  });
+  localEvents.forEach(function(ev) {
+    if (localEventOnDate(ev, dayKey, abbrev)) out.push({ title: ev.title, color: labelColor(ev.label || 'Fixed Events') });
+  });
+  tasks.forEach(function(t) {
+    const rep = t.repeatPattern && t.repeatPattern !== 'none';
+    let show;
+    if (rep) {
+      show = taskRepeatsOnDay(t, abbrev) && (!t.createdDate || t.createdDate <= dayKey) && !(t.skipDates && t.skipDates.indexOf(dayKey) !== -1);
+    } else if (t.tomorrow) {
+      show = (dayKey === tomorrowKey);
+    } else {
+      show = (dayKey === todayKey);
+    }
+    if (show) out.push({ title: t.title, color: t.label ? labelColor(t.label) : '#6fa287' });
+  });
+  return out;
 }
 
 function buildMonthGrid(year, month) {
@@ -689,12 +855,13 @@ function buildMonthGrid(year, month) {
     const cell = document.createElement('div');
     const isToday = (d === now.getDate() && month === now.getMonth() && year === now.getFullYear());
     cell.className = 'month-cell' + (isToday ? ' today' : '');
-    const dayKey = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
-    const dayEvents = monthEventsByDay[dayKey] || [];
-    const eventHtml = dayEvents.map(function(t) {
-      return '<div class="month-event-label" title="' + t.replace(/"/g, '&quot;') + '">' + t + '</div>';
-    }).join('');
-    cell.innerHTML = '<div>' + d + '</div>' + eventHtml;
+    const items = itemsForDate(new Date(year, month, d));
+    const shown = items.slice(0, 3);
+    const extra = items.length - shown.length;
+    const itemHtml = shown.map(function(it) {
+      return '<div class="month-event-label" style="background:' + it.color + '33;" title="' + escapeHtml(it.title) + '">' + escapeHtml(it.title) + '</div>';
+    }).join('') + (extra > 0 ? '<div class="month-more">+' + extra + ' more</div>' : '');
+    cell.innerHTML = '<div>' + d + '</div>' + itemHtml;
     grid.appendChild(cell);
   }
 }
@@ -710,20 +877,23 @@ function taskRepeatsOnDay(task, dayAbbrev) {
   return parts.indexOf(DAY_FULL_NAMES[dayAbbrev]) !== -1;
 }
 
+// Weeks run Monday to Sunday here, so the "Sun" column is the Sunday at the END of this week.
 function getDateForDayInCurrentWeek(dayAbbrev) {
-  const targetIdx = DAY_NAMES.indexOf(dayAbbrev);
+  const targetIdx = (DAY_NAMES.indexOf(dayAbbrev) + 6) % 7; // Mon=0 ... Sun=6
   const today = new Date();
-  const diff = targetIdx - today.getDay();
+  const todayIdx = (today.getDay() + 6) % 7;
   const d = new Date(today);
-  d.setDate(d.getDate() + diff);
-  return d.toISOString().slice(0, 10);
+  d.setDate(d.getDate() + (targetIdx - todayIdx));
+  return localDateStr(d);
 }
 
 function renderWeekGrid(gridId, dayNames) {
   const grid = document.getElementById(gridId);
   grid.style.gridTemplateColumns = 'repeat(' + dayNames.length + ', 1fr)';
-  const todaysTasks = tasks.filter(function(t) { return !t.tomorrow; });
-  const todayShort = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date().getDay()];
+  // Today's column only lists tasks that are actually active today
+  // (not tasks that repeat on other days, and not tasks sent to Tomorrow).
+  const todaysTasks = tasks.filter(isTaskActiveToday);
+  const todayShort = DAY_NAMES[new Date().getDay()];
   grid.innerHTML = dayNames.map(function(d) {
     const isToday = d === todayShort;
     let listItems;
@@ -742,7 +912,7 @@ function renderWeekGrid(gridId, dayNames) {
       const bg = t.label ? (labelColor(t.label) + '55') : '';
       const style = bg ? ' style="background:' + bg + ';"' : '';
       const showDone = isToday && t.completed; // completion only applies to today's real instance
-      return '<div class="week-task-row' + (showDone ? ' done' : '') + '"' + style + '>' + t.title + '</div>';
+      return '<div class="week-task-row' + (showDone ? ' done' : '') + '"' + style + '>' + escapeHtml(t.title) + '</div>';
     }).join('');
     const emptyMsg = isToday ? 'Nothing scheduled' : 'No repeating tasks';
     return '<div class="week-col' + (isToday ? ' today' : '') + '"><div class="week-col-head">' + d + '</div><div class="week-col-body">' + (rows || '<div class="week-task-row empty">' + emptyMsg + '</div>') + '</div></div>';
@@ -765,18 +935,15 @@ function positionNowLine() {
   const line = document.getElementById('nowLine');
   const label = document.getElementById('nowLineLabel');
   const grid = document.getElementById('grid');
-  if (!line || !grid) return;
-  const bounds = getDayBounds();
-  const gridStart = Math.floor(bounds.start / 60) * 60;
+  if (!line || !grid || !gridMap) return;
   const nowMin = nowMinutesSinceMidnight();
-  if (nowMin < gridStart) {
+  if (nowMin < gridMap.start) {
     line.style.display = 'none';
     if (label) label.style.display = 'none';
     return;
   }
   line.style.display = 'block';
-  const rowHeight = 60;
-  const topPx = (nowMin - gridStart) / 60 * rowHeight;
+  const topPx = pxAt(nowMin);
   line.style.top = topPx + 'px';
   if (label) {
     label.style.display = 'block';
@@ -785,7 +952,51 @@ function positionNowLine() {
   }
 }
 
-setInterval(function() { updateLiveClock(); positionNowLine(); }, 1000);
+// Don't redraw the schedule underneath a drag that's in progress.
+let dragInProgress = false;
+document.addEventListener('dragstart', function() { dragInProgress = true; });
+document.addEventListener('dragend', function() { dragInProgress = false; });
+
+// Re-plans everything that depends on "what time is it now". (Lighter than render(): it leaves
+// the label/event side lists alone so it can't interrupt you while you're typing in Settings.)
+function tickRender() {
+  bumpOverflowToTomorrow();
+  renderGrid();
+  renderTaskList();
+  renderTomorrow();
+  updateProgress();
+}
+
+let lastRenderedMinute = nowMinutesSinceMidnight();
+setInterval(function() {
+  updateLiveClock();
+  positionNowLine();
+  // If the app was left open past midnight, roll over to the new day automatically.
+  const last = localStorage.getItem('flowgrove_last_date');
+  if (last && last !== localDateStr()) {
+    checkDayRollover();
+    loadGoogleCalendarEvents();
+    render();
+    lastRenderedMinute = nowMinutesSinceMidnight();
+    return;
+  }
+  // Every minute the day is re-planned from "now", so unfinished tasks never sit in the past.
+  const nm = nowMinutesSinceMidnight();
+  if (nm !== lastRenderedMinute && !dragInProgress) {
+    lastRenderedMinute = nm;
+    tickRender();
+    if (calendarConnected && nm % 5 === 0) loadGoogleCalendarEvents(); // pick up calendar changes
+  }
+}, 1000);
+
+// Coming back to this tab after a while: re-plan right away instead of waiting for the next tick.
+document.addEventListener('visibilitychange', function() {
+  if (!document.hidden && !dragInProgress) {
+    lastRenderedMinute = nowMinutesSinceMidnight();
+    tickRender();
+    loadGoogleCalendarEvents();
+  }
+});
 
 /* ---- Unified Add Task form: click OR keyboard shortcut, same fields, no mode switch ---- */
 
@@ -802,6 +1013,9 @@ function focusTypeIfPanelBackground(e) {
 }
 
 function setEntryType(type) {
+  // While editing something, the type is locked to what's being edited.
+  if (editingTaskId !== null && type !== 'task') return;
+  if (editingEventId !== null && type !== 'event') return;
   currentEntryType = type;
   document.querySelectorAll('#typeSeg .seg-btn').forEach(function(b) {
     b.classList.toggle('selected', b.dataset.val === type);
@@ -809,7 +1023,8 @@ function setEntryType(type) {
   document.getElementById('taskOnlyFields').style.display = (type === 'task') ? 'block' : 'none';
   document.getElementById('eventOnlyFields').style.display = (type === 'event') ? 'block' : 'none';
   document.getElementById('optionalRow').style.display = 'flex';
-  document.getElementById('taskSubmitBtn').textContent = (editingTaskId !== null) ? 'Save Changes' : (type === 'event' ? 'Add Event' : 'Add & Reschedule');
+  const editing = (editingTaskId !== null || editingEventId !== null);
+  document.getElementById('taskSubmitBtn').textContent = editing ? 'Save Changes' : (type === 'event' ? 'Add Event' : 'Add & Reschedule');
   document.getElementById('title').focus();
 }
 
@@ -857,11 +1072,132 @@ function titleKey(e) {
   if (e.key === 'Enter') {
     e.preventDefault();
     if (currentEntryType === 'event') {
-      document.getElementById('eventStart').focus();
+      focusTrio('eventStart', 'h');
     } else {
       document.getElementById('prioritySeg').focus();
     }
   }
+}
+
+/* ---- Event start/end time boxes: hour : minute AM/PM, Enter (or right arrow) moves
+   to the next box, so the whole thing can be done without touching the mouse. ---- */
+
+function trioEl(prefix, part) { return document.getElementById(prefix + '_' + part); }
+
+function focusTrio(prefix, part) {
+  const el = trioEl(prefix, part);
+  el.focus();
+  el.select();
+}
+
+function trioPadMinute(prefix) {
+  const m = trioEl(prefix, 'm');
+  if (m.value.length === 1) m.value = '0' + m.value;
+}
+
+function trioAdvance(prefix, part) {
+  if (part === 'h') {
+    focusTrio(prefix, 'm');
+  } else if (part === 'm') {
+    trioPadMinute(prefix);
+    focusTrio(prefix, 'ap');
+  } else {
+    // After AM/PM: Start goes to End's hour; End goes on to the Label field.
+    if (prefix === 'eventStart') focusTrio('eventEnd', 'h');
+    else document.getElementById('labelSearch').focus();
+  }
+}
+
+function trioBack(prefix, part) {
+  if (part === 'm') focusTrio(prefix, 'h');
+  else if (part === 'ap') focusTrio(prefix, 'm');
+}
+
+function trioKey(e, prefix, part) {
+  const k = e.key;
+  if (k === 'Enter') { e.preventDefault(); trioAdvance(prefix, part); return; }
+  if (k === 'ArrowRight' && part !== 'ap') { e.preventDefault(); trioAdvance(prefix, part); return; }
+  if (k === 'ArrowLeft' && part !== 'h') { e.preventDefault(); trioBack(prefix, part); return; }
+
+  if (part === 'ap') {
+    if (k === 'a' || k === 'A') { e.preventDefault(); e.target.value = 'AM'; }
+    else if (k === 'p' || k === 'P') { e.preventDefault(); e.target.value = 'PM'; }
+    else if (k === 'ArrowUp' || k === 'ArrowDown' || k === ' ') { e.preventDefault(); e.target.value = (e.target.value === 'AM') ? 'PM' : 'AM'; }
+    else if (k !== 'Tab' && k !== 'ArrowRight' && k !== 'ArrowLeft') { e.preventDefault(); }
+    return;
+  }
+
+  if (k === 'ArrowUp' || k === 'ArrowDown') {
+    e.preventDefault();
+    const dir = (k === 'ArrowUp') ? 1 : -1;
+    const el = e.target;
+    let n = parseInt(el.value, 10);
+    if (part === 'h') {
+      if (isNaN(n)) n = (dir === 1) ? 1 : 12;
+      else n = ((n - 1 + dir + 12) % 12) + 1;
+      el.value = String(n);
+    } else {
+      if (isNaN(n)) n = (dir === 1) ? 0 : 59;
+      else n = (n + dir + 60) % 60;
+      el.value = (n < 10 ? '0' : '') + n;
+    }
+    el.select();
+  }
+}
+
+function trioInput(e, prefix, part) {
+  const el = e.target;
+  let v = el.value.replace(/\D/g, '').slice(0, 2);
+  el.value = v;
+  if (part === 'h') {
+    if (v.length === 2) {
+      let n = parseInt(v, 10);
+      if (n === 0) n = 12;
+      else if (n > 12 && n <= 23) { n = n - 12; trioEl(prefix, 'ap').value = 'PM'; } // typed 24-hour style, e.g. 15 = 3 PM
+      else if (n > 23) n = 12;
+      el.value = String(n);
+      focusTrio(prefix, 'm');
+    } else if (v.length === 1 && parseInt(v, 10) >= 2) {
+      focusTrio(prefix, 'm'); // a single digit 2-9 can't start a valid hour, so move on
+    }
+  } else {
+    if (v.length === 2) {
+      let n = parseInt(v, 10);
+      if (n > 59) n = 59;
+      el.value = (n < 10 ? '0' : '') + n;
+      focusTrio(prefix, 'ap');
+    } else if (v.length === 1 && parseInt(v, 10) >= 6) {
+      el.value = '0' + v;
+      focusTrio(prefix, 'ap');
+    }
+  }
+}
+
+// Returns minutes since midnight, or null if the hour hasn't been filled in.
+function getTrioMinutes(prefix) {
+  const hRaw = trioEl(prefix, 'h').value.trim();
+  const mRaw = trioEl(prefix, 'm').value.trim();
+  if (!hRaw) return null;
+  let h = parseInt(hRaw, 10);
+  if (isNaN(h)) return null;
+  if (h < 1 || h > 12) h = 12;
+  const m = mRaw ? Math.min(59, parseInt(mRaw, 10) || 0) : 0;
+  const pm = trioEl(prefix, 'ap').value === 'PM';
+  return (h % 12) * 60 + m + (pm ? 720 : 0);
+}
+
+function setTrio(prefix, minutes) {
+  if (minutes === null || minutes === undefined) {
+    trioEl(prefix, 'h').value = '';
+    trioEl(prefix, 'm').value = '';
+    trioEl(prefix, 'ap').value = 'AM';
+    return;
+  }
+  const h24 = Math.floor(minutes / 60) % 24;
+  const m = minutes % 60;
+  trioEl(prefix, 'ap').value = h24 >= 12 ? 'PM' : 'AM';
+  trioEl(prefix, 'h').value = String(h24 % 12 === 0 ? 12 : h24 % 12);
+  trioEl(prefix, 'm').value = (m < 10 ? '0' : '') + m;
 }
 
 function timeKey(e) {
@@ -983,6 +1319,20 @@ function getSelectedRepeatItems() {
     const box = document.getElementById('rc_' + i);
     return box && box.checked;
   });
+}
+
+// Fills the Repeat checkbox + checklist from a saved pattern string (used when editing).
+function populateRepeat(pattern) {
+  const hasRepeat = pattern && pattern !== 'none';
+  document.getElementById('repeatCheck').checked = !!hasRepeat;
+  toggleRepeatChecklist();
+  if (hasRepeat) {
+    const selected = pattern.split(', ');
+    REPEAT_CHECKLIST_ITEMS.forEach(function(item, i) {
+      const box = document.getElementById('rc_' + i);
+      if (box) box.checked = selected.indexOf(item) !== -1;
+    });
+  }
 }
 
 function saveLabels() { localStorage.setItem('flowgrove_labels', JSON.stringify(labels)); }
@@ -1115,9 +1465,11 @@ function editLabelName(index, newName) {
   const oldName = labels[index].name;
   labels[index].name = clean;
   saveLabels();
-  // Update any tasks currently using the old label name to the new one.
+  // Update any tasks and events currently using the old label name to the new one.
   tasks.forEach(function(t) { if (t.label === oldName) t.label = clean; });
+  localEvents.forEach(function(ev) { if (ev.label === oldName) ev.label = clean; });
   saveTasks();
+  saveLocalEvents();
   refreshLabelUI();
   render();
 }
@@ -1129,7 +1481,9 @@ function deleteLabel(index) {
   labels.splice(index, 1);
   saveLabels();
   tasks.forEach(function(t) { if (t.label === name) t.label = null; });
+  localEvents.forEach(function(ev) { if (ev.label === name) ev.label = null; });
   saveTasks();
+  saveLocalEvents();
   refreshLabelUI();
   render();
 }
@@ -1155,7 +1509,29 @@ function autoCapitalizeTitle(str) {
 
 function saveTasks() { localStorage.setItem('flowgrove_tasks', JSON.stringify(tasks)); }
 
-let editingTaskId = null;
+// Checks a new or edited fixed event against your other fixed events (on every day it would
+// repeat over the next two weeks) and against today's Google Calendar events.
+function findEventConflictForForm(startMin, endMin, repeatPattern, excludeId) {
+  const rep = repeatPattern && repeatPattern !== 'none';
+  const probe = { repeatPattern: repeatPattern, createdDate: localDateStr() };
+  for (let k = 0; k < 14; k++) {
+    if (!rep && k > 0) break;
+    const d = new Date(); d.setDate(d.getDate() + k);
+    const dayKey = localDateStr(d), abbrev = DAY_NAMES[d.getDay()];
+    if (!localEventOnDate(probe, dayKey, abbrev)) continue;
+    for (let i = 0; i < localEvents.length; i++) {
+      const other = localEvents[i];
+      if (other.id === excludeId) continue;
+      if (localEventOnDate(other, dayKey, abbrev) && startMin < other.endMin && endMin > other.startMin) return other.title;
+    }
+    if (k === 0) {
+      for (let j = 0; j < events.length; j++) {
+        if (startMin < events[j].endMin && endMin > events[j].startMin) return events[j].title;
+      }
+    }
+  }
+  return null;
+}
 
 function submitTaskForm(e) {
   e.preventDefault();
@@ -1169,14 +1545,22 @@ function submitTaskForm(e) {
   if (labelName) { label = findOrCreateLabel(labelName); }
 
   if (currentEntryType === 'event') {
-    const startVal = document.getElementById('eventStart').value;
-    const endVal = document.getElementById('eventEnd').value;
-    if (!startVal || !endVal) { alert('Please set both a start and end time for the event.'); return false; }
-    const startMin = parseTimeToMinutes(startVal);
-    const endMin = parseTimeToMinutes(endVal);
+    const startMin = getTrioMinutes('eventStart');
+    const endMin = getTrioMinutes('eventEnd');
+    if (startMin === null || endMin === null) { alert('Please set both a start and end time for the event.'); return false; }
+    if (endMin <= startMin) { alert('The end time needs to be after the start time.'); return false; }
+    const clash = findEventConflictForForm(startMin, endMin, repeatPattern, editingEventId);
+    if (clash) { alert('That time overlaps with "' + clash + '". Events can\'t overlap, so please pick a different time.'); return false; }
     const optionalEv = document.getElementById('optional').checked;
-    const ev = { id: nextLocalEventId++, title: title, startMin: startMin, endMin: endMin, repeatPattern: repeatPattern, label: label ? label.name : null, optional: optionalEv };
-    localEvents.push(ev);
+    if (editingEventId !== null) {
+      const existingEv = localEvents.find(function(x) { return x.id === editingEventId; });
+      if (existingEv) {
+        existingEv.title = title; existingEv.startMin = startMin; existingEv.endMin = endMin;
+        existingEv.repeatPattern = repeatPattern; existingEv.label = label ? label.name : null; existingEv.optional = optionalEv;
+      }
+    } else {
+      localEvents.push({ id: nextLocalEventId++, title: title, startMin: startMin, endMin: endMin, repeatPattern: repeatPattern, label: label ? label.name : null, optional: optionalEv, createdDate: localDateStr() });
+    }
     saveLocalEvents();
     resetTaskForm();
     render();
@@ -1197,7 +1581,7 @@ function submitTaskForm(e) {
       existing.repeatPattern = repeatPattern; existing.label = label ? label.name : null;
     }
   } else {
-    const task = { id: nextId++, title: title, priority: currentPriority, time: time, motivation: motivation, optional: optional, completed: false, label: label ? label.name : null, tomorrow: false, repeatPattern: repeatPattern, createdDate: new Date().toISOString().slice(0, 10) };
+    const task = { id: nextId++, title: title, priority: currentPriority, time: time, motivation: motivation, optional: optional, completed: false, label: label ? label.name : null, tomorrow: false, repeatPattern: repeatPattern, createdDate: localDateStr() };
     tasks.push(task);
   }
   saveTasks();
@@ -1208,6 +1592,7 @@ function submitTaskForm(e) {
 
 function resetTaskForm() {
   editingTaskId = null;
+  editingEventId = null;
   document.getElementById('title').value = '';
   document.getElementById('labelSearch').value = '';
   document.getElementById('inlineLabelResults').style.display = 'none';
@@ -1216,8 +1601,8 @@ function resetTaskForm() {
   document.getElementById('repeatChecklistInline').style.display = 'none';
   document.getElementById('time').value = 15;
   document.getElementById('motivation').value = 5;
-  document.getElementById('eventStart').value = '';
-  document.getElementById('eventEnd').value = '';
+  setTrio('eventStart', null);
+  setTrio('eventEnd', null);
   setPriority(3);
   setEntryType('task');
   document.getElementById('taskSubmitBtn').textContent = 'Add & Reschedule';
@@ -1230,25 +1615,37 @@ function resetTaskForm() {
 function startEditTask(id) {
   const t = tasks.find(function(x) { return x.id === id; });
   if (!t) return;
-  editingTaskId = id;
+  setSidebar('right', false); // make sure the form is visible
+  editingTaskId = null; editingEventId = null;
   setEntryType('task');
+  editingTaskId = id;
   document.getElementById('title').value = t.title;
   setPriority(t.priority);
   document.getElementById('time').value = t.time;
   document.getElementById('motivation').value = t.motivation;
   document.getElementById('labelSearch').value = t.label || '';
   document.getElementById('optional').checked = t.optional;
+  populateRepeat(t.repeatPattern);
 
-  const hasRepeat = t.repeatPattern && t.repeatPattern !== 'none';
-  document.getElementById('repeatCheck').checked = hasRepeat;
-  toggleRepeatChecklist();
-  if (hasRepeat) {
-    const selected = t.repeatPattern.split(', ');
-    REPEAT_CHECKLIST_ITEMS.forEach(function(item, i) {
-      const box = document.getElementById('rc_' + i);
-      if (box) box.checked = selected.indexOf(item) !== -1;
-    });
-  }
+  document.getElementById('taskSubmitBtn').textContent = 'Save Changes';
+  document.getElementById('cancelEditBtn').style.display = 'block';
+  document.getElementById('title').scrollIntoView({ block: 'center', behavior: 'smooth' });
+  document.getElementById('title').focus();
+}
+
+function startEditEvent(id) {
+  const ev = localEvents.find(function(x) { return x.id === id; });
+  if (!ev) return;
+  setSidebar('right', false); // make sure the form is visible
+  editingTaskId = null; editingEventId = null;
+  setEntryType('event');
+  editingEventId = id;
+  document.getElementById('title').value = ev.title;
+  setTrio('eventStart', ev.startMin);
+  setTrio('eventEnd', ev.endMin);
+  document.getElementById('labelSearch').value = ev.label || '';
+  document.getElementById('optional').checked = !!ev.optional;
+  populateRepeat(ev.repeatPattern);
 
   document.getElementById('taskSubmitBtn').textContent = 'Save Changes';
   document.getElementById('cancelEditBtn').style.display = 'block';
@@ -1308,7 +1705,7 @@ function deleteChoice(option) {
   if (option === 1) {
     // Just today's occurrence: skip today, keep the recurring definition for other days.
     if (!t.skipDates) t.skipDates = [];
-    t.skipDates.push(new Date().toISOString().slice(0, 10));
+    t.skipDates.push(localDateStr());
     saveTasks();
   } else {
     // "This and following" and "All" both remove the recurring definition entirely —
@@ -1355,19 +1752,16 @@ function toggleComplete(id) {
   const t = tasks.find(x => x.id === id);
   if (!t) return;
   if (!t.completed) {
-    // Marking complete: lock in wherever it's currently scheduled, like a
-    // fixed calendar event, so adding new tasks later can't disturb it.
-    // The END of that fixed block is the ACTUAL moment you complete it,
-    // not the originally estimated end time — if a 45-minute task starting
-    // at 9:00 gets checked off at 9:43, the locked block is 9:00-9:43, not 9:00-9:45.
-    const current = computeSchedule().find(function(s) { return s.id === id; });
-    if (current) {
-      const nowMin = nowMinutesSinceMidnight();
-      // If the task's auto-assigned slot hadn't arrived yet (completed early/out
-      // of order), the real start can't be later than right now either — a
-      // completed block must never render past the now-line.
-      t.fixedStartMin = Math.min(current.startMin, nowMin);
-      t.fixedEndMin = Math.max(t.fixedStartMin + 1, nowMin);
+    // Marking complete: lock it in as a "done" block that ends right now and is as long as the
+    // task's estimate, trimmed so it never overlaps an event, a break, or another finished task.
+    // Because it is locked, adding new tasks later can't disturb it.
+    const slot = findCompletedSlot(t, nowMinutesSinceMidnight());
+    if (slot) {
+      t.fixedStartMin = slot.start;
+      t.fixedEndMin = slot.end;
+    } else {
+      delete t.fixedStartMin; // no free room to show it; it still counts as done
+      delete t.fixedEndMin;
     }
     t.completed = true;
     if (settings.sound) playCompletionSound();
@@ -1427,7 +1821,7 @@ function maybeShowSaying() {
   setTimeout(function() { popup.classList.remove('show'); }, 2200);
 }
 
-function playTone(ctx, freq, start, dur, type, peakVol) {
+function playTone(ctx, freq, start, dur, type, peakVol, dest) {
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
   osc.type = type || 'triangle';
@@ -1435,7 +1829,7 @@ function playTone(ctx, freq, start, dur, type, peakVol) {
   gain.gain.setValueAtTime(0, ctx.currentTime + start);
   gain.gain.linearRampToValueAtTime(peakVol || 0.18, ctx.currentTime + start + 0.02);
   gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur);
-  osc.connect(gain).connect(ctx.destination);
+  osc.connect(gain).connect(dest || ctx.destination);
   osc.start(ctx.currentTime + start);
   osc.stop(ctx.currentTime + start + dur + 0.05);
 }
@@ -1462,9 +1856,16 @@ function playSound_sparkle() {
 }
 
 function playSound_deep() {
-  // A low, warm, mellow single tone, satisfying without being bright.
+  // A low, warm bell-like tone. A plain 220 Hz sine is very quiet to the human ear (and most
+  // laptop/phone speakers barely play it), so no volume increase on that note alone could make
+  // it loud. This version keeps a low fundamental for the "deep" feel, then stacks its
+  // overtones (392, 588 and 784 Hz), which the ear hears far more strongly. The tones add up
+  // to just under full volume so it is as loud as it can get without crackling.
   const ctx = new (window.AudioContext || window.webkitAudioContext)();
-  playTone(ctx, 220.0, 0, 0.7, 'sine', 0.24);
+  playTone(ctx, 196.0, 0, 1.2, 'triangle', 0.35);
+  playTone(ctx, 392.0, 0, 1.0, 'sine', 0.30);
+  playTone(ctx, 588.0, 0, 0.8, 'sine', 0.18);
+  playTone(ctx, 784.0, 0, 0.6, 'sine', 0.10);
 }
 
 function playSound_arpeggio() {
@@ -1486,7 +1887,7 @@ function previewSound(name) {
 }
 
 function playCompletionSound() {
-  try { previewSound(settings.completionSound || 'chime'); } catch (e) {}
+  try { previewSound(settings.completionSound || 'sparkle'); } catch (e) {}
 }
 
 let manualBreaks = JSON.parse(localStorage.getItem('flowgrove_manual_breaks') || 'null') || [];
@@ -1531,7 +1932,7 @@ function taskSortFn(a, b) {
 }
 
 function isTaskActiveToday(t) {
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayStr = localDateStr();
   const todayAbbrev = DAY_NAMES[new Date().getDay()];
   if (t.tomorrow) return false;
   if (t.skipDates && t.skipDates.indexOf(todayStr) !== -1) return false;
@@ -1540,27 +1941,90 @@ function isTaskActiveToday(t) {
   return true;
 }
 
-function computeSchedule() {
-  const todays = tasks.filter(isTaskActiveToday);
-
-  // Completed tasks are already locked into a specific time (set once, in
-  // toggleComplete) — they behave like a fixed calendar event from here on:
-  // nothing new gets scheduled over them.
-  const completedFixed = todays.filter(function(t) { return t.completed && typeof t.fixedStartMin === 'number'; });
-  const required = todays.filter(function(t) { return !t.completed && !t.optional; });
-  const optional = todays.filter(function(t) { return !t.completed && t.optional; });
-
-  required.sort(taskSortFn);
-  optional.sort(taskSortFn);
-
-  // Build the busy-block list from BOTH real calendar events and
-  // already-completed tasks, so new tasks only ever land in genuinely open time.
-  const todaysLocalEvents = localEvents.filter(function(ev) {
-    return !ev.repeatPattern || ev.repeatPattern === 'none' || taskRepeatsOnDay(ev, DAY_NAMES[new Date().getDay()]);
+// Returns the longest piece of [start, end) that is NOT covered by any blocker,
+// or null if less than a minute is left.
+function clipLongest(start, end, blockers) {
+  let segs = [[start, end]];
+  blockers.forEach(function(b) {
+    const next = [];
+    segs.forEach(function(sg) {
+      if (b.endMin <= sg[0] || b.startMin >= sg[1]) { next.push(sg); return; }
+      if (b.startMin > sg[0]) next.push([sg[0], b.startMin]);
+      if (b.endMin < sg[1]) next.push([b.endMin, sg[1]]);
+    });
+    segs = next;
   });
-  const busyBlocks = events.map(function(ev) { return { startMin: ev.startMin, endMin: ev.endMin }; })
-    .concat(completedFixed.map(function(t) { return { startMin: t.fixedStartMin, endMin: t.fixedEndMin }; }))
-    .concat(todaysLocalEvents.map(function(ev) { return { startMin: ev.startMin, endMin: ev.endMin }; }));
+  let best = null;
+  segs.forEach(function(sg) {
+    if (sg[1] - sg[0] >= 1 && (!best || (sg[1] - sg[0]) > (best[1] - best[0]))) best = sg;
+  });
+  return best ? { s: best[0], e: best[1] } : null;
+}
+
+// Everything on today's schedule that is already locked in: Google Calendar events and your own
+// fixed events (these win every conflict), then manual breaks and finished tasks, which are
+// trimmed so they can never sit on top of anything above them.
+function getFixedBlocks() {
+  const todayKey = localDateStr();
+  const todayAbbrev = DAY_NAMES[new Date().getDay()];
+  const google = events.map(function(ev) { return { startMin: ev.startMin, endMin: ev.endMin, title: ev.title }; });
+  const locals = localEvents
+    .filter(function(ev) { return localEventOnDate(ev, todayKey, todayAbbrev); })
+    .map(function(ev) { return { startMin: ev.startMin, endMin: ev.endMin, ev: ev }; });
+  const authoritative = google.concat(locals);
+
+  const manual = [];
+  manualBreaks.forEach(function(b) {
+    const c = clipLongest(b.startMin, b.endMin, authoritative);
+    if (c) manual.push({ startMin: c.s, endMin: c.e, orig: b });
+  });
+
+  const blockers = authoritative.concat(manual);
+  const completed = [];
+  tasks.filter(function(t) { return isTaskActiveToday(t) && t.completed && typeof t.fixedStartMin === 'number'; })
+    .sort(function(a, b) { return a.fixedStartMin - b.fixedStartMin; })
+    .forEach(function(t) {
+      const c = clipLongest(t.fixedStartMin, t.fixedEndMin, blockers);
+      if (c) { completed.push({ task: t, startMin: c.s, endMin: c.e }); blockers.push({ startMin: c.s, endMin: c.e }); }
+    });
+
+  return { google: google, locals: locals, manual: manual, completed: completed };
+}
+
+// Where a task you just ticked off goes on the schedule: it ends when you ticked it and is as
+// long as its estimate, trimmed so it never overlaps an event, a break, or another finished task.
+function findCompletedSlot(task, nowMin) {
+  const fixed = getFixedBlocks();
+  const busy = fixed.google.concat(fixed.locals, fixed.manual, fixed.completed);
+  let end = nowMin;
+  for (let guard = 0; guard < 25; guard++) {
+    let moved = false;
+    busy.forEach(function(b) { if (b.startMin < end && end < b.endMin) { end = b.startMin; moved = true; } });
+    if (!moved) break;
+  }
+  let start = end - task.time;
+  busy.forEach(function(b) { if (b.endMin <= end && b.endMin > start) start = b.endMin; });
+  start = Math.max(0, start);
+  if (end - start < 1) return null;
+  return { start: start, end: end };
+}
+
+// Builds today's schedule. Nothing overlaps, with ONE exception: a "quick" task (under 5 minutes
+// AND motivation 7 or higher) is allowed to sit inside a break. The returned array also carries
+// an `.unplaced` list: tasks that didn't fit before the end of today's working hours.
+function computeSchedule() {
+  const fixed = getFixedBlocks();
+  const pending = tasks.filter(function(t) { return isTaskActiveToday(t) && !t.completed; });
+
+  function isQuick(t) { return t.time < 5 && t.motivation >= 7; }
+  const reqNormal = pending.filter(function(t) { return !t.optional && !isQuick(t); }).sort(taskSortFn);
+  const reqQuick = pending.filter(function(t) { return !t.optional && isQuick(t); }).sort(taskSortFn);
+  const optNormal = pending.filter(function(t) { return t.optional && !isQuick(t); }).sort(taskSortFn);
+  const optQuick = pending.filter(function(t) { return t.optional && isQuick(t); }).sort(taskSortFn);
+
+  // Busy time: calendar events, your own fixed events, breaks you took, and finished tasks.
+  function span(x) { return { startMin: x.startMin, endMin: x.endMin }; }
+  const busyBlocks = fixed.google.map(span).concat(fixed.locals.map(span), fixed.manual.map(span), fixed.completed.map(span));
   busyBlocks.sort(function(a, b) { return a.startMin - b.startMin; });
 
   const bounds = getDayBounds();
@@ -1572,79 +2036,96 @@ function computeSchedule() {
   });
   if (cursor < bounds.end) windows.push({ start: cursor, end: bounds.end });
 
-  // Nothing new (tasks or breaks) gets placed before the current moment —
-  // once time has passed, that gap is gone, so new/incomplete work always
-  // starts from "now" forward, not backfilled into an earlier empty gap.
+  // Nothing new (tasks or breaks) gets placed before the current moment: once time has
+  // passed, that gap is gone, so unfinished work always starts from "now" forward.
   const nowMin = nowMinutesSinceMidnight();
   windows = windows
     .map(function(w) { return { start: Math.max(w.start, nowMin), end: w.end }; })
     .filter(function(w) { return w.end > w.start; });
 
-  const placed = completedFixed.map(function(t) {
-    return Object.assign({}, t, { startMin: t.fixedStartMin, endMin: t.fixedEndMin });
+  const placed = fixed.completed.map(function(c) {
+    return Object.assign({}, c.task, { startMin: c.startMin, endMin: c.endMin });
   });
+  const unplaced = [];
+  const breaks = [];
+
+  // Puts a task in the first open window big enough for it and returns that window
+  // (so a break can go right after it), or null if nothing fits.
   function place(task) {
     for (let w of windows) {
       if (w.end - w.start >= task.time) {
         placed.push(Object.assign({}, task, { startMin: w.start, endMin: w.start + task.time }));
         w.start += task.time;
-        return true;
+        return w;
       }
     }
-    return false;
+    return null;
   }
 
-  // A task can be bumped by an automatic break only if ALL of these are true:
-  // it's optional, it's under 5 minutes, AND its motivation is 3 or higher.
-  // Low-motivation (<3) tasks and anything 5+ minutes are always protected.
-  function isBreakOverlappable(task) {
-    return task.optional && task.time < 5 && task.motivation >= 3;
-  }
-
+  // Automatic breaks: once enough work minutes pile up, a break goes RIGHT AFTER the task that
+  // pushed it over the limit (in the same open window). Breaks alternate short, long, short,
+  // long. No trailing break after the last task, since nothing important follows it.
   let breakIdCounter = 1;
-  function placeBreak(len, kind) {
-    for (let w of windows) {
-      if (w.end - w.start >= len) {
-        placed.push({ id: 'break-' + (breakIdCounter++), type: 'break', breakType: kind, title: (kind === 'long' ? 'Long Break' : 'Short Break'), startMin: w.start, endMin: w.start + len });
-        w.start += len;
-        return true;
-      }
-    }
-    return false;
-  }
-
-  // Real automatic break insertion: after enough accumulated work minutes,
-  // insert a short break; every 2nd short break becomes a long break instead.
-  // If the next required task is flexible (per isBreakOverlappable), the
-  // break is inserted ahead of it even without extra free room, bumping that
-  // task slightly later — protected tasks never get bumped this way.
   let workSinceBreak = 0, shortBreakCount = 0;
   const workThreshold = settings.shortWorkMin || 25;
-  required.forEach(function(task) {
-    if (workSinceBreak >= workThreshold && isBreakOverlappable(task)) {
-      const isLong = (shortBreakCount % 2 === 1);
-      const breakLen = isLong ? (settings.medBreakMin || 15) : (settings.shortBreakMin || 5);
-      if (placeBreak(breakLen, isLong ? 'long' : 'short')) {
-        workSinceBreak = 0;
-        shortBreakCount++;
-      }
-    }
-    if (!place(task)) return;
+  reqNormal.forEach(function(task, idx) {
+    const w = place(task);
+    if (!w) { unplaced.push(task); return; }
     workSinceBreak += task.time;
-    if (workSinceBreak >= workThreshold) {
+    const isLast = (idx === reqNormal.length - 1);
+    if (workSinceBreak >= workThreshold && !isLast) {
       const isLong = (shortBreakCount % 2 === 1);
       const breakLen = isLong ? (settings.medBreakMin || 15) : (settings.shortBreakMin || 5);
-      if (placeBreak(breakLen, isLong ? 'long' : 'short')) {
+      if (w.end - w.start >= breakLen) {
+        const br = { id: 'break-' + (breakIdCounter++), type: 'break', breakType: isLong ? 'long' : 'short', title: (isLong ? 'Long Break' : 'Short Break'), startMin: w.start, endMin: w.start + breakLen, used: 0 };
+        placed.push(br);
+        breaks.push(br);
+        w.start += breakLen;
         workSinceBreak = 0;
         shortBreakCount++;
       }
     }
   });
-  optional.forEach(place);
+
+  // Quick tasks go inside the first break that still has room for them (one after another, never
+  // on top of each other). With no break available they just take normal free time.
+  function placeQuick(task) {
+    for (let i = 0; i < breaks.length; i++) {
+      const b = breaks[i];
+      if (b.startMin + b.used + task.time <= b.endMin) {
+        placed.push(Object.assign({}, task, { startMin: b.startMin + b.used, endMin: b.startMin + b.used + task.time }));
+        b.used += task.time;
+        return true;
+      }
+    }
+    return !!place(task);
+  }
+  reqQuick.forEach(function(t) { if (!placeQuick(t)) unplaced.push(t); });
+  optNormal.forEach(function(t) { if (!place(t)) unplaced.push(t); });
+  optQuick.forEach(function(t) { if (!placeQuick(t)) unplaced.push(t); });
+
+  placed.unplaced = unplaced;
   return placed;
 }
 
+// Anything that doesn't fit in today's working hours moves to Tomorrow (lowest priority
+// and longest tasks go first, since those are placed last), and the user is told.
+function bumpOverflowToTomorrow() {
+  const overflow = computeSchedule().unplaced || [];
+  if (!overflow.length) return;
+  const names = [];
+  overflow.forEach(function(t) {
+    const real = tasks.find(function(x) { return x.id === t.id; });
+    if (real) { real.tomorrow = true; delete real.manualOrder; names.push(real.title); }
+  });
+  if (!names.length) return;
+  saveTasks();
+  const shownNames = names.slice(0, 3).join(', ') + (names.length > 3 ? ' and ' + (names.length - 3) + ' more' : '');
+  showToast("Moved to Tomorrow (didn't fit today): " + shownNames);
+}
+
 function render() {
+  bumpOverflowToTomorrow();
   renderGrid();
   renderTaskList();
   renderTomorrow();
@@ -1660,12 +2141,14 @@ function renderEventsSidebar() {
     return;
   }
   box.innerHTML = localEvents.map(function(ev, i) {
-    return '<div class="qa-label-item"><span style="flex:1;">' + ev.title + ' <span class="badge">' + formatClockTime(ev.startMin) + '</span></span><button type="button" class="remove" onclick="deleteLocalEvent(' + i + ')" style="background:none;border:none;color:#a3372f;cursor:pointer;">Delete</button></div>';
+    const rep = ev.repeatPattern && ev.repeatPattern !== 'none';
+    return '<div class="qa-label-item"><span style="flex:1;" title="Click to edit" onclick="startEditEvent(' + ev.id + ')">' + escapeHtml(ev.title) + ' <span class="badge">' + formatClockTime(ev.startMin) + '</span>' + (rep ? '<span class="badge">Repeats</span>' : '') + '</span><button type="button" class="remove" onclick="deleteLocalEvent(' + i + ')" style="background:none;border:none;color:#a3372f;cursor:pointer;">Delete</button></div>';
   }).join('');
 }
 
 function deleteLocalEvent(index) {
   if (!localEvents[index]) return;
+  if (editingEventId === localEvents[index].id) resetTaskForm();
   localEvents.splice(index, 1);
   saveLocalEvents();
   render();
@@ -1679,78 +2162,94 @@ function labelColor(name) {
 let draggedTaskId = null;
 let draggedLocalEventId = null;
 
+// The schedule grid is not a plain ruler: hours that hold very short blocks get a little taller,
+// so every block, even a 3-minute one, is tall enough to read and nothing is ever drawn on top
+// of something else. gridMap converts between clock minutes and pixels on the current grid.
+let gridMap = null;
+
+function pxAt(minute) {
+  if (!gridMap) return 0;
+  const rel = Math.min(Math.max(minute - gridMap.start, 0), gridMap.n);
+  const i = Math.min(Math.floor(rel), gridMap.n - 1);
+  return gridMap.P[i] + (rel - i) * (gridMap.P[i + 1] - gridMap.P[i]);
+}
+
+function minuteAtPx(y) {
+  if (!gridMap) return 0;
+  const P = gridMap.P;
+  if (y <= 0) return gridMap.start;
+  if (y >= P[gridMap.n]) return gridMap.end;
+  let lo = 0, hi = gridMap.n;
+  while (hi - lo > 1) {
+    const mid = (lo + hi) >> 1;
+    if (P[mid] <= y) lo = mid; else hi = mid;
+  }
+  return gridMap.start + lo + (y - P[lo]) / (P[lo + 1] - P[lo]);
+}
+
+// If a fixed event would overlap a calendar event or another fixed event today, returns that
+// event's name (otherwise null). Used when you drag an event to a new time.
+function findFixedConflict(startMin, endMin, ignoreLocalId) {
+  const fixed = getFixedBlocks();
+  let hit = null;
+  fixed.google.forEach(function(g) { if (!hit && startMin < g.endMin && endMin > g.startMin) hit = g.title; });
+  fixed.locals.forEach(function(l) {
+    if (!hit && l.ev.id !== ignoreLocalId && startMin < l.endMin && endMin > l.startMin) hit = l.ev.title;
+  });
+  return hit;
+}
+
 function renderGrid() {
   const grid = document.getElementById('grid');
   grid.innerHTML = '';
   const bounds = getDayBounds();
   const gridStart = Math.floor(bounds.start / 60) * 60; // round down to the start of that hour for clean row labels
   const startHour = gridStart / 60, endHour = Math.ceil(bounds.end / 60);
-  for (let h = startHour; h < endHour; h++) {
-    const row = document.createElement('div'); row.className = 'hour-row';
-    const label = document.createElement('div'); label.className = 'hour-label';
-    const dh = h % 12 === 0 ? 12 : h % 12; const ampm = h < 12 ? 'AM' : 'PM';
-    label.textContent = dh + ' ' + ampm;
-    row.appendChild(label);
-    const track = document.createElement('div'); track.className = 'hour-track';
-    row.appendChild(track);
-    grid.appendChild(row);
-  }
-  const rowHeight = 60;
-  function placeOnGrid(startMin, endMin, el) {
-    const offset = startMin - gridStart;
-    const hourIndex = Math.floor(offset/60);
-    const within = offset % 60;
-    const tracks = grid.querySelectorAll('.hour-track');
-    if (hourIndex < 0 || hourIndex >= tracks.length) return;
-    el.style.top = (within/60*rowHeight) + 'px';
-    el.style.height = Math.max(20, (endMin-startMin)/60*rowHeight) + 'px';
-    tracks[hourIndex].appendChild(el);
-  }
+  const gridEnd = endHour * 60;
+  const n = gridEnd - gridStart;
 
-  // Dark green "now" line, like Google Calendar's day view.
-  const nowLine = document.createElement('div');
-  nowLine.id = 'nowLine';
-  grid.appendChild(nowLine);
-  const nowLineLabel = document.createElement('div');
-  nowLineLabel.id = 'nowLineLabel';
-  grid.appendChild(nowLineLabel);
-  positionNowLine();
-  events.forEach(function(ev) {
+  // 1. Build every block first (position comes after we know how tall each hour needs to be).
+  const items = [];
+  function addItem(startMin, endMin, el) { items.push({ startMin: startMin, endMin: endMin, el: el, col: 0, cols: 1 }); }
+
+  const fixed = getFixedBlocks();
+
+  fixed.google.forEach(function(ev) {
     const el = document.createElement('div'); el.className = 'block event';
     el.style.background = labelColor('Google Calendar');
-    el.innerHTML = '<span class="title">' + ev.title + '</span><span class="meta">Google Calendar</span>';
+    el.innerHTML = '<span class="title">' + escapeHtml(ev.title) + '</span><span class="meta">Google Calendar</span>';
     el.oncontextmenu = function(e) { showDurationTooltip(e, ev.title, ev.startMin, ev.endMin); };
-    placeOnGrid(ev.startMin, ev.endMin, el);
+    addItem(ev.startMin, ev.endMin, el);
   });
-  manualBreaks.forEach(function(b) {
+  fixed.manual.forEach(function(b) {
     const el = document.createElement('div'); el.className = 'block break-block';
     el.style.background = labelColor('Break');
     el.innerHTML = '<span class="title">Break</span>';
     el.style.cursor = 'pointer';
     el.oncontextmenu = function(e) { showDurationTooltip(e, 'Break', b.startMin, b.endMin); };
-    el.onclick = function() { openBreakLengthEditor(b.id); };
-    placeOnGrid(b.startMin, b.endMin, el);
+    el.onclick = function() { openBreakLengthEditor(b.orig.id); };
+    addItem(b.startMin, b.endMin, el);
   });
-  localEvents.forEach(function(ev) {
-    if (ev.repeatPattern && ev.repeatPattern !== 'none' && !taskRepeatsOnDay(ev, DAY_NAMES[new Date().getDay()])) return;
+  fixed.locals.forEach(function(item) {
+    const ev = item.ev;
     const el = document.createElement('div'); el.className = 'block event local-event';
     el.style.background = labelColor(ev.label || 'Fixed Events');
-    el.innerHTML = '<span class="title">' + ev.title + '</span><span class="meta">Fixed event (drag to move)</span>';
+    el.innerHTML = '<span class="title">' + escapeHtml(ev.title) + '</span><span class="meta">Fixed event (click to edit, drag to move)</span>';
     el.draggable = true;
+    el.onclick = function() { startEditEvent(ev.id); };
     el.oncontextmenu = function(e) { showDurationTooltip(e, ev.title, ev.startMin, ev.endMin); };
     el.ondragstart = function(e) { draggedLocalEventId = ev.id; e.dataTransfer.effectAllowed = 'move'; };
-    placeOnGrid(ev.startMin, ev.endMin, el);
+    addItem(ev.startMin, ev.endMin, el);
   });
   computeSchedule().forEach(function(t) {
     const el = document.createElement('div');
 
     if (t.type === 'break') {
       el.className = 'block break-block';
-      const breakLabelName = 'Break';
-      el.style.background = labelColor(breakLabelName);
+      el.style.background = labelColor('Break');
       el.innerHTML = '<span class="title">' + t.title + '</span>';
       el.oncontextmenu = function(e) { showDurationTooltip(e, t.title, t.startMin, t.endMin); };
-      placeOnGrid(t.startMin, t.endMin, el);
+      addItem(t.startMin, t.endMin, el);
       return;
     }
 
@@ -1768,9 +2267,9 @@ function renderGrid() {
     } else {
       metaText = pLabel + ' - ' + t.time + 'm - Motivation ' + t.motivation + (t.label ? ' - ' + t.label : '');
     }
-    // Short blocks only show the title — there isn't room for a second line without cutting something off.
+    // Short blocks only show the title: there isn't room for a second line without cutting something off.
     const showMeta = duration >= 30;
-    el.innerHTML = '<label class="task-checkbox-wrap" onclick="event.stopPropagation()"><input type="checkbox" ' + (t.completed ? 'checked' : '') + ' onchange="toggleComplete(' + t.id + ')"></label><span class="title">' + t.title + (t.optional ? '<span class="badge">Optional</span>' : '') + '</span>' + (showMeta ? '<span class="meta">' + metaText + '</span>' : '');
+    el.innerHTML = '<label class="task-checkbox-wrap" onclick="event.stopPropagation()"><input type="checkbox" ' + (t.completed ? 'checked' : '') + ' onchange="toggleComplete(' + t.id + ')"></label><span class="title">' + escapeHtml(t.title) + (t.optional ? '<span class="badge">Optional</span>' : '') + '</span>' + (showMeta ? '<span class="meta">' + escapeHtml(metaText) + '</span>' : '');
     el.onclick = function() { startEditTask(t.id); };
     el.oncontextmenu = function(e) { showDurationTooltip(e, t.title, t.startMin, t.endMin); };
     el.draggable = true;
@@ -1783,11 +2282,92 @@ function renderGrid() {
       if (dragged && dragged.tomorrow) { dragged.tomorrow = false; saveTasks(); render(); return; }
       reorderTaskBefore(draggedTaskId, t.id);
     };
-    placeOnGrid(t.startMin, t.endMin, el);
+    addItem(t.startMin, t.endMin, el);
   });
 
+  // 2. Work out how tall each minute needs to be. Normal minutes are 1px. A block shorter than
+  //    MIN_PX minutes stretches its own minutes so the block ends up MIN_PX tall.
+  const MIN_PX = 18;
+  const w = new Array(n).fill(1);
+  items.forEach(function(it) {
+    const d = it.endMin - it.startMin;
+    if (d <= 0) return;
+    const need = MIN_PX / d;
+    if (need <= 1) return;
+    const from = Math.max(it.startMin, gridStart), to = Math.min(it.endMin, gridEnd);
+    for (let m = from; m < to; m++) if (w[m - gridStart] < need) w[m - gridStart] = need;
+  });
+  const P = [0];
+  for (let i = 0; i < n; i++) P.push(P[i] + w[i]);
+  gridMap = { start: gridStart, end: gridEnd, n: n, P: P };
+
+  // 3. Hour rows, each as tall as its minutes need.
+  for (let h = startHour; h < endHour; h++) {
+    const row = document.createElement('div'); row.className = 'hour-row';
+    row.style.height = (P[(h + 1) * 60 - gridStart] - P[h * 60 - gridStart]) + 'px';
+    const label = document.createElement('div'); label.className = 'hour-label';
+    const dh = h % 12 === 0 ? 12 : h % 12; const ampm = h < 12 ? 'AM' : 'PM';
+    label.textContent = dh + ' ' + ampm;
+    row.appendChild(label);
+    const track = document.createElement('div'); track.className = 'hour-track';
+    row.appendChild(track);
+    grid.appendChild(row);
+  }
+
+  // 4. Place the blocks. Anything that still shares clock time (a quick task inside a break, or
+  //    two calendar events that are double-booked in real life) is drawn side by side.
+  const layer = document.createElement('div');
+  layer.className = 'blocks-layer';
+  layer.style.height = P[n] + 'px';
+  grid.appendChild(layer);
+
+  const visible = items.filter(function(it) { return it.endMin > gridStart && it.startMin < gridEnd; });
+  visible.sort(function(a, b) { return (a.startMin - b.startMin) || (b.endMin - a.endMin); });
+  let cluster = [], clusterEnd = -1;
+  function flush() {
+    if (!cluster.length) return;
+    const colEnds = [];
+    cluster.forEach(function(it) {
+      let c = 0;
+      while (c < colEnds.length && colEnds[c] > it.startMin) c++;
+      colEnds[c] = it.endMin;
+      it.col = c;
+    });
+    cluster.forEach(function(it) {
+      it.cols = colEnds.length;
+      const top = pxAt(Math.max(it.startMin, gridStart));
+      const bottom = pxAt(Math.min(it.endMin, gridEnd));
+      const height = Math.max(1, bottom - top);
+      it.el.style.top = top + 'px';
+      it.el.style.height = height + 'px';
+      if (height < 32) it.el.classList.add('compact');
+      if (it.cols > 1) {
+        it.el.style.left = 'calc(' + (it.col * 100 / it.cols) + '% + 2px)';
+        it.el.style.right = 'auto';
+        it.el.style.width = 'calc(' + (100 / it.cols) + '% - 4px)';
+      }
+      layer.appendChild(it.el);
+    });
+    cluster = [];
+  }
+  visible.forEach(function(it) {
+    if (cluster.length && it.startMin >= clusterEnd) flush();
+    clusterEnd = cluster.length ? Math.max(clusterEnd, it.endMin) : it.endMin;
+    cluster.push(it);
+  });
+  flush();
+
+  // Dark green "now" line, like Google Calendar's day view.
+  const nowLine = document.createElement('div');
+  nowLine.id = 'nowLine';
+  grid.appendChild(nowLine);
+  const nowLineLabel = document.createElement('div');
+  nowLineLabel.id = 'nowLineLabel';
+  grid.appendChild(nowLineLabel);
+  positionNowLine();
+
   // Dropping a task from Tomorrow back onto the schedule grid brings it back to today.
-  // Dropping a local event repositions it to wherever it was dropped.
+  // Dropping a fixed event moves it to wherever it was dropped (unless that would overlap another event).
   grid.ondragover = function(e) { e.preventDefault(); };
   grid.ondrop = function(e) {
     e.preventDefault();
@@ -1795,15 +2375,18 @@ function renderGrid() {
       const ev = localEvents.find(function(x) { return x.id === draggedLocalEventId; });
       if (ev) {
         const gridRect = grid.getBoundingClientRect();
-        const dropY = e.clientY - gridRect.top;
-        const bounds2 = getDayBounds();
-        const gridStart2 = Math.floor(bounds2.start / 60) * 60;
+        const dropMin = minuteAtPx(e.clientY - gridRect.top - 1);
         const duration = ev.endMin - ev.startMin;
-        let newStart = gridStart2 + Math.round(dropY / 60 * 60); // 60px per hour row
-        newStart = Math.round(newStart / 5) * 5; // snap to 5-minute increments
-        ev.startMin = newStart;
-        ev.endMin = newStart + duration;
-        saveLocalEvents();
+        let newStart = Math.round(dropMin / 5) * 5; // snap to 5-minute increments
+        newStart = Math.max(0, Math.min(1440 - duration, newStart));
+        const conflict = findFixedConflict(newStart, newStart + duration, ev.id);
+        if (conflict) {
+          showToast('Can\'t move it there, it would overlap "' + conflict + '".');
+        } else {
+          ev.startMin = newStart;
+          ev.endMin = newStart + duration;
+          saveLocalEvents();
+        }
       }
       draggedLocalEventId = null;
       render();
@@ -1839,7 +2422,7 @@ function renderTaskList() {
     const pLabel = t.priority === 3 ? 'Top' : t.priority === 2 ? 'Medium' : 'Low';
     const span = document.createElement('span');
     span.style.cursor = 'pointer';
-    span.innerHTML = t.title + ' <span class="badge">' + pLabel + '</span>' + (t.optional ? '<span class="badge">Optional</span>' : '') + (t.label ? '<span class="badge">' + t.label + '</span>' : '');
+    span.innerHTML = escapeHtml(t.title) + ' <span class="badge">' + pLabel + '</span>' + (t.optional ? '<span class="badge">Optional</span>' : '') + (t.label ? '<span class="badge">' + escapeHtml(t.label) + '</span>' : '');
     span.onclick = function() { startEditTask(t.id); };
     li.appendChild(span);
     const btn = document.createElement('button'); btn.className = 'remove'; btn.textContent = 'Remove';
@@ -1864,7 +2447,7 @@ function reorderTaskBefore(draggedId, targetId) {
   if (!dragged || !target || dragged.tomorrow || target.tomorrow) return;
   // This is a today-only manual override — it does not carry forward to
   // recurring task instances or future days, which stay fully automatic.
-  const todays = tasks.filter(function(t) { return !t.tomorrow && !t.completed; })
+  const todays = tasks.filter(function(t) { return isTaskActiveToday(t) && !t.completed; })
     .slice()
     .sort(function(a, b) { return (a.manualOrder || 0) - (b.manualOrder || 0); });
   const withoutDragged = todays.filter(function(t) { return t.id !== draggedId; });
@@ -1879,7 +2462,7 @@ function renderTomorrow() {
   const ul = document.getElementById('tomorrowListUI');
   const list = tasks.filter(function(t) { return t.tomorrow; });
   ul.innerHTML = list.map(function(t) {
-    return '<li draggable="true" data-task-id="' + t.id + '" style="padding:4px 0;border-bottom:1px solid var(--border);cursor:grab;">' + t.title + '</li>';
+    return '<li draggable="true" data-task-id="' + t.id + '" style="padding:4px 0;border-bottom:1px solid var(--border);cursor:grab;">' + escapeHtml(t.title) + '</li>';
   }).join('');
   document.getElementById('tomorrowEmpty').style.display = list.length ? 'none' : 'block';
 
@@ -1895,7 +2478,7 @@ function renderTomorrow() {
 }
 
 function updateProgress() {
-  const todays = tasks.filter(function(t) { return !t.tomorrow; });
+  const todays = tasks.filter(isTaskActiveToday);
   const done = todays.filter(function(t) { return t.completed; }).length;
   document.getElementById('progressPill').textContent = done + ' of ' + todays.length + ' tasks done';
 }
@@ -1907,7 +2490,7 @@ function openSettings() {
   document.getElementById('secondaryColor').value = settings.secondary;
   document.getElementById('tertiaryColor').value = settings.tertiary;
   document.getElementById('soundToggle').checked = settings.sound;
-  const soundRadio = document.querySelector('input[name="completionSoundChoice"][value="' + (settings.completionSound || 'chime') + '"]');
+  const soundRadio = document.querySelector('input[name="completionSoundChoice"][value="' + (settings.completionSound || 'sparkle') + '"]');
   if (soundRadio) soundRadio.checked = true;
   document.getElementById('sayingsToggle').checked = settings.sayings;
   document.getElementById('timeFormatSelect').value = settings.timeFormat;
@@ -1934,7 +2517,7 @@ function renderQuoteSettingsUI() {
   byCategory.innerHTML = QUOTE_CATEGORIES.map(function(cat) {
     const items = quotes.map(function(q, i) { return { q: q, i: i }; }).filter(function(x) { return x.q.category === cat; });
     const rows = items.map(function(x) {
-      return '<div class="qa-label-item"><span style="flex:1;">' + x.q.text + '</span><button type="button" class="remove" onclick="deleteQuote(' + x.i + ')" style="background:none;border:none;color:#a3372f;cursor:pointer;">Delete</button></div>';
+      return '<div class="qa-label-item"><span style="flex:1;">' + escapeHtml(x.q.text) + '</span><button type="button" class="remove" onclick="deleteQuote(' + x.i + ')" style="background:none;border:none;color:#a3372f;cursor:pointer;">Delete</button></div>';
     }).join('');
     return '<details style="margin-bottom:6px;">' +
       '<summary style="cursor:pointer;font-size:12.5px;color:var(--tertiary);">' + cat + ' (' + items.length + ')</summary>' +
@@ -2031,10 +2614,11 @@ function saveSettings() {
 
   localStorage.setItem('flowgrove_settings', JSON.stringify(settings));
   closeSettings();
+  render(); // working hours may have changed, so re-check what fits today
 }
 
 function exportData() {
-  const data = { profile: JSON.parse(localStorage.getItem('flowgrove_profile') || 'null'), tasks: tasks, labels: labels, quotes: quotes, settings: settings };
+  const data = { profile: JSON.parse(localStorage.getItem('flowgrove_profile') || 'null'), tasks: tasks, events: localEvents, labels: labels, quotes: quotes, settings: settings };
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -2054,19 +2638,23 @@ const TUTORIAL_STEPS = [
   { target: '#dayTabBtn', title: "Day view is home base", text: "This is where the real scheduling magic happens, real clock times, tasks placed automatically for you." },
   { target: '#weekdaysTabBtn', title: "Weekdays view", text: "Want a Monday-through-Friday look? Tap here anytime." },
   { target: '#weekTabBtn', title: "Week view", text: "Prefer seeing your whole week, weekends included? This one's for you." },
-  { target: '#monthTabBtn', title: "Month view", text: "Zoom all the way out for the big picture of your month." },
+  { target: '#monthTabBtn', title: "Month view", text: "Zoom all the way out for the big picture of your month, with your tasks and events on the days they belong to." },
   { target: '[data-tut="addTaskPanel"]', title: "Adding a task is easy", text: "Give it a title, a priority, a time estimate, a motivation level, a label, maybe a repeat pattern, whatever you need." },
-  { target: '#prioritySeg', title: "Go however feels fastest", text: "Up top, choose 1 for Task or 2 for Event. Events are for fixed things like Lunch or Pick up, not synced from Google Calendar, just yours, and you can drag one to a new time anytime. For priority, click Top, Medium, or Low, or just type 1, 2, or 3, totally up to you! Time and motivation work the same way, type a number or tap the arrow keys. Checkboxes toggle with a click or a quick tap of the Space bar. Hit Enter to hop to the next field, or Tab to go back a step." },
-  { target: '[data-tut="scheduleGrid"]', title: "How your day gets ordered", text: "Priority comes first, then time estimate, then motivation as the tiebreaker. Low-motivation tasks get placed earlier in the day, while your energy's higher." },
-  { target: '[data-tut="scheduleGrid"]', title: "Marking things done", text: "Just click a task block to complete it, and watch the rest of your day adjust automatically if something ran long or short." },
+  { target: '#prioritySeg', title: "Go however feels fastest", text: "Up top, choose 1 for Task or 2 for Event. Events are for fixed things like Lunch or Pick up, not synced from Google Calendar, just yours. Click an event to edit it, or drag it to a new time anytime. For priority, click Top, Medium, or Low, or just type 1, 2, or 3, totally up to you! Time and motivation work the same way, type a number or tap the arrow keys. Checkboxes toggle with a click or a quick tap of the Space bar. Hit Enter to hop to the next field, or Tab to go back a step." },
+  { target: '[data-tut="scheduleGrid"]', title: "How your day gets ordered", text: "Priority comes first, then time estimate, then motivation as the tiebreaker. Short breaks and longer breaks are tucked in automatically after stretches of work." },
+  { target: '[data-tut="scheduleGrid"]', title: "Marking things done", text: "Tick the little checkbox in the corner of a task to mark it done, and watch the rest of your day adjust automatically. Clicking the task itself opens it so you can edit it instead." },
   { target: '[data-tut="breakBtn"]', title: "Need a breather?", text: "Tap this anytime for an instant break. It'll keep time for you, tap again whenever you're ready to jump back in." },
-  { target: '[data-tut="tomorrowPanel"]', title: "Tomorrow's got your back", text: "Anything that doesn't fit today lands here instead of vanishing. You can also drag any task straight onto this panel to send it to Tomorrow yourself, or drag one back out to bring it into today." },
+  { target: '[data-tut="tomorrowPanel"]', title: "Tomorrow's got your back", text: "Anything that doesn't fit before the end of your day moves here automatically instead of vanishing, and you'll get a heads up when it happens. You can also drag any task onto this panel yourself, or drag one back out to bring it into today. Tomorrow's list becomes today's list when the new day starts." },
   { target: '#labelsSidebarPanel', title: "Make it yours with Labels", text: "Give a label its own name and color to keep things visually organized, don't worry, labels never change your schedule order." },
+  { target: '#leftToggle', title: "Need more room?", text: "These little arrows on each side collapse the panels so your schedule has more space. Click again to bring them back, they remember how you left them." },
   { target: null, title: "That's it, you're ready!", text: "Go ahead and start adding your day. You can always pull this tour back up with the Tutorial button whenever you want a refresher." }
 ];
 let tutStep = 0;
 
 function startTutorial() {
+  // Make sure both side panels are open so every tutorial step has something to point at.
+  setSidebar('left', false);
+  setSidebar('right', false);
   tutStep = 0;
   document.getElementById('tutorialOverlay').classList.add('show');
   showTutorialStep();
@@ -2128,17 +2716,23 @@ function showTutorialStep() {
   }
 }
 
-// Require account setup before showing the schedule. If no profile exists yet
-// on this device, send the person to account-setup.html first. Once that's
-// done and they land back here, the tutorial (below) layers on top automatically.
+// Runs once when a new calendar day starts (on page load, or automatically if the
+// page was left open past midnight).
 function checkDayRollover() {
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayStr = localDateStr();
   const lastStr = localStorage.getItem('flowgrove_last_date');
   if (lastStr === todayStr) return; // same day, nothing to do
+  if (lastStr && lastStr > todayStr) {
+    // Saved date is "in the future" (older versions stored the UTC date, which runs
+    // ahead in the evening). Just fix the stored date, don't treat it as a new day.
+    localStorage.setItem('flowgrove_last_date', todayStr);
+    return;
+  }
 
   // A new day has started. Completed one-off tasks from before are done and
   // gone, they shouldn't linger. Repeating tasks keep existing, but their
   // completed/fixed-time/manual-order status resets so today starts fresh.
+  // Anything that was waiting in Tomorrow is now part of today.
   tasks = tasks.filter(function(t) {
     const isRepeating = t.repeatPattern && t.repeatPattern !== 'none';
     return isRepeating || !t.completed;
@@ -2151,8 +2745,16 @@ function checkDayRollover() {
       delete t.fixedEndMin;
     }
     delete t.manualOrder;
+    if (t.tomorrow) t.tomorrow = false;
   });
   saveTasks();
+
+  // One-time events from earlier days are over; repeating events stay.
+  localEvents = localEvents.filter(function(ev) {
+    const rep = ev.repeatPattern && ev.repeatPattern !== 'none';
+    return rep || (ev.createdDate || todayStr) >= todayStr;
+  });
+  saveLocalEvents();
 
   // Yesterday's manual breaks are history now too, clear them so they don't
   // keep showing on today's grid.
@@ -2162,11 +2764,15 @@ function checkDayRollover() {
   localStorage.setItem('flowgrove_last_date', todayStr);
 }
 
+// Require account setup before showing the schedule. If no profile exists yet
+// on this device, send the person to account-setup.html first. Once that's
+// done and they land back here, the tutorial (below) layers on top automatically.
 if (!localStorage.getItem('flowgrove_profile')) {
   window.location.href = 'account-setup.html';
 } else {
   checkDayRollover();
   applyColorsToPage();
+  applySidebars();
   refreshLabelUI();
   render();
   refreshMotivationQuote();

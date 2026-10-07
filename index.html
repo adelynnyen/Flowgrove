@@ -20,12 +20,19 @@
     --optional-bg: #fbf6e8;
     --optional-line: #e3d6a3;
     --event-bg: #e8ebe8;
+    --accent-dark: #1e5631;
+    --accent-light: #dff0e5;
+    --accent-light-border: #bfe0cc;
+    --switch-bg: #f4f6f5;
+    --switch-text: #5b6b60;
+    --switch-active-text: #1c2b22;
+    --motivation-text: #1c2b22;
   }
   * { box-sizing: border-box; }
   body { margin: 0; font-family: 'Lora', serif; background: var(--primary); color: var(--ink); line-height: 1.5; }
   .topbar { display: flex; align-items: center; justify-content: space-between; padding: 14px 24px; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 10px; }
   .brand { font-size: 19px; font-weight: 700; }
-  .live-clock { font-size: 15px; font-weight: 600; color: #1e5631; margin-top: 2px; }
+  .live-clock { font-size: 15px; font-weight: 600; color: var(--accent-dark); margin-top: 2px; }
   .week-grid { display: grid; gap: 6px; }
   .week-col { border: 1px solid var(--border); border-radius: 8px; padding: 8px 3px; text-align: center; align-self: start; }
   .week-col-head { white-space: nowrap; font-weight: 600; font-size: 12px; margin-bottom: 6px; }
@@ -35,9 +42,9 @@
   .week-col.today { border-color: var(--tertiary); background: #f3f8f5; }
   .week-col-head { font-size: 12px; font-weight: 600; margin-bottom: 6px; }
   .week-col-body { font-size: 11px; color: var(--ink-soft); }
-  .view-switch { display: flex; gap: 4px; background: #f4f6f5; border-radius: 8px; padding: 3px; }
-  .view-switch button { border: none; background: none; padding: 6px 14px; border-radius: 6px; font-family: 'Lora', serif; font-size: 13px; cursor: pointer; color: var(--ink-soft); }
-  .view-switch button.active { background: #fff; color: var(--ink); box-shadow: var(--shadow); font-weight: 600; }
+  .view-switch { display: flex; gap: 4px; background: var(--switch-bg); border-radius: 8px; padding: 3px; }
+  .view-switch button { border: none; background: none; padding: 6px 14px; border-radius: 6px; font-family: 'Lora', serif; font-size: 13px; cursor: pointer; color: var(--switch-text); }
+  .view-switch button.active { background: #fff; color: var(--switch-active-text); box-shadow: var(--shadow); font-weight: 600; }
   .topbar-actions { display: flex; gap: 8px; align-items: center; }
   .icon-btn { border: 1px solid var(--border); background: #fff; border-radius: 8px; padding: 7px 12px; font-family: 'Lora', serif; font-size: 12.5px; cursor: pointer; color: var(--ink); }
   .icon-btn:hover { background: #f7f9f8; }
@@ -49,7 +56,7 @@
   main.right-collapsed { --right-w: 44px; }
   @media (min-width: 900px) { main { grid-template-columns: var(--left-w) 1fr var(--right-w); align-items: start; } }
   .leftbar { display: flex; flex-direction: column; gap: 16px; }
-  .panel.motivation-panel { background: #dff0e5; border-color: #bfe0cc; border-left: 4px solid var(--tertiary); box-shadow: 0 2px 10px rgba(111,162,135,0.2); }
+  .panel.motivation-panel { background: var(--accent-light); border-color: var(--accent-light-border); color: var(--motivation-text); border-left: 4px solid var(--tertiary); box-shadow: 0 2px 10px rgba(111,162,135,0.2); }
   .motivation-panel h3::before { content: "✦ "; }
   #motivationText { font-size: 14.5px; line-height: 1.4; }
   .panel { border: 1px solid var(--border); border-radius: 10px; background: #fff; }
@@ -813,33 +820,17 @@ function renderMonth() {
     .catch(function() { /* leave the grid as-is if this fails */ });
 }
 
-// Everything that belongs on a given calendar day, for the Month view:
-// Google Calendar events, your own fixed events, and tasks (repeating tasks on
-// their repeat days, plus today's and tomorrow's one-time tasks).
+// Everything that belongs on a given calendar day, for the Month view: Google Calendar events and
+// your own fixed events. (Tasks are not shown here, only events.)
 function itemsForDate(dateObj) {
   const dayKey = localDateStr(dateObj);
   const abbrev = DAY_NAMES[dateObj.getDay()];
-  const todayKey = localDateStr();
-  const tomorrowD = new Date(); tomorrowD.setDate(tomorrowD.getDate() + 1);
-  const tomorrowKey = localDateStr(tomorrowD);
   const out = [];
   (monthEventsByDay[dayKey] || []).forEach(function(title) {
     out.push({ title: title, color: labelColor('Google Calendar') });
   });
   localEvents.forEach(function(ev) {
     if (localEventOnDate(ev, dayKey, abbrev)) out.push({ title: ev.title, color: labelColor(ev.label || 'Fixed Events') });
-  });
-  tasks.forEach(function(t) {
-    const rep = t.repeatPattern && t.repeatPattern !== 'none';
-    let show;
-    if (rep) {
-      show = taskRepeatsOnDay(t, abbrev) && (!t.createdDate || t.createdDate <= dayKey) && !(t.skipDates && t.skipDates.indexOf(dayKey) !== -1);
-    } else if (t.tomorrow) {
-      show = (dayKey === tomorrowKey);
-    } else {
-      show = (dayKey === todayKey);
-    }
-    if (show) out.push({ title: t.title, color: t.label ? labelColor(t.label) : '#6fa287' });
   });
   return out;
 }
@@ -961,8 +952,9 @@ document.addEventListener('dragend', function() { dragInProgress = false; });
 // the label/event side lists alone so it can't interrupt you while you're typing in Settings.)
 function tickRender() {
   bumpOverflowToTomorrow();
-  renderGrid();
-  renderTaskList();
+  const sched = computeSchedule();
+  renderGrid(sched);
+  renderTaskList(sched);
   renderTomorrow();
   updateProgress();
 }
@@ -2009,9 +2001,14 @@ function findCompletedSlot(task, nowMin) {
   return { start: start, end: end };
 }
 
-// Builds today's schedule. Nothing overlaps, with ONE exception: a "quick" task (under 5 minutes
-// AND motivation 7 or higher) is allowed to sit inside a break. The returned array also carries
-// an `.unplaced` list: tasks that didn't fit before the end of today's working hours.
+// The smallest piece a task may be split into when an event is in the way (in minutes).
+const MIN_PIECE = 10;
+
+// Builds today's schedule, strictly in priority order. Nothing is ever placed ahead of a task that
+// outranks it: if an event is in the way, a task is split (start, pause for the event, finish
+// afterward) instead of being skipped. Nothing overlaps, with ONE exception: a "quick" task
+// (under 5 minutes AND motivation 7 or higher) may sit inside a break. The returned array also
+// carries an `.unplaced` list: tasks that didn't fit before the end of today's working hours.
 function computeSchedule() {
   const fixed = getFixedBlocks();
   const pending = tasks.filter(function(t) { return isTaskActiveToday(t) && !t.completed; });
@@ -2049,27 +2046,57 @@ function computeSchedule() {
   const unplaced = [];
   const breaks = [];
 
-  // Puts a task in the first open window big enough for it and returns that window
-  // (so a break can go right after it), or null if nothing fits.
-  function place(task) {
-    for (let w of windows) {
-      if (w.end - w.start >= task.time) {
-        placed.push(Object.assign({}, task, { startMin: w.start, endMin: w.start + task.time }));
-        w.start += task.time;
-        return w;
+  // Tasks are placed one after another. `frontier` is the first open stretch of time still allowed:
+  // once a task has moved past a gap, later tasks never go back to fill it, so a shorter or
+  // lower-priority task can never jump ahead of one that outranks it.
+  let frontier = 0;
+
+  // Places a task. If it doesn't fit before the next event it is split: a piece before the event
+  // and the rest afterward. Every piece is at least MIN_PIECE minutes (a task shorter than that
+  // is never split). Returns the open stretch where the LAST piece ended (so a break can go
+  // right after it), or null if the whole task doesn't fit today.
+  function placeTask(task) {
+    let remaining = task.time;
+    const undo = [];
+    const pieces = [];
+    let lastIdx = -1;
+    for (let wi = frontier; wi < windows.length && remaining > 0; wi++) {
+      const w = windows[wi];
+      const room = w.end - w.start;
+      if (room <= 0) continue;
+      let len;
+      if (room >= remaining) {
+        len = remaining;
+      } else {
+        len = Math.min(room, remaining - MIN_PIECE);
+        if (len < MIN_PIECE) continue; // this gap is too small to work in, leave it empty
       }
+      undo.push([w, w.start]);
+      pieces.push({ s: w.start, e: w.start + len });
+      w.start += len;
+      remaining -= len;
+      lastIdx = wi;
     }
-    return null;
+    if (remaining > 0) {
+      undo.forEach(function(u) { u[0].start = u[1]; });
+      return null;
+    }
+    frontier = lastIdx;
+    pieces.forEach(function(pc, i) {
+      placed.push(Object.assign({}, task, { startMin: pc.s, endMin: pc.e, partIndex: i, partCount: pieces.length }));
+    });
+    return windows[lastIdx];
   }
 
   // Automatic breaks: once enough work minutes pile up, a break goes RIGHT AFTER the task that
-  // pushed it over the limit (in the same open window). Breaks alternate short, long, short,
-  // long. No trailing break after the last task, since nothing important follows it.
+  // pushed it over the limit (in the same open stretch). Breaks alternate short, long, short,
+  // long, and only go between tasks, never in the middle of one. No trailing break after the
+  // last task, since nothing important follows it.
   let breakIdCounter = 1;
   let workSinceBreak = 0, shortBreakCount = 0;
   const workThreshold = settings.shortWorkMin || 25;
   reqNormal.forEach(function(task, idx) {
-    const w = place(task);
+    const w = placeTask(task);
     if (!w) { unplaced.push(task); return; }
     workSinceBreak += task.time;
     const isLast = (idx === reqNormal.length - 1);
@@ -2098,14 +2125,32 @@ function computeSchedule() {
         return true;
       }
     }
-    return !!place(task);
+    return !!placeTask(task);
   }
   reqQuick.forEach(function(t) { if (!placeQuick(t)) unplaced.push(t); });
-  optNormal.forEach(function(t) { if (!place(t)) unplaced.push(t); });
+  optNormal.forEach(function(t) { if (!placeTask(t)) unplaced.push(t); });
   optQuick.forEach(function(t) { if (!placeQuick(t)) unplaced.push(t); });
 
   placed.unplaced = unplaced;
   return placed;
+}
+
+// Today's tasks in the order they appear on the schedule (first piece of each task, earliest first).
+// "All Tasks Today" uses this, so the list and the schedule can never disagree.
+function getTodayOrder(sched) {
+  sched = sched || computeSchedule();
+  const firstStart = {};
+  sched.forEach(function(s) {
+    if (s.type === 'break') return;
+    if (firstStart[s.id] === undefined || s.startMin < firstStart[s.id]) firstStart[s.id] = s.startMin;
+  });
+  return tasks.filter(isTaskActiveToday).slice().sort(function(a, b) {
+    const sa = firstStart[a.id], sb = firstStart[b.id];
+    if (sa !== undefined && sb !== undefined) return (sa - sb) || taskSortFn(a, b);
+    if (sa !== undefined) return -1;
+    if (sb !== undefined) return 1;
+    return taskSortFn(a, b);
+  });
 }
 
 // Anything that doesn't fit in today's working hours moves to Tomorrow (lowest priority
@@ -2126,8 +2171,9 @@ function bumpOverflowToTomorrow() {
 
 function render() {
   bumpOverflowToTomorrow();
-  renderGrid();
-  renderTaskList();
+  const sched = computeSchedule(); // one plan, shared, so the grid and the list always agree
+  renderGrid(sched);
+  renderTaskList(sched);
   renderTomorrow();
   refreshLabelUI();
   renderEventsSidebar();
@@ -2199,7 +2245,7 @@ function findFixedConflict(startMin, endMin, ignoreLocalId) {
   return hit;
 }
 
-function renderGrid() {
+function renderGrid(sched) {
   const grid = document.getElementById('grid');
   grid.innerHTML = '';
   const bounds = getDayBounds();
@@ -2241,7 +2287,7 @@ function renderGrid() {
     el.ondragstart = function(e) { draggedLocalEventId = ev.id; e.dataTransfer.effectAllowed = 'move'; };
     addItem(ev.startMin, ev.endMin, el);
   });
-  computeSchedule().forEach(function(t) {
+  (sched || computeSchedule()).forEach(function(t) {
     const el = document.createElement('div');
 
     if (t.type === 'break') {
@@ -2260,16 +2306,17 @@ function renderGrid() {
     else el.style.background = settings.secondary === '#ffffff' ? '#f4f6f5' : settings.secondary;
 
     const duration = t.endMin - t.startMin;
+    const partSuffix = (t.partCount > 1) ? ' (' + (t.partIndex + 1) + '/' + t.partCount + ')' : '';
     const pLabel = t.priority === 3 ? 'Top' : t.priority === 2 ? 'Medium' : 'Low';
     let metaText;
     if (t.completed) {
       metaText = 'Done: ' + formatClockTime(t.startMin) + ' - ' + formatClockTime(t.endMin);
     } else {
-      metaText = pLabel + ' - ' + t.time + 'm - Motivation ' + t.motivation + (t.label ? ' - ' + t.label : '');
+      metaText = pLabel + ' - ' + (t.partCount > 1 ? (duration + ' of ' + t.time + 'm') : (t.time + 'm')) + ' - Motivation ' + t.motivation + (t.label ? ' - ' + t.label : '');
     }
     // Short blocks only show the title: there isn't room for a second line without cutting something off.
     const showMeta = duration >= 30;
-    el.innerHTML = '<label class="task-checkbox-wrap" onclick="event.stopPropagation()"><input type="checkbox" ' + (t.completed ? 'checked' : '') + ' onchange="toggleComplete(' + t.id + ')"></label><span class="title">' + escapeHtml(t.title) + (t.optional ? '<span class="badge">Optional</span>' : '') + '</span>' + (showMeta ? '<span class="meta">' + escapeHtml(metaText) + '</span>' : '');
+    el.innerHTML = '<label class="task-checkbox-wrap" onclick="event.stopPropagation()"><input type="checkbox" ' + (t.completed ? 'checked' : '') + ' onchange="toggleComplete(' + t.id + ')"></label><span class="title">' + escapeHtml(t.title + partSuffix) + (t.optional ? '<span class="badge">Optional</span>' : '') + '</span>' + (showMeta ? '<span class="meta">' + escapeHtml(metaText) + '</span>' : '');
     el.onclick = function() { startEditTask(t.id); };
     el.oncontextmenu = function(e) { showDurationTooltip(e, t.title, t.startMin, t.endMin); };
     el.draggable = true;
@@ -2397,15 +2444,11 @@ function renderGrid() {
   };
 }
 
-function renderTaskList() {
+function renderTaskList(sched) {
   const ul = document.getElementById('taskListUI');
   ul.innerHTML = '';
-  const sorted = tasks.filter(isTaskActiveToday)
-    .slice()
-    .sort(function(a, b) {
-      if (a.completed !== b.completed) return a.completed ? 1 : -1;
-      return taskSortFn(a, b);
-    });
+  // Same order as the schedule, always. Finished tasks stay in the spot they were done.
+  const sorted = getTodayOrder(sched);
   sorted.forEach(function(t) {
     const li = document.createElement('li');
     if (t.completed) li.classList.add('task-done-row');
@@ -2445,13 +2488,12 @@ function reorderTaskBefore(draggedId, targetId) {
   const dragged = tasks.find(function(t) { return t.id === draggedId; });
   const target = tasks.find(function(t) { return t.id === targetId; });
   if (!dragged || !target || dragged.tomorrow || target.tomorrow) return;
-  // This is a today-only manual override — it does not carry forward to
-  // recurring task instances or future days, which stay fully automatic.
-  const todays = tasks.filter(function(t) { return isTaskActiveToday(t) && !t.completed; })
-    .slice()
-    .sort(function(a, b) { return (a.manualOrder || 0) - (b.manualOrder || 0); });
+  // This is a today-only manual override: it starts from the order you see on the schedule, and
+  // it does not carry forward to recurring task instances or future days, which stay automatic.
+  const todays = getTodayOrder().filter(function(t) { return !t.completed; });
   const withoutDragged = todays.filter(function(t) { return t.id !== draggedId; });
   const targetIndex = withoutDragged.findIndex(function(t) { return t.id === targetId; });
+  if (targetIndex < 0) return; // dropped on a finished task: nothing to reorder against
   withoutDragged.splice(targetIndex, 0, dragged);
   withoutDragged.forEach(function(t, i) { t.manualOrder = i; });
   saveTasks();
@@ -2564,6 +2606,7 @@ function renderWorkingHoursUI() {
 
 function applyThemePreset() {
   const val = document.getElementById('themeSelect').value;
+  settings.theme = val;
   document.getElementById('customColors').style.display = val === 'custom' ? 'block' : 'none';
   const presets = {
     modern: { primary:'#ffffff', secondary:'#ffffff', tertiary:'#6fa287' },
@@ -2573,9 +2616,8 @@ function applyThemePreset() {
   };
   if (presets[val]) {
     settings.primary = presets[val].primary; settings.secondary = presets[val].secondary; settings.tertiary = presets[val].tertiary;
-    applyColorsToPage();
   }
-  settings.theme = val;
+  applyColorsToPage();
 }
 
 function applyCustomColors() {
@@ -2585,11 +2627,72 @@ function applyCustomColors() {
   applyColorsToPage();
 }
 
+function hexToHsl(hex) {
+  const m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex || '');
+  if (!m) return null;
+  const r = parseInt(m[1], 16) / 255, g = parseInt(m[2], 16) / 255, b = parseInt(m[3], 16) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  let h = 0, s = 0;
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    if (max === r) h = ((g - b) / d + (g < b ? 6 : 0));
+    else if (max === g) h = ((b - r) / d + 2);
+    else h = ((r - g) / d + 4);
+    h *= 60;
+  }
+  return { h: h, s: s, l: l };
+}
+
+function hslToHex(h, s, l) {
+  const c = (1 - Math.abs(2 * l - 1)) * s;
+  const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+  const m = l - c / 2;
+  let r = 0, g = 0, b = 0;
+  if (h < 60) { r = c; g = x; }
+  else if (h < 120) { r = x; g = c; }
+  else if (h < 180) { g = c; b = x; }
+  else if (h < 240) { g = x; b = c; }
+  else if (h < 300) { r = x; b = c; }
+  else { r = c; b = x; }
+  function hex(v) { const n = Math.round((v + m) * 255); return (n < 16 ? '0' : '') + n.toString(16); }
+  return '#' + hex(r) + hex(g) + hex(b);
+}
+
+// The Day/Weekdays/Week/Month bar, the Motivation block, and the date + time follow the theme:
+// a light and a dark shade of the theme's color. Modern and Dark keep their original greens.
+function deriveThemeShades() {
+  const GREEN = { dark: '#1e5631', light: '#dff0e5', border: '#bfe0cc', switchBg: '#f4f6f5', switchText: '#5b6b60', switchActive: '#1c2b22', motivationText: '#1c2b22' };
+  function fromShades(dark, light, border) {
+    return { dark: dark, light: light, border: border, switchBg: light, switchText: dark, switchActive: dark, motivationText: dark };
+  }
+  const theme = settings.theme;
+  if (theme === 'modern' || theme === 'dark') return GREEN;
+  if (theme === 'pastel') return fromShades('#8e3f7f', '#f7e4f4', '#e8c3e2');   // dark pink / light pink
+  if (theme === 'colorful') return fromShades('#a8501f', '#fde8d9', '#f5c9a8'); // burnt orange / light peach
+  // Custom: use the background color's hue if it has a noticeable tint, otherwise the button color's.
+  const bg = hexToHsl(settings.primary), accent = hexToHsl(settings.tertiary);
+  const base = (bg && bg.s >= 0.25) ? bg : accent;
+  if (!base) return GREEN;
+  const s = Math.min(0.7, Math.max(0.3, base.s));
+  return fromShades(hslToHex(base.h, s, 0.28), hslToHex(base.h, Math.min(s, 0.6), 0.92), hslToHex(base.h, Math.min(s, 0.5), 0.82));
+}
+
 function applyColorsToPage() {
-  document.documentElement.style.setProperty('--primary', settings.primary);
-  document.documentElement.style.setProperty('--secondary', settings.secondary);
-  document.documentElement.style.setProperty('--tertiary', settings.tertiary);
-  document.documentElement.style.setProperty('--tertiary-hover', settings.tertiary);
+  const root = document.documentElement.style;
+  root.setProperty('--primary', settings.primary);
+  root.setProperty('--secondary', settings.secondary);
+  root.setProperty('--tertiary', settings.tertiary);
+  root.setProperty('--tertiary-hover', settings.tertiary);
+  const sh = deriveThemeShades();
+  root.setProperty('--accent-dark', sh.dark);
+  root.setProperty('--accent-light', sh.light);
+  root.setProperty('--accent-light-border', sh.border);
+  root.setProperty('--switch-bg', sh.switchBg);
+  root.setProperty('--switch-text', sh.switchText);
+  root.setProperty('--switch-active-text', sh.switchActive);
+  root.setProperty('--motivation-text', sh.motivationText);
 }
 
 function saveSettings() {
@@ -2638,10 +2741,10 @@ const TUTORIAL_STEPS = [
   { target: '#dayTabBtn', title: "Day view is home base", text: "This is where the real scheduling magic happens, real clock times, tasks placed automatically for you." },
   { target: '#weekdaysTabBtn', title: "Weekdays view", text: "Want a Monday-through-Friday look? Tap here anytime." },
   { target: '#weekTabBtn', title: "Week view", text: "Prefer seeing your whole week, weekends included? This one's for you." },
-  { target: '#monthTabBtn', title: "Month view", text: "Zoom all the way out for the big picture of your month, with your tasks and events on the days they belong to." },
+  { target: '#monthTabBtn', title: "Month view", text: "Zoom all the way out for the big picture of your month, with your events and Google Calendar events on the days they belong to." },
   { target: '[data-tut="addTaskPanel"]', title: "Adding a task is easy", text: "Give it a title, a priority, a time estimate, a motivation level, a label, maybe a repeat pattern, whatever you need." },
   { target: '#prioritySeg', title: "Go however feels fastest", text: "Up top, choose 1 for Task or 2 for Event. Events are for fixed things like Lunch or Pick up, not synced from Google Calendar, just yours. Click an event to edit it, or drag it to a new time anytime. For priority, click Top, Medium, or Low, or just type 1, 2, or 3, totally up to you! Time and motivation work the same way, type a number or tap the arrow keys. Checkboxes toggle with a click or a quick tap of the Space bar. Hit Enter to hop to the next field, or Tab to go back a step." },
-  { target: '[data-tut="scheduleGrid"]', title: "How your day gets ordered", text: "Priority comes first, then time estimate, then motivation as the tiebreaker. Short breaks and longer breaks are tucked in automatically after stretches of work." },
+  { target: '[data-tut="scheduleGrid"]', title: "How your day gets ordered", text: "Priority comes first, then time estimate, then motivation as the tiebreaker. If an event is in the way, a long task pauses for it and finishes afterward, and short breaks and longer breaks are tucked in automatically after stretches of work. The list on the right is always in the same order as your schedule." },
   { target: '[data-tut="scheduleGrid"]', title: "Marking things done", text: "Tick the little checkbox in the corner of a task to mark it done, and watch the rest of your day adjust automatically. Clicking the task itself opens it so you can edit it instead." },
   { target: '[data-tut="breakBtn"]', title: "Need a breather?", text: "Tap this anytime for an instant break. It'll keep time for you, tap again whenever you're ready to jump back in." },
   { target: '[data-tut="tomorrowPanel"]', title: "Tomorrow's got your back", text: "Anything that doesn't fit before the end of your day moves here automatically instead of vanishing, and you'll get a heads up when it happens. You can also drag any task onto this panel yourself, or drag one back out to bring it into today. Tomorrow's list becomes today's list when the new day starts." },

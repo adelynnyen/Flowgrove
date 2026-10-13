@@ -15,7 +15,7 @@
 //   GOOGLE_CLIENT_ID
 //   GOOGLE_CLIENT_SECRET
 
-const API_VERSION = 3;
+const API_VERSION = 4;
 const MAX_RANGE_MS = 62 * 24 * 60 * 60 * 1000; // never more than ~2 months in one request
 const MAX_CALENDARS = 15;
 
@@ -167,6 +167,7 @@ export default async function handler(req, res) {
           events.push({
             calId: r.cal.id,
             title: ev.summary || '(No title)',
+            colorId: ev.colorId || null, // an event can have its own color, different from its calendar's
             allDay: !ev.start.dateTime,
             start: ev.start.dateTime || ev.start.date,
             end: (ev.end && (ev.end.dateTime || ev.end.date)) || ev.start.dateTime || ev.start.date

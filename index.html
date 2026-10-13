@@ -62,8 +62,8 @@
   #breakBtn.on { background: #fff; color: var(--tertiary); }
   main { --left-w: 220px; --right-w: 320px; max-width: 1240px; margin: 0 auto; padding: 20px 24px 64px; display: grid; grid-template-columns: 1fr; gap: 22px; }
   main > div { min-width: 0; }
-  main.left-collapsed { --left-w: 44px; }
-  main.right-collapsed { --right-w: 44px; }
+  main.left-collapsed { --left-w: 56px; }
+  main.right-collapsed { --right-w: 108px; }
   @media (min-width: 900px) { main { grid-template-columns: var(--left-w) 1fr var(--right-w); align-items: start; } }
   .leftbar { display: flex; flex-direction: column; gap: 16px; }
   .panel.motivation-panel { background: var(--accent-light); border-color: var(--accent-light-border); color: var(--motivation-text); border-left: 4px solid var(--tertiary); box-shadow: 0 2px 10px rgba(111,162,135,0.2); }
@@ -120,10 +120,39 @@
   .sb-content { display: flex; flex-direction: column; gap: 16px; }
   .collapse-btn { align-self: flex-end; border: 1px solid var(--border); background: #fff; border-radius: 8px; width: 34px; height: 28px; cursor: pointer; font-size: 15px; line-height: 1; color: var(--ink-soft); }
   .collapse-btn:hover { background: #f7f9f8; color: var(--ink); }
-  .rail-label { display: none; writing-mode: vertical-rl; font-size: 12px; color: var(--ink-soft); margin: 10px auto 0; letter-spacing: 0.03em; }
-  .collapsed-side .sb-content { display: none; }
-  .collapsed-side .rail-label { display: block; }
+  .rail-icons { display: none; }
+
+  /* ---- a collapsed side: a strip of icons. Click an icon to pop out just that block. ---- */
+  .collapsed-side { position: sticky; top: 12px; z-index: 110; align-self: start; }
   .collapsed-side .collapse-btn { align-self: center; }
+  .collapsed-side .rail-icons { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+  .leftbar.collapsed-side .rail-icons { align-items: center; }
+  .rail-btn { display: flex; align-items: center; gap: 8px; width: 100%; padding: 7px 8px; border: 1px solid transparent; border-radius: 12px; background: transparent; color: var(--accent-dark); cursor: pointer; font-family: 'Lora', serif; font-size: 13px; font-weight: 700; text-align: left; transition: background 0.15s ease, border-color 0.15s ease; }
+  .leftbar .rail-btn { justify-content: center; width: auto; padding: 8px; }
+  .rail-btn:hover { background: var(--accent-light); }
+  .rail-btn.is-open { background: var(--accent-light); border-color: var(--accent-light-border); }
+  .rail-btn svg { width: 26px; height: 26px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; transform-origin: 50% 50%; transition: transform 0.35s ease; }
+  .rail-btn svg.fill { fill: currentColor; stroke: none; }
+  .rail-btn svg .pie-bg { fill: #e6ebe7; stroke: none; }
+  .rail-btn svg .pie-dark { fill: currentColor; stroke: none; }
+  .rail-btn:hover svg.ico-spin { transform: rotate(90deg); }
+  .rail-btn svg.ico-spin.spinning { animation: railSpin 0.6s ease; }
+  @keyframes railSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  .rail-text { font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  /* blocks that are popped out float next to the strip, over the schedule; several can be open at once */
+  .collapsed-side .sb-content { display: none; position: absolute; top: 0; flex-direction: column; gap: 12px; max-height: calc(100vh - 24px); overflow-y: auto; padding: 6px 18px 26px; z-index: 120; }
+  .leftbar.collapsed-side .sb-content { left: calc(100% - 12px); width: 336px; }
+  .sidebar.collapsed-side .sb-content { right: calc(100% - 12px); width: 386px; }
+  .collapsed-side.has-popped .sb-content { display: flex; }
+  .collapsed-side .sb-content > .panel { display: none !important; }
+  .collapsed-side .sb-content > .panel.popped { display: block !important; box-shadow: 0 6px 16px rgba(0,0,0,0.16); animation: popIn 0.2s ease-out; }
+  .collapsed-side .sb-content > .panel.popped[style*="display:none"], .collapsed-side .sb-content > .panel.popped[style*="display: none"] { display: none !important; }
+  .collapsed-side .sb-content > .panel.popped.pop-out { animation: popOut 0.17s ease-in forwards; }
+  .leftbar.collapsed-side .sb-content > .panel { --pop-from: -26px; }
+  .sidebar.collapsed-side .sb-content > .panel { --pop-from: 26px; }
+  @keyframes popIn { from { opacity: 0; transform: translateX(var(--pop-from, 26px)) scale(0.97); } to { opacity: 1; transform: none; } }
+  @keyframes popOut { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateX(var(--pop-from, 26px)) scale(0.97); } }
   .side-panel { padding: 14px 16px 16px; }
   .side-panel h3 { margin: 0 0 10px; font-size: 13.5px; font-weight: 600; }
   .tab-row { display: flex; gap: 6px; margin-bottom: 10px; }
@@ -264,9 +293,12 @@
 <main>
   <div class="leftbar" id="leftbar">
     <button type="button" class="collapse-btn" id="leftToggle" onclick="toggleSidebar('left')" title="Collapse" aria-label="Collapse or expand the left panels">&laquo;</button>
-    <div class="rail-label">Motivation · Labels · Events</div>
+    <div class="rail-icons">
+      <button type="button" class="rail-btn" data-pop="motivation" title="Motivation" aria-label="Motivation" onclick="railClick('motivation', this)"><svg class="ico ico-spin fill" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1.5Q13 11 22.5 12Q13 13 12 22.5Q11 13 1.5 12Q11 11 12 1.5Z"/></svg></button>
+      <button type="button" class="rail-btn" data-pop="labels" title="Labels" aria-label="Labels" onclick="railClick('labels', this)"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L2.2 12.2V2.2h10l8.4 8.4a2 2 0 0 1 0 2.8z"/><circle cx="7.4" cy="7.4" r="1.5" fill="currentColor" stroke="none"/></svg></button>
+    </div>
     <div class="sb-content">
-      <div class="panel side-panel motivation-panel">
+      <div class="panel side-panel motivation-panel" id="motivationPanel" data-pop="motivation">
         <div style="display:flex;justify-content:space-between;align-items:center;">
           <h3 style="margin:0;">Motivation</h3>
           <button type="button" class="icon-btn" onclick="refreshMotivationQuote()" title="Get a new quote">↻ Refresh</button>
@@ -274,7 +306,7 @@
         <p id="motivationText" style="font-size:13px;margin:8px 0 0;font-style:italic;"></p>
       </div>
 
-      <div class="panel side-panel" id="labelsSidebarPanel">
+      <div class="panel side-panel" id="labelsSidebarPanel" data-pop="labels">
         <h3>Labels</h3>
         <p style="font-size:11px;color:var(--ink-soft);margin:0 0 6px;">Click a label to highlight matching tasks. Click × to delete.</p>
         <div id="labelsSidebarList" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
@@ -285,11 +317,6 @@
         <button type="button" class="icon-btn" style="margin-top:6px;width:100%;" onclick="addLabelFromSidebar()">Add Label</button>
       </div>
 
-      <div class="panel side-panel" id="eventsSidebarPanel">
-        <h3>Events</h3>
-        <p style="font-size:11px;color:var(--ink-soft);margin:0 0 6px;">Fixed events you've created (not from Google Calendar). Click one to edit it, or drag it on the schedule to move it.</p>
-        <div id="eventsSidebarList"></div>
-      </div>
     </div>
   </div>
 
@@ -325,9 +352,19 @@
 
   <div class="sidebar" id="rightbar">
     <button type="button" class="collapse-btn" id="rightToggle" onclick="toggleSidebar('right')" title="Collapse" aria-label="Collapse or expand the right panels">&raquo;</button>
-    <div class="rail-label">Add · Tomorrow · Tasks</div>
+    <div class="rail-icons">
+      <button type="button" class="rail-btn" id="railClockBtn" data-pop="clock" style="display:none;" title="Timer / stopwatch" aria-label="Timer or stopwatch" onclick="railClick('clock', this)">
+        <svg class="ico" id="railPie" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" class="pie-bg"/><path id="railPieDark" class="pie-dark" d=""/></svg>
+        <svg class="ico" id="railStopwatch" viewBox="0 0 24 24" aria-hidden="true" style="display:none;"><circle cx="12" cy="13.6" r="7.6"/><path d="M12 13.6V9M9.4 2.8h5.2M12 2.8v3.4M18.6 6.4l1.5-1.5"/></svg>
+        <span class="rail-text" id="railClockText"></span>
+      </button>
+      <button type="button" class="rail-btn" data-pop="add" title="Add a Task/Event" aria-label="Add a Task/Event" onclick="railClick('add', this)"><svg class="ico ico-spin" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.5v15M4.5 12h15" stroke-width="2.8"/></svg></button>
+      <button type="button" class="rail-btn" data-pop="tasks" title="All Tasks Today" aria-label="All Tasks Today" onclick="railClick('tasks', this)"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="4.5"/><path d="M8 12.4l2.9 2.9 5.4-5.8"/></svg><span class="rail-text" id="railTasksCount">0</span></button>
+      <button type="button" class="rail-btn" data-pop="events" title="Fixed Events" aria-label="Fixed Events" onclick="railClick('events', this)"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="3.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><circle cx="8.5" cy="14.2" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="14.2" r="1" fill="currentColor" stroke="none"/><circle cx="15.5" cy="14.2" r="1" fill="currentColor" stroke="none"/></svg><span class="rail-text" id="railEventsCount">0</span></button>
+      <button type="button" class="rail-btn" data-pop="tomorrow" title="Tomorrow" aria-label="Tomorrow" onclick="railClick('tomorrow', this)"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.2"/><path d="M8.4 8l4 4-4 4M12.8 8l4 4-4 4"/></svg><span class="rail-text" id="railTomorrowCount">0</span></button>
+    </div>
     <div class="sb-content">
-      <div class="panel side-panel clock-panel" id="clockPanel" data-tut="clockPanel" style="display:none;">
+      <div class="panel side-panel clock-panel" id="clockPanel" data-pop="clock" data-tut="clockPanel" style="display:none;">
         <div class="clock-head">
           <h3 id="clockTitle">Name of Task</h3>
           <button type="button" class="clock-close" onclick="closeClockPanel()" title="Close" aria-label="Close the clock">&times;</button>
@@ -353,7 +390,7 @@
         <p class="clock-note" id="clockRunningNote" style="display:none;"></p>
       </div>
 
-      <div class="panel side-panel" data-tut="addTaskPanel" onclick="focusTypeIfPanelBackground(event)">
+      <div class="panel side-panel" id="addPanel" data-pop="add" data-tut="addTaskPanel" onclick="focusTypeIfPanelBackground(event)">
         <h3>Add a Task/Event</h3>
         <p style="font-size:11px;color:var(--ink-soft);margin:0 0 10px;">Click any field, or use the fast keyboard shortcuts shown (type a number, hit Space, or press Enter to jump to the next field).</p>
 
@@ -424,15 +461,23 @@
         </form>
       </div>
 
-      <div class="panel side-panel" data-tut="tomorrowPanel">
+
+
+      <div class="panel task-list" id="tasksPanel" data-pop="tasks" data-tut="taskListPanel">
+        <h3>All Tasks Today</h3>
+        <ul id="taskListUI"></ul>
+      </div>
+
+      <div class="panel side-panel" id="eventsSidebarPanel" data-pop="events">
+        <h3>Events</h3>
+        <p style="font-size:11px;color:var(--ink-soft);margin:0 0 6px;">Fixed events you've created (not from Google Calendar). Click one to edit it, or drag it on the schedule to move it.</p>
+        <div id="eventsSidebarList"></div>
+      </div>
+
+      <div class="panel side-panel" id="tomorrowPanel" data-pop="tomorrow" data-tut="tomorrowPanel">
         <h3>Tomorrow</h3>
         <ul id="tomorrowListUI" style="list-style:none;margin:0;padding:0;font-size:12.5px;"></ul>
         <p id="tomorrowEmpty" style="font-size:12px;color:var(--ink-soft);margin:6px 0 0;">Nothing here yet.</p>
-      </div>
-
-      <div class="panel task-list" data-tut="taskListPanel">
-        <h3>All Tasks Today</h3>
-        <ul id="taskListUI"></ul>
       </div>
     </div>
   </div>
@@ -971,6 +1016,7 @@ function applySidebars() {
     btn.innerHTML = side === 'left' ? (collapsed ? '&raquo;' : '&laquo;') : (collapsed ? '&laquo;' : '&raquo;');
     btn.title = collapsed ? 'Expand' : 'Collapse';
   });
+  syncPop();
 }
 function setSidebar(side, collapsed) {
   sidebarState[side] = collapsed;
@@ -1202,6 +1248,7 @@ function tickRender() {
   updateProgress();
   renderAllDayStrip();
   refreshVisibleViews();
+  updateRail();
 }
 
 let lastRenderedMinute = nowMinutesSinceMidnight();
@@ -1897,7 +1944,7 @@ function resetTaskForm() {
 function startEditTask(id) {
   const t = tasks.find(function(x) { return x.id === id; });
   if (!t) return;
-  setSidebar('right', false); // make sure the form is visible
+  revealPanel('add'); // if the side is collapsed, pop out just the form
   editingTaskId = null; editingEventId = null;
   setEntryType('task');
   editingTaskId = id;
@@ -1918,7 +1965,7 @@ function startEditTask(id) {
 function startEditEvent(id) {
   const ev = localEvents.find(function(x) { return x.id === id; });
   if (!ev) return;
-  setSidebar('right', false); // make sure the form is visible
+  revealPanel('add'); // if the side is collapsed, pop out just the form
   editingTaskId = null; editingEventId = null;
   setEntryType('event');
   editingEventId = id;
@@ -2038,17 +2085,15 @@ function toggleComplete(id) {
   if (!t.completed) {
     pauseClockIfTask(id); // finishing a task stops its clock
     recordCompletionTime(t); // minutes worked since the break ended / the last task was ticked
-    // Marking complete: lock it in as a "done" block that ends right now and is as long as the
-    // task's estimate, trimmed so it never overlaps an event, a break, or another finished task.
-    // Because it is locked, adding new tasks later can't disturb it.
+    // Ticking a task means you've moved on: a fixed event or break that is still going ends early now.
+    // The finished task remembers what it ended, because its block is allowed to overlap them.
+    const endedKeys = endInProgressEarly();
+    if (endedKeys.length) t.cutKeys = endedKeys; else delete t.cutKeys;
+    // Marking complete: lock it in as a "done" block that ends right now. It is at least one minute long,
+    // so a finished task can never disappear from the schedule.
     const slot = findCompletedSlot(t, nowMinutesSinceMidnight());
-    if (slot) {
-      t.fixedStartMin = slot.start;
-      t.fixedEndMin = slot.end;
-    } else {
-      delete t.fixedStartMin; // no free room to show it; it still counts as done
-      delete t.fixedEndMin;
-    }
+    t.fixedStartMin = slot.start;
+    t.fixedEndMin = slot.end;
     t.completed = true;
     if (settings.sound) playCompletionSound();
     maybeShowSaying();
@@ -2060,6 +2105,8 @@ function toggleComplete(id) {
     delete t.fixedEndMin;
     delete t.inferredNetMs;
     delete t.chunkStartMs;
+    restoreEndedEarly(t.cutKeys); // put back any event this tick ended early
+    delete t.cutKeys;
   }
   saveTasks();
   render();
@@ -2090,6 +2137,7 @@ let workState = (function() {
   ws.clocks = ws.clocks || {};
   ws.log = ws.log || [];
   ws.running = ws.running || null;
+  if (!ws.cuts) ws.cuts = {};          // events/breaks that were ended early today: key -> minute they ended
   if (ws.markerAt === undefined) ws.markerAt = null; // when the last break ended or the last task was ticked
   if (ws.panelTaskId === undefined) ws.panelTaskId = null;
   return ws;
@@ -2137,7 +2185,7 @@ function ensureWorkToday() {
     while (keys.length > 90) delete hist[keys.shift()];
     localStorage.setItem('flowgrove_work_history', JSON.stringify(hist));
   }
-  workState = { date: today, clocks: {}, running: null, panelTaskId: null, log: [], markerAt: null };
+  workState = { date: today, clocks: {}, running: null, panelTaskId: null, log: [], markerAt: null, cuts: {} };
   saveWork();
 }
 
@@ -2201,17 +2249,70 @@ function recordCompletionTime(task) {
   saveWork();
 }
 
+// Starting a timer or stopwatch, or ticking a task done, means you've moved on to the next thing.
+// So any fixed event (yours or Google's) that is still going, and a break that is still on, ends early
+// right now. The part of an event that wasn't used becomes free time again, and right-clicking the
+// event shows how much of it was used. (Google Calendar itself is never changed.)
+// Returns the keys of what was ended, so a finished task can remember them.
+function endInProgressEarly() {
+  const nowMin = nowMinutesSinceMidnight();
+  const keys = [];
+  const names = [];
+  const fixed = getFixedBlocks();
+  fixed.google.concat(fixed.locals).forEach(function(b) {
+    if (b.startMin < nowMin && nowMin < b.endMin) { // started earlier and not over yet
+      workState.cuts[b.key] = nowMin;
+      keys.push(b.key);
+      names.push(b.title);
+    }
+  });
+  if (breakActive) {
+    const breakKey = endManualBreak();
+    names.push('your break');
+    if (breakKey) keys.push(breakKey);
+  }
+  if (names.length) {
+    saveWork();
+    showToast('Ended early: ' + names.join(', ') + '.');
+  }
+  return keys;
+}
+
+// Un-ticking a task puts back the events it ended early.
+function restoreEndedEarly(keys) {
+  (keys || []).forEach(function(k) { delete workState.cuts[k]; });
+  saveWork();
+}
+
+// Tasks ticked done while an event was going could end up with no block at all (the old bug). This puts
+// a block back for those, using the start time that was saved when they were ticked.
+function repairFinishedTasks() {
+  let changed = false;
+  tasks.forEach(function(t) {
+    if (t.completed && typeof t.fixedStartMin !== 'number' && t.chunkStartMs && localDateStr(new Date(t.chunkStartMs)) === localDateStr()) {
+      const d = new Date(t.chunkStartMs);
+      const startMin = d.getHours() * 60 + d.getMinutes();
+      t.fixedStartMin = startMin;
+      t.fixedEndMin = startMin + Math.max(1, Math.round((t.inferredNetMs || 0) / 60000));
+      changed = true;
+    }
+  });
+  if (changed) saveTasks();
+}
+
 function startClock(taskId) {
   const task = taskById(taskId);
   if (!task) return;
   const c = getClock(taskId);
   if (workState.running) pauseRunningClock();
   if (c.mode === 'timer' && timerLenMs(c, task) - c.timerElapsedMs <= 0) return; // already finished: Reset first
+  const endedEarly = endInProgressEarly(); // starting a clock means you've moved on: a fixed event or break that is still going ends now
   workState.running = { taskId: taskId, mode: c.mode, startedAt: Date.now() };
   openSession(task, c.mode);
   if (c.mode === 'timer') scheduleTimerRing(timerLenMs(c, task) - c.timerElapsedMs);
   saveWork();
   renderClockPanel();
+  if (endedEarly.length) render(); // the event or break that ended early is redrawn shorter
 }
 
 function pauseRunningClock() {
@@ -2422,10 +2523,10 @@ function openClockPanel(taskId) {
   clockDemo = false;
   workState.panelTaskId = taskId;
   saveWork();
-  setSidebar('right', false); // make sure it can be seen
   renderClockPanel();
+  revealPanel('clock'); // if the side is collapsed, pop out just the clock
   const panel = document.getElementById('clockPanel');
-  if (panel && panel.scrollIntoView) panel.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  if (!sidebarState.right && panel && panel.scrollIntoView) panel.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 }
 
 function closeClockPanel() {
@@ -2510,6 +2611,7 @@ function renderClockPanel() {
 
   renderLapList();
   updateClockDisplay();
+  updateRailClock();
 }
 
 function updateClockDisplay() {
@@ -2537,6 +2639,7 @@ function clockTick() {
     }
   }
   updateClockDisplay();
+  updateRailClock();
 }
 setInterval(clockTick, 100);
 ensureWorkToday();
@@ -2567,10 +2670,17 @@ function showTaskTooltip(e, t) {
 }
 
 // Google events: name and start to end. Your own fixed events: name, start to end, and how long it is.
-function showEventTooltip(e, title, startMin, endMin, showLength) {
+// An event that was ended early shows how much of it was used out of the plan, and what was left over.
+function showEventTooltip(e, title, startMin, endMin, showLength, info) {
   e.preventDefault();
   let html = '<div>' + escapeHtml(title + ': ' + formatClockTime(startMin) + ' - ' + formatClockTime(endMin)) + '</div>';
-  if (showLength) html += '<div>' + escapeHtml('Length: ' + formatDuration(startMin, endMin)) + '</div>';
+  if (info && info.wasCut) {
+    const used = endMin - startMin;
+    const planned = info.plannedEndMin - startMin;
+    html += '<div>' + escapeHtml(used + '/' + planned + ' min (' + (planned - used) + ' min left over)') + '</div>';
+  } else if (showLength) {
+    html += '<div>' + escapeHtml('Length: ' + formatDuration(startMin, endMin)) + '</div>';
+  }
   placeTooltip(e, html);
 }
 
@@ -2611,6 +2721,199 @@ function tutorialRestoreClockPanel() {
   saveWork();
   renderClockPanel();
 }
+
+/* ============================================================================================
+   Collapsed side panels.
+   When a side is collapsed it shows a strip of icons. Clicking an icon pops out ONLY that block
+   (floating next to the strip); several blocks can stay out at once, and clicking the icon again
+   puts one back. The arrow button at the top is separate: it expands or collapses the WHOLE side.
+   Also here: the live timer / stopwatch icon, the counts on the icons, and the clock's keyboard
+   shortcuts (Enter or Space start and pause, L marks a lap).
+   ============================================================================================ */
+
+// Which side each block lives on.
+const POP_SIDE = { motivation: 'left', labels: 'left', clock: 'right', add: 'right', tasks: 'right', events: 'right', tomorrow: 'right' };
+
+let popped = [];
+try { popped = JSON.parse(localStorage.getItem('flowgrove_popped') || '[]') || []; } catch (e) { popped = []; }
+popped = popped.filter(function(k) { return POP_SIDE[k]; });
+function savePopped() { localStorage.setItem('flowgrove_popped', JSON.stringify(popped)); }
+
+// Makes the page match the list of popped-out blocks (which panels float, which icons look pressed).
+function syncPop() {
+  document.querySelectorAll('.panel[data-pop]').forEach(function(panel) {
+    const on = popped.indexOf(panel.dataset.pop) !== -1;
+    if (on) panel.classList.add('popped');
+    else if (!panel.classList.contains('pop-out')) panel.classList.remove('popped');
+  });
+  document.querySelectorAll('.rail-btn').forEach(function(b) {
+    b.classList.toggle('is-open', popped.indexOf(b.dataset.pop) !== -1);
+  });
+  ['left', 'right'].forEach(function(side) {
+    const bar = document.getElementById(side === 'left' ? 'leftbar' : 'rightbar');
+    if (bar) bar.classList.toggle('has-popped', popped.some(function(k) { return POP_SIDE[k] === side; }));
+  });
+}
+
+function popOut(key) {
+  if (!POP_SIDE[key]) return;
+  const panel = document.querySelector('.panel[data-pop="' + key + '"]');
+  if (panel) panel.classList.remove('pop-out');
+  if (popped.indexOf(key) === -1) popped.push(key);
+  savePopped();
+  syncPop();
+}
+
+function popIn(key) {
+  const panel = document.querySelector('.panel[data-pop="' + key + '"]');
+  if (!panel || panel.classList.contains('pop-out')) return;
+  panel.classList.add('pop-out'); // slides away, then is removed
+  setTimeout(function() {
+    popped = popped.filter(function(k) { return k !== key; });
+    savePopped();
+    panel.classList.remove('pop-out', 'popped');
+    syncPop();
+  }, 170);
+}
+
+function togglePop(key) {
+  if (popped.indexOf(key) === -1) popOut(key); else popIn(key);
+}
+
+// If the side holding this block is collapsed, pop out just that block (used when you click a task or the pencil).
+function revealPanel(key) {
+  if (POP_SIDE[key] && sidebarState[POP_SIDE[key]] && popped.indexOf(key) === -1) popOut(key);
+}
+
+function railClick(key, btn) {
+  // Icons that have an animation (the star and the plus) spin when clicked.
+  const ico = btn.querySelector('.ico-spin');
+  if (ico) { ico.classList.remove('spinning'); void ico.getBoundingClientRect(); ico.classList.add('spinning'); }
+  if (key === 'clock' && railClockTaskId !== null && workState.panelTaskId !== railClockTaskId) {
+    workState.panelTaskId = railClockTaskId; // show the clock that is actually in use
+    saveWork();
+    renderClockPanel();
+  }
+  togglePop(key);
+}
+document.addEventListener('animationend', function(e) {
+  if (e.target && e.target.classList && e.target.classList.contains('spinning')) e.target.classList.remove('spinning');
+});
+
+/* ---- numbers on the icons ---- */
+
+function setRailText(id, value) {
+  const el = document.getElementById(id);
+  if (el && el.textContent !== String(value)) el.textContent = value;
+}
+
+function updateRail() {
+  setRailText('railTasksCount', tasks.filter(function(t) { return isTaskActiveToday(t) && !t.completed; }).length);
+  setRailText('railEventsCount', localEvents.length);
+  setRailText('railTomorrowCount', tasks.filter(function(t) { return t.tomorrow; }).length);
+  updateRailClock();
+}
+
+/* ---- the live timer / stopwatch icon ---- */
+
+let railClockTaskId = null; // the task whose clock the icon shows (null = no clock in use, icon hidden)
+let railPieLast = null;
+
+// A clock is "in use" while it is running, or paused with time on it (not after Reset or when a timer is done).
+function clockInUseTaskId() {
+  const r = workState.running;
+  if (r && taskById(r.taskId)) return r.taskId;
+  const id = workState.panelTaskId;
+  const task = (id !== null && id !== undefined) ? taskById(id) : null;
+  const c = task ? workState.clocks[id] : null;
+  if (c) {
+    if (c.mode === 'timer') { if (c.timerElapsedMs > 0 && timerLenMs(c, task) - c.timerElapsedMs > 0) return id; }
+    else if (c.swElapsedMs > 0) return id;
+  }
+  return null;
+}
+
+// The dark wedge is the time LEFT. It shrinks clockwise as time passes (the used part is the light wedge).
+function pieDarkPath(elapsedFrac) {
+  const left = 1 - elapsedFrac;
+  if (left <= 0.001) return '';
+  if (left >= 0.999) return 'M12 2 A10 10 0 1 1 11.99 2 Z';
+  const a = elapsedFrac * 2 * Math.PI;
+  const x = 12 + 10 * Math.sin(a), y = 12 - 10 * Math.cos(a);
+  return 'M12 12 L' + x.toFixed(2) + ' ' + y.toFixed(2) + ' A10 10 0 ' + (left > 0.5 ? 1 : 0) + ' 1 12 2 Z';
+}
+
+function updateRailClock() {
+  const btn = document.getElementById('railClockBtn');
+  if (!btn) return;
+  const id = clockInUseTaskId();
+  railClockTaskId = id;
+  if (id === null) {
+    if (btn.style.display !== 'none') btn.style.display = 'none';
+    return;
+  }
+  if (btn.style.display === 'none') btn.style.display = '';
+  const task = taskById(id);
+  const c = getClock(id);
+  const isTimer = (c.mode === 'timer');
+  const pie = document.getElementById('railPie');
+  const watch = document.getElementById('railStopwatch');
+  pie.style.display = isTimer ? '' : 'none';
+  watch.style.display = isTimer ? 'none' : '';
+  if (isTimer) {
+    const len = timerLenMs(c, task);
+    const used = Math.min(len, timerElapsedMs(id));
+    const d = pieDarkPath(len > 0 ? used / len : 1);
+    if (d !== railPieLast) { document.getElementById('railPieDark').setAttribute('d', d); railPieLast = d; }
+    setRailText('railClockText', formatClock(len - used, false));
+  } else {
+    setRailText('railClockText', formatClock(stopwatchElapsedMs(id), true).split('.')[0]); // minutes:seconds
+  }
+  btn.title = (isTimer ? 'Timer: ' : 'Stopwatch: ') + task.title;
+}
+
+/* ---- keyboard shortcuts for the open clock ---- */
+
+// Enter or Space starts / pauses the open timer or stopwatch. L marks a lap on the stopwatch.
+// Only when you aren't typing in a box and nothing is open on top (settings, the tutorial, ...).
+function clockShortcutsAllowed(target) {
+  const panel = document.getElementById('clockPanel');
+  if (!panel || panel.style.display === 'none' || panel.offsetParent === null) return false;
+  const id = workState.panelTaskId;
+  if (id === null || id === undefined || !taskById(id)) return false;
+  const overlays = ['settingsOverlay', 'tutorialOverlay', 'longEventOverlay', 'breakLengthOverlay', 'deleteChoiceOverlay'];
+  for (let i = 0; i < overlays.length; i++) {
+    const o = document.getElementById(overlays[i]);
+    if (o && o.classList.contains('show')) return false;
+  }
+  const tag = target && target.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (target && target.isContentEditable)) return false;
+  return target === document.body || target === document.documentElement || panel.contains(target);
+}
+
+let swallowSpaceUp = false;
+document.addEventListener('keydown', function(e) {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  const isToggle = (e.key === 'Enter' || e.key === ' ');
+  const isLap = (e.key === 'l' || e.key === 'L');
+  if (!isToggle && !isLap) return;
+  if (!clockShortcutsAllowed(e.target)) return;
+  const id = workState.panelTaskId;
+  if (isLap) {
+    const c = getClock(id);
+    if (c.mode === 'stopwatch' && runningOn(id, 'stopwatch')) { e.preventDefault(); if (!e.repeat) lapClock(id); }
+    return;
+  }
+  e.preventDefault();               // also stops a focused button from clicking itself as well
+  if (e.key === ' ') swallowSpaceUp = true;
+  if (e.repeat) return;             // holding the key down shouldn't flip it back and forth
+  toggleClock();
+});
+document.addEventListener('keyup', function(e) {
+  if (e.key === ' ' && swallowSpaceUp) { swallowSpaceUp = false; e.preventDefault(); }
+});
+
+syncPop();
 
 function personalizeQuote(text) {
   if (text.indexOf('{name}') === -1) return text;
@@ -2802,20 +3105,30 @@ function toggleBreak() {
       btn.textContent = "I'm on break - " + mins + ":" + (secs < 10 ? '0' : '') + secs;
     }, 1000);
   } else {
-    breakActive = false;
-    clearInterval(breakInterval);
-    btn.classList.remove('on');
-    btn.style.background = '';
-    btn.style.color = '';
-    btn.textContent = 'Click me to have an auto break';
-    workState.markerAt = Date.now(); saveWork(); // break over: assume you're starting your next task now
-    const endMin = nowMinutesSinceMidnight();
-    if (endMin > breakStartMin) {
-      manualBreaks.push({ id: 'manual-' + Date.now(), startMin: breakStartMin, endMin: endMin });
-      saveManualBreaks();
-      render();
-    }
+    endManualBreak();
+    render();
   }
+}
+
+// Ends the break you started with the break button, and records it. Returns the break's key (or null if it was
+// shorter than a minute). Also used when you start a clock or tick a task while the break is still on.
+function endManualBreak() {
+  const btn = document.getElementById('breakBtn');
+  breakActive = false;
+  clearInterval(breakInterval);
+  btn.classList.remove('on');
+  btn.style.background = '';
+  btn.style.color = '';
+  btn.textContent = 'Click me to have an auto break';
+  workState.markerAt = Date.now(); saveWork(); // break over: assume you're starting your next task now
+  const endMin = nowMinutesSinceMidnight();
+  if (endMin > breakStartMin) {
+    const id = 'manual-' + Date.now();
+    manualBreaks.push({ id: id, startMin: breakStartMin, endMin: endMin });
+    saveManualBreaks();
+    return 'brk|' + id;
+  }
+  return null;
 }
 
 function taskSortFn(a, b) {
@@ -2862,16 +3175,30 @@ function clipLongest(start, end, blockers) {
 function getFixedBlocks() {
   const todayKey = localDateStr();
   const todayAbbrev = DAY_NAMES[new Date().getDay()];
-  const google = events.filter(function(ev) { return calendarVisible(ev.calId); }).map(function(ev) { return { startMin: ev.startMin, endMin: ev.endMin, title: ev.title, color: ev.color, calName: ev.calName }; });
+  const cuts = workState.cuts || {};
+  // An event you ended early stops where you moved on. plannedEndMin remembers where it was meant to end.
+  function endOf(key, startMin, endMin) {
+    const c = cuts[key];
+    return (typeof c === 'number' && c > startMin && c < endMin) ? c : endMin;
+  }
+  const google = events.filter(function(ev) { return calendarVisible(ev.calId); }).map(function(ev) {
+    const key = 'g|' + ev.calId + '|' + ev.title + '|' + ev.startMin;
+    const end = endOf(key, ev.startMin, ev.endMin);
+    return { startMin: ev.startMin, endMin: end, plannedEndMin: ev.endMin, wasCut: end < ev.endMin, key: key, title: ev.title, color: ev.color, calName: ev.calName };
+  });
   const locals = localEvents
     .filter(function(ev) { return localEventOnDate(ev, todayKey, todayAbbrev); })
-    .map(function(ev) { return { startMin: ev.startMin, endMin: ev.endMin, ev: ev }; });
+    .map(function(ev) {
+      const key = 'l|' + ev.id + '|' + todayKey;
+      const end = endOf(key, ev.startMin, ev.endMin);
+      return { startMin: ev.startMin, endMin: end, plannedEndMin: ev.endMin, wasCut: end < ev.endMin, key: key, title: ev.title, ev: ev };
+    });
   const authoritative = google.concat(locals);
 
   const manual = [];
   manualBreaks.forEach(function(b) {
     const c = clipLongest(b.startMin, b.endMin, authoritative);
-    if (c) manual.push({ startMin: c.s, endMin: c.e, orig: b });
+    if (c) manual.push({ startMin: c.s, endMin: c.e, orig: b, key: 'brk|' + b.id });
   });
 
   const blockers = authoritative.concat(manual);
@@ -2879,8 +3206,13 @@ function getFixedBlocks() {
   tasks.filter(function(t) { return isTaskActiveToday(t) && t.completed && typeof t.fixedStartMin === 'number'; })
     .sort(function(a, b) { return a.fixedStartMin - b.fixedStartMin; })
     .forEach(function(t) {
-      const c = clipLongest(t.fixedStartMin, t.fixedEndMin, blockers);
-      if (c) { completed.push({ task: t, startMin: c.s, endMin: c.e }); blockers.push({ startMin: c.s, endMin: c.e }); }
+      // Events and breaks this task ended early may overlap its block: you were working through them.
+      const skip = t.cutKeys || [];
+      const mine = blockers.filter(function(b) { return !b.key || skip.indexOf(b.key) === -1; });
+      let c = clipLongest(t.fixedStartMin, t.fixedEndMin, mine);
+      if (!c) c = { s: t.fixedStartMin, e: Math.max(t.fixedEndMin, t.fixedStartMin + 1) }; // a finished task is never hidden
+      completed.push({ task: t, startMin: c.s, endMin: c.e });
+      blockers.push({ startMin: c.s, endMin: c.e });
     });
 
   return { google: google, locals: locals, manual: manual, completed: completed };
@@ -2890,7 +3222,8 @@ function getFixedBlocks() {
 // long as its estimate, trimmed so it never overlaps an event, a break, or another finished task.
 function findCompletedSlot(task, nowMin) {
   const fixed = getFixedBlocks();
-  const busy = fixed.google.concat(fixed.locals, fixed.manual, fixed.completed);
+  const skip = task.cutKeys || []; // events/breaks this very tick ended early
+  const busy = fixed.google.concat(fixed.locals, fixed.manual, fixed.completed).filter(function(b) { return !b.key || skip.indexOf(b.key) === -1; });
   let end = nowMin;
   for (let guard = 0; guard < 25; guard++) {
     let moved = false;
@@ -2906,7 +3239,11 @@ function findCompletedSlot(task, nowMin) {
   }
   busy.forEach(function(b) { if (b.endMin <= end && b.endMin > start) start = b.endMin; });
   start = Math.max(0, start);
-  if (end - start < 1) return null;
+  // Always at least one minute long, so a finished task never disappears from the schedule.
+  if (end - start < 1) {
+    start = Math.max(0, end - 1);
+    if (end - start < 1) end = start + 1;
+  }
   return { start: start, end: end };
 }
 
@@ -3166,6 +3503,7 @@ function render() {
   renderAllDayStrip();
   refreshVisibleViews();
   renderClockPanel();
+  updateRail();
 }
 
 function renderEventsSidebar() {
@@ -3254,7 +3592,7 @@ function renderGrid(sched) {
     el.style.background = evColor;
     el.style.color = readableText(evColor);
     el.innerHTML = '<span class="title">' + escapeHtml(ev.title) + '</span><span class="meta">' + escapeHtml(ev.calName || 'Google Calendar') + '</span>';
-    el.oncontextmenu = function(e) { showEventTooltip(e, ev.title, ev.startMin, ev.endMin, false); };
+    el.oncontextmenu = function(e) { showEventTooltip(e, ev.title, ev.startMin, ev.endMin, false, ev); };
     addItem(ev.startMin, ev.endMin, el);
   });
   fixed.manual.forEach(function(b) {
@@ -3274,9 +3612,9 @@ function renderGrid(sched) {
     el.innerHTML = '<span class="title">' + escapeHtml(ev.title) + '</span><span class="meta">Fixed event (click to edit, drag to move)</span>';
     el.draggable = true;
     el.onclick = function() { startEditEvent(ev.id); };
-    el.oncontextmenu = function(e) { showEventTooltip(e, ev.title, ev.startMin, ev.endMin, true); };
+    el.oncontextmenu = function(e) { showEventTooltip(e, ev.title, item.startMin, item.endMin, true, item); };
     el.ondragstart = function(e) { draggedLocalEventId = ev.id; e.dataTransfer.effectAllowed = 'move'; };
-    addItem(ev.startMin, ev.endMin, el);
+    addItem(item.startMin, item.endMin, el);
   });
   (sched || computeSchedule()).forEach(function(t) {
     const el = document.createElement('div');
@@ -3749,11 +4087,11 @@ const TUTORIAL_STEPS = [
   { target: '#grid .block.task .task-checkbox-wrap', fallback: '[data-tut="scheduleGrid"]', title: "Completing a task", text: "Tick the little checkbox on a task when you're done. It turns into a finished block, confetti rains down, and the rest of your day adjusts automatically. (If you'd rather skip the confetti, you can turn it off in Settings.)" },
   { target: '#grid .block.task .task-edit-btn', fallback: '[data-tut="scheduleGrid"]', title: "Editing a task", text: "Tap the pencil on the right side of a task to change its name, time, priority, label, or repeat." },
   { target: '#grid .block.task', fallback: '[data-tut="scheduleGrid"]', title: "Right-click for details", text: "Right-click a task to see how many minutes you've worked on it out of its total, its time slot, its priority and motivation, and whether it repeats." },
-  { target: '#clockPanel', before: tutorialShowClockPanel, title: "Timer and Stopwatch", text: "Click a task (not its checkbox or pencil) and its clock opens here. The Timer counts down from the task's time, and you can change the length. The Stopwatch counts up, and you can mark Laps and rename them. Start turns into Pause, Reset starts over, and the timer rings when it reaches zero (pick the sound in Settings). Only one clock runs at a time." },
+  { target: '#clockPanel', before: tutorialShowClockPanel, title: "Timer and Stopwatch", text: "Click a task (not its checkbox or pencil) and its clock opens here. The Timer counts down from the task's time, and you can change the length. The Stopwatch counts up, and you can mark Laps and rename them. Start turns into Pause, Reset starts over, and the timer rings when it reaches zero (pick the sound in Settings). Only one clock runs at a time. While a clock is open, Enter or Space starts and pauses it, and L marks a lap on the stopwatch." },
   { target: '[data-tut="breakBtn"]', title: "Need a breather?", text: "Tap this anytime for an instant break. It also pauses any running timer or stopwatch, so press Start on your clock when you're back. It keeps time for you, and you tap it again whenever you're ready to jump back in." },
   { target: '[data-tut="tomorrowPanel"]', title: "Tomorrow's got your back", text: "Anything that doesn't fit before the end of your day moves here automatically instead of vanishing, and you'll get a heads up when it happens. You can also drag any task onto this panel yourself, or drag one back out to bring it into today. Tomorrow's list becomes today's list when the new day starts." },
   { target: '#labelsSidebarPanel', title: "Make it yours with Labels", text: "Give a label its own name and color to keep things visually organized, don't worry, labels never change your schedule order." },
-  { target: '#leftToggle', title: "Need more room?", text: "These little arrows on each side collapse the panels so your schedule has more space. Click again to bring them back, they remember how you left them." },
+  { target: '#leftToggle', title: "Need more room?", text: "These little arrows on each side collapse the panels so your schedule has more space. When a side is collapsed, tap an icon to pop out just that block (you can leave several open), and tap the arrow to bring the whole panel back. They remember how you left them." },
   { target: null, title: "That's it, you're ready!", text: "Go ahead and start adding your day. You can always pull this tour back up with the Tutorial button whenever you want a refresher." }
 ];
 let tutStep = 0;
@@ -3885,8 +4223,10 @@ if (!localStorage.getItem('flowgrove_profile')) {
   window.location.href = 'account-setup.html';
 } else {
   checkDayRollover();
+  repairFinishedTasks();
   applyColorsToPage();
   applySidebars();
+  updateRail();
   refreshLabelUI();
   render();
   refreshMotivationQuote();

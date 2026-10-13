@@ -34,6 +34,14 @@
   .brand { font-size: 19px; font-weight: 700; }
   .live-clock { font-size: 15px; font-weight: 600; color: var(--accent-dark); margin-top: 2px; }
   .week-grid { display: grid; gap: 6px; }
+  .week-cols { display: grid; gap: 6px; }
+  .week-head-row { margin-bottom: 4px; }
+  .week-head-row .week-col-head { text-align: center; margin: 0; }
+  .week-col-head.today { color: var(--accent-dark); }
+  .week-lane { row-gap: 3px; margin-bottom: 6px; }
+  .week-bar { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 6px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; text-align: left; cursor: default; }
+  .week-bar.cont-left { border-top-left-radius: 0; border-bottom-left-radius: 0; }
+  .week-bar.cont-right { border-top-right-radius: 0; border-bottom-right-radius: 0; }
   .week-col { border: 1px solid var(--border); border-radius: 8px; padding: 8px 3px; text-align: center; align-self: start; }
   .week-col-head { white-space: nowrap; font-weight: 600; font-size: 12px; margin-bottom: 6px; }
   .week-task-row { font-size: 10.5px; padding: 4px 3px; margin-bottom: 3px; background: #f4f6f5; border-radius: 5px; word-break: break-word; }
@@ -96,8 +104,8 @@
   .block.break-block { background: #f0ebf8; border: 1px dashed #b7a5d9; color: #5d4e78; }
   .block.break-block .title { font-size: 11px; font-weight: 500; }
   .block.task { border-color: transparent; cursor: pointer; padding-left: 30px; padding-right: 30px; }
-  .task-edit-btn { position: absolute; top: 4px; right: 8px; border: none; background: none; cursor: pointer; font-size: 15px; line-height: 1; color: var(--ink-soft); padding: 3px 5px; border-radius: 6px; z-index: 2; }
-  .task-edit-btn:hover { color: var(--ink); background: rgba(0,0,0,0.07); }
+  .task-edit-btn { position: absolute; top: 4px; right: 8px; border: none; background: none; cursor: pointer; font-size: 15px; line-height: 1; color: inherit; opacity: 0.7; padding: 3px 5px; border-radius: 6px; z-index: 2; }
+  .task-edit-btn:hover { opacity: 1; background: rgba(0,0,0,0.10); }
   .block.task.completed { opacity: 0.45; text-decoration: line-through; }
   .badge { display: inline-block; font-size: 9px; background: rgba(0,0,0,0.08); border-radius: 4px; padding: 0 4px; margin-left: 4px; text-decoration: none; }
   .month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
@@ -210,7 +218,7 @@
   .clock-panel .seg-group { background: #fff; }
   .clock-display { font-size: 46px; font-weight: 700; text-align: center; color: var(--accent-dark); font-variant-numeric: tabular-nums; margin: 12px 0 8px; }
   .clock-len-row { display: none; align-items: center; justify-content: center; gap: 8px; font-size: 12px; color: var(--ink-soft); margin-bottom: 6px; }
-  .clock-panel .clock-len-row input { width: 64px; text-align: center; padding: 4px 6px; }
+  .clock-panel .clock-len-row input { width: 58px; text-align: center; padding: 4px 6px; }
   .clock-buttons { display: flex; justify-content: center; gap: 8px; margin-top: 8px; }
   .clock-buttons button { min-width: 78px; padding: 8px 14px; border-radius: 8px; border: 1px solid var(--border); background: #fff; font-family: 'Lora', serif; font-size: 13px; cursor: pointer; color: var(--ink); }
   .clock-buttons button.primary-btn { background: var(--tertiary); border-color: var(--tertiary); color: #fff; font-weight: 600; }
@@ -222,6 +230,15 @@
   .clock-panel input.lap-name:hover, .clock-panel input.lap-name:focus { border-color: var(--border); background: #fff; }
   .lap-time { font-weight: 600; color: var(--accent-dark); }
   .lap-total { color: var(--ink-soft); }
+
+  /* ---- "Is this right" box for long events ---- */
+  .confirm-times { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 14px 0 6px; flex-wrap: wrap; }
+  .confirm-dash { font-weight: 600; color: var(--ink-soft); }
+  .confirm-note { font-size: 12px; color: var(--ink-soft); text-align: center; margin: 6px 0 0; }
+  .confirm-error { font-size: 12px; color: #a3372f; text-align: center; min-height: 16px; margin: 6px 0 0; }
+  .confirm-buttons { display: flex; justify-content: center; gap: 8px; margin-top: 10px; }
+  .confirm-buttons button.primary { margin-top: 0; width: auto; padding: 8px 26px; }
+  .confirm-buttons .icon-btn { padding: 8px 22px; }
 </style>
 </head>
 <body>
@@ -321,9 +338,11 @@
         </div>
         <div class="clock-display" id="clockDisplay">30:00</div>
         <div class="clock-len-row" id="clockLenRow">
-          <label for="clockLen" style="margin:0;">Length</label>
-          <input type="number" id="clockLen" min="1" max="600" onchange="setTimerLength(this.value)" onkeydown="if(event.key==='Enter'){this.blur();}">
+          <label style="margin:0;">Length</label>
+          <input type="number" id="clockLenMin" min="0" max="600" aria-label="Timer minutes" onchange="setTimerLength()" onkeydown="if(event.key==='Enter'){this.blur();}">
           <span>min</span>
+          <input type="number" id="clockLenSec" min="0" max="59" aria-label="Timer seconds" onchange="setTimerLength()" onkeydown="if(event.key==='Enter'){this.blur();}">
+          <span>sec</span>
         </div>
         <div class="clock-buttons">
           <button type="button" class="primary-btn" id="clockStartBtn" onclick="toggleClock()">Start</button>
@@ -459,6 +478,7 @@
     <div class="settings-section">
       <h4>Task Completion Sound</h4>
       <div class="toggle-row"><span>Play a sound on completion</span><input type="checkbox" id="soundToggle" checked></div>
+      <div class="toggle-row"><span>Confetti when a task is completed</span><input type="checkbox" id="confettiToggle" checked></div>
       <div style="margin:6px 0 4px;font-size:12px;color:var(--ink-soft);">Pick a sound (tap ▶ to preview):</div>
       <div class="sound-option"><label><input type="radio" name="completionSoundChoice" value="chime"> Soft Chime</label><button type="button" class="icon-btn" onclick="previewSound('chime')">▶</button></div>
       <div class="sound-option"><label><input type="radio" name="completionSoundChoice" value="bell"> Gentle Bell</label><button type="button" class="icon-btn" onclick="previewSound('bell')">▶</button></div>
@@ -554,6 +574,33 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="longEventOverlay" onkeydown="if(event.key==='Escape'){cancelLongEvent();}">
+  <div class="modal" style="max-width:400px;">
+    <h2>Is this right:</h2>
+    <div class="confirm-times">
+      <div class="time-trio">
+        <input type="text" inputmode="numeric" maxlength="2" id="confirmStart_h" placeholder="12" autocomplete="off" aria-label="Start hour" onfocus="this.select()" oninput="trioInput(event,'confirmStart','h')" onkeydown="trioKey(event,'confirmStart','h')">
+        <span>:</span>
+        <input type="text" inputmode="numeric" maxlength="2" id="confirmStart_m" placeholder="00" autocomplete="off" aria-label="Start minute" onfocus="this.select()" oninput="trioInput(event,'confirmStart','m')" onkeydown="trioKey(event,'confirmStart','m')" onblur="trioPadMinute('confirmStart')">
+        <input type="text" class="ap" id="confirmStart_ap" value="AM" readonly aria-label="Start AM or PM" onfocus="this.select()" onkeydown="trioKey(event,'confirmStart','ap')">
+      </div>
+      <span class="confirm-dash">-</span>
+      <div class="time-trio">
+        <input type="text" inputmode="numeric" maxlength="2" id="confirmEnd_h" placeholder="12" autocomplete="off" aria-label="End hour" onfocus="this.select()" oninput="trioInput(event,'confirmEnd','h')" onkeydown="trioKey(event,'confirmEnd','h')">
+        <span>:</span>
+        <input type="text" inputmode="numeric" maxlength="2" id="confirmEnd_m" placeholder="00" autocomplete="off" aria-label="End minute" onfocus="this.select()" oninput="trioInput(event,'confirmEnd','m')" onkeydown="trioKey(event,'confirmEnd','m')" onblur="trioPadMinute('confirmEnd')">
+        <input type="text" class="ap" id="confirmEnd_ap" value="AM" readonly aria-label="End AM or PM" onfocus="this.select()" onkeydown="trioKey(event,'confirmEnd','ap')">
+      </div>
+    </div>
+    <p class="confirm-note" id="longEventNote"></p>
+    <p class="confirm-error" id="longEventError"></p>
+    <div class="confirm-buttons">
+      <button type="button" class="primary" id="confirmOkBtn" onclick="confirmLongEvent()">OK</button>
+      <button type="button" class="icon-btn" id="confirmCancelBtn" onclick="cancelLongEvent()">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <div id="durationTooltip" style="display:none;position:absolute;background:#1c2b22;color:#fff;padding:8px 14px;border-radius:8px;font-size:12.5px;line-height:1.5;text-align:center;z-index:600;pointer-events:none;"></div>
 
 <div id="tutorialOverlay">
@@ -563,7 +610,7 @@
     <h4 id="tutTitle"></h4>
     <p id="tutText"></p>
     <div class="tutorial-actions">
-      <button class="skip" onclick="endTutorial()">Skip</button>
+      <button class="skip" onclick="endTutorial()">End tutorial</button>
       <button class="next" onclick="nextTutorialStep()">Next</button>
     </div>
   </div>
@@ -623,7 +670,10 @@ let googleCalendars = [];   // [{ id, name, color, primary }]
 let googleAll = [];         // every event in the loaded range: { calId, title, allDay, start, end, color, calName }
 let hiddenCalendars = JSON.parse(localStorage.getItem('flowgrove_hidden_calendars') || 'null') || [];
 let calendarStatus = { message: '', needsReconnect: false };
-const CALENDAR_API_VERSION = 3;
+const CALENDAR_API_VERSION = 4;
+const GOOGLE_BLUE = '#347CFE'; // every Google event on the Day, Weekdays and Week views (52, 124, 254)
+// Google Calendar's own colors for an event that has a color of its own (colorId 1 to 11). Used on the Month view.
+const GOOGLE_EVENT_COLORS = { '1': '#7986cb', '2': '#33b679', '3': '#8e24aa', '4': '#e67c73', '5': '#f6bf26', '6': '#f4511e', '7': '#039be5', '8': '#616161', '9': '#3f51b5', '10': '#0b8043', '11': '#d50000' };
 
 // White text on dark colors, dark text on light colors.
 function readableText(hex) {
@@ -685,7 +735,7 @@ function googleOnDay(dateObj) {
       if (en <= dayStart || s >= dayEnd) return;
       const startMin = Math.max(0, Math.round((s - dayStart) / 60000));
       const endMin = Math.min(1440, Math.round((en - dayStart) / 60000));
-      if (endMin > startMin) timed.push({ title: e.title, color: e.color, calName: e.calName, calId: e.calId, startMin: startMin, endMin: endMin });
+      if (endMin > startMin) timed.push({ title: e.title, color: e.color, monthColor: e.monthColor, calName: e.calName, calId: e.calId, startMin: startMin, endMin: endMin });
     }
   });
   timed.sort(function(a, b) { return a.startMin - b.startMin; });
@@ -715,7 +765,8 @@ function loadGoogleCalendarEvents() {
         googleCalendars.forEach(function(c) { byId[c.id] = c; });
         googleAll = (data.events || []).map(function(e) {
           const c = byId[e.calId] || {};
-          return { calId: e.calId, title: e.title, allDay: !!e.allDay, start: e.start, end: e.end, color: c.color || '#347CFE', calName: c.name || 'Google Calendar' };
+          // color = what Day/Weekdays/Week show. monthColor = the exact color Google Calendar shows (the event's own color, else its calendar's).
+          return { calId: e.calId, title: e.title, allDay: !!e.allDay, start: e.start, end: e.end, color: GOOGLE_BLUE, monthColor: GOOGLE_EVENT_COLORS[e.colorId] || c.color || GOOGLE_BLUE, calName: c.name || 'Google Calendar' };
         });
         if (data.apiVersion !== CALENDAR_API_VERSION) {
           calendarStatus.message = "The calendar files on your website are out of date, so some events may be missing. Upload the newest files from the api folder to GitHub (events.js and google.js), then disconnect and connect again.";
@@ -806,7 +857,7 @@ for (let i = SYSTEM_LABEL_DEFAULTS.length - 1; i >= 0; i--) {
 }
 let settings = JSON.parse(localStorage.getItem('flowgrove_settings') || 'null') || {
   theme: 'modern', primary: '#ffffff', secondary: '#ffffff', tertiary: '#6fa287',
-  sound: true, sayings: true, timeFormat: '12', completionSound: 'sparkle', timerSound: 'bell', timerSoundOn: true,
+  sound: true, sayings: true, timeFormat: '12', completionSound: 'sparkle', timerSound: 'bell', timerSoundOn: true, confetti: true,
   quoteCategories: { Wellness: true, Encouragement: true, Bible: true },
   shortWorkMin: 25, shortBreakMin: 5, medBreakMin: 15,
   workingHours: {
@@ -987,8 +1038,8 @@ function itemsForDate(dateObj) {
   const dayKey = localDateStr(dateObj);
   const abbrev = DAY_NAMES[dateObj.getDay()];
   const g = googleOnDay(dateObj);
-  const out = g.allDay.map(function(e) { return { title: e.title, color: e.color, allDay: true }; });
-  const timed = g.timed.map(function(e) { return { title: e.title, color: e.color, start: e.startMin }; });
+  const out = g.allDay.map(function(e) { return { title: e.title, color: e.monthColor, allDay: true, solid: true }; });
+  const timed = g.timed.map(function(e) { return { title: e.title, color: e.monthColor, start: e.startMin, solid: true }; });
   localEvents.forEach(function(ev) {
     if (localEventOnDate(ev, dayKey, abbrev)) timed.push({ title: ev.title, color: labelColor(ev.label || 'Fixed Events'), start: ev.startMin });
   });
@@ -1011,7 +1062,7 @@ function buildMonthGrid(year, month) {
     const shown = items.slice(0, 3);
     const extra = items.length - shown.length;
     const itemHtml = shown.map(function(it) {
-      const style = it.allDay ? 'background:' + it.color + ';color:' + readableText(it.color) + ';' : 'background:' + it.color + '33;';
+      const style = (it.allDay || it.solid) ? 'background:' + it.color + ';color:' + readableText(it.color) + ';' : 'background:' + it.color + '33;';
       return '<div class="month-event-label" style="' + style + '" title="' + escapeHtml(it.title) + '">' + escapeHtml(it.title) + '</div>';
     }).join('') + (extra > 0 ? '<div class="month-more">+' + extra + ' more</div>' : '');
     cell.innerHTML = '<div>' + d + '</div>' + itemHtml;
@@ -1038,33 +1089,68 @@ function dateObjForDay(dayAbbrev) {
   return new Date(today.getFullYear(), today.getMonth(), today.getDate() + (targetIdx - todayIdx));
 }
 
-// Each column lists, top to bottom: all-day events first, then everything else in the order it
-// happens that day. Tasks come out of the SAME planner as the Day view, so the order always matches
-// the Day view and "All Tasks Today".
+// Weekdays / Week. Top to bottom: the day names, then all-day events as ONE continuous bar across every
+// day they cover (like Google Calendar), then each day's tasks and timed events in the order they happen.
+// Tasks come out of the SAME planner as the Day view, so the order always matches the Day view and
+// "All Tasks Today". Colors are exact: Google events are always the Google blue, tasks and fixed events
+// use their label's exact color.
 function renderWeekGrid(gridId, dayNames) {
   const grid = document.getElementById(gridId);
-  grid.style.gridTemplateColumns = 'repeat(' + dayNames.length + ', 1fr)';
+  grid.style.display = 'block';
+  grid.style.gridTemplateColumns = '';
+  const n = dayNames.length;
   const todayKey = localDateStr();
-  grid.innerHTML = dayNames.map(function(d) {
+  const colsStyle = 'grid-template-columns:repeat(' + n + ',1fr);';
+  const days = dayNames.map(function(d) {
     const dateObj = dateObjForDay(d);
-    const isToday = localDateStr(dateObj) === todayKey;
-    const agenda = getDayAgenda(dateObj);
-    const allDayHtml = agenda.allDay.map(function(e) {
-      return '<div class="week-task-row allday" style="background:' + e.color + ';color:' + readableText(e.color) + ';" title="' + escapeHtml(e.calName + ': ' + e.title) + '">' + escapeHtml(e.title) + '</div>';
-    }).join('');
-    const itemHtml = agenda.items.map(function(it) {
+    return { d: d, dateObj: dateObj, key: localDateStr(dateObj), isToday: localDateStr(dateObj) === todayKey, agenda: getDayAgenda(dateObj) };
+  });
+
+  let html = '<div class="week-cols week-head-row" style="' + colsStyle + '">' + days.map(function(x) {
+    return '<div class="week-col-head' + (x.isToday ? ' today' : '') + '">' + x.d + ' ' + x.dateObj.getDate() + '</div>';
+  }).join('') + '</div>';
+
+  // all-day events: one bar per event, from its first visible day to its last
+  const bars = [];
+  const seen = {};
+  days.forEach(function(x, i) {
+    x.agenda.allDay.forEach(function(e) {
+      const id = e.calId + '|' + e.title + '|' + e.start + '|' + e.end;
+      if (seen[id] === undefined) { seen[id] = bars.length; bars.push({ e: e, from: i, to: i }); }
+      else bars[seen[id]].to = i;
+    });
+  });
+  bars.sort(function(a, b) { return (a.from - b.from) || (b.to - a.to); });
+  const laneEnds = [];
+  bars.forEach(function(b) {
+    let l = 0;
+    while (l < laneEnds.length && laneEnds[l] >= b.from) l++;
+    laneEnds[l] = b.to;
+    b.lane = l;
+  });
+  const afterLast = new Date(days[n - 1].dateObj.getFullYear(), days[n - 1].dateObj.getMonth(), days[n - 1].dateObj.getDate() + 1);
+  const afterLastKey = localDateStr(afterLast);
+  if (bars.length) {
+    html += '<div class="week-cols week-lane" style="' + colsStyle + '">' + bars.map(function(b) {
+      const continuesLeft = b.e.start < days[0].key;
+      const continuesRight = b.e.end > afterLastKey;
+      return '<div class="week-bar' + (continuesLeft ? ' cont-left' : '') + (continuesRight ? ' cont-right' : '') + '" style="grid-column:' + (b.from + 1) + ' / ' + (b.to + 2) + ';grid-row:' + (b.lane + 1) + ';background:' + b.e.color + ';color:' + readableText(b.e.color) + ';" title="' + escapeHtml(b.e.calName + ': ' + b.e.title) + '">' + escapeHtml(b.e.title) + '</div>';
+    }).join('') + '</div>';
+  }
+
+  html += '<div class="week-cols" style="' + colsStyle + '">' + days.map(function(x) {
+    const itemHtml = x.agenda.items.map(function(it) {
       if (it.kind === 'event') {
-        return '<div class="week-task-row" style="background:' + it.color + '33;"><span class="week-time">' + shortTime(it.start) + '</span> ' + escapeHtml(it.title) + '</div>';
+        return '<div class="week-task-row" style="background:' + it.color + ';color:' + readableText(it.color) + ';"><span class="week-time">' + shortTime(it.start) + '</span> ' + escapeHtml(it.title) + '</div>';
       }
       const t = it.t;
-      const bg = t.label ? (labelColor(t.label) + '55') : '';
-      const style = bg ? ' style="background:' + bg + ';"' : '';
-      const showDone = isToday && t.completed; // completion only applies to today's real instance
+      const style = t.label ? ' style="background:' + labelColor(t.label) + ';color:' + readableText(labelColor(t.label)) + ';"' : '';
+      const showDone = x.isToday && t.completed; // completion only applies to today's real instance
       return '<div class="week-task-row' + (showDone ? ' done' : '') + '"' + style + '>' + escapeHtml(t.title) + '</div>';
     }).join('');
-    const rows = allDayHtml + itemHtml;
-    return '<div class="week-col' + (isToday ? ' today' : '') + '"><div class="week-col-head">' + d + ' ' + dateObj.getDate() + '</div><div class="week-col-body">' + (rows || '<div class="week-task-row empty">Nothing scheduled</div>') + '</div></div>';
-  }).join('');
+    return '<div class="week-col' + (x.isToday ? ' today' : '') + '"><div class="week-col-body">' + (itemHtml || '<div class="week-task-row empty">Nothing scheduled</div>') + '</div></div>';
+  }).join('') + '</div>';
+  grid.innerHTML = html;
 }
 
 function updateLiveClock() {
@@ -1253,8 +1339,10 @@ function trioAdvance(prefix, part) {
     trioPadMinute(prefix);
     focusTrio(prefix, 'ap');
   } else {
-    // After AM/PM: Start goes to End's hour; End goes on to the Label field.
+    // After AM/PM: Start goes to End's hour; End goes on to the next control (the Label field, or the OK button in the "Is this right" box).
     if (prefix === 'eventStart') focusTrio('eventEnd', 'h');
+    else if (prefix === 'confirmStart') focusTrio('confirmEnd', 'h');
+    else if (prefix === 'confirmEnd') document.getElementById('confirmOkBtn').focus();
     else document.getElementById('labelSearch').focus();
   }
 }
@@ -1684,6 +1772,42 @@ function findEventConflictForForm(startMin, endMin, repeatPattern, excludeId) {
   return null;
 }
 
+// ---- "Is this right" box for events that are 7 hours or longer ----
+let longEventConfirmed = false;
+
+function askLongEventConfirm(startMin, endMin) {
+  setTrio('confirmStart', startMin);
+  setTrio('confirmEnd', endMin);
+  document.getElementById('longEventNote').textContent = 'That is ' + formatDuration(startMin, endMin) + ' long. Change the times here if needed.';
+  document.getElementById('longEventError').textContent = '';
+  document.getElementById('longEventOverlay').classList.add('show');
+  focusTrio('confirmStart', 'h');
+}
+
+function closeLongEvent() {
+  document.getElementById('longEventOverlay').classList.remove('show');
+}
+
+// OK: use the times in the box (you may have changed them) and save the event.
+function confirmLongEvent() {
+  const s = getTrioMinutes('confirmStart');
+  const e = getTrioMinutes('confirmEnd');
+  const err = document.getElementById('longEventError');
+  if (s === null || e === null) { err.textContent = 'Please fill in both times.'; return; }
+  if (e <= s) { err.textContent = 'The end time needs to be after the start time.'; return; }
+  setTrio('eventStart', s);
+  setTrio('eventEnd', e);
+  closeLongEvent();
+  longEventConfirmed = true;
+  submitTaskForm({ preventDefault: function() {} });
+}
+
+// Cancel: back to the form, nothing saved.
+function cancelLongEvent() {
+  closeLongEvent();
+  focusTrio('eventStart', 'h');
+}
+
 function submitTaskForm(e) {
   e.preventDefault();
   const titleRaw = document.getElementById('title').value.trim();
@@ -1700,6 +1824,13 @@ function submitTaskForm(e) {
     const endMin = getTrioMinutes('eventEnd');
     if (startMin === null || endMin === null) { alert('Please set both a start and end time for the event.'); return false; }
     if (endMin <= startMin) { alert('The end time needs to be after the start time.'); return false; }
+    // 7 hours or longer: ask "Is this right" first, with the times editable right in the box.
+    const alreadyConfirmed = longEventConfirmed;
+    longEventConfirmed = false;
+    if (!alreadyConfirmed && endMin - startMin >= 7 * 60) {
+      askLongEventConfirm(startMin, endMin);
+      return false;
+    }
     const clash = findEventConflictForForm(startMin, endMin, repeatPattern, editingEventId);
     if (clash) { alert('That time overlaps with "' + clash + '". Events can\'t overlap, so please pick a different time.'); return false; }
     const optionalEv = document.getElementById('optional').checked;
@@ -1906,6 +2037,7 @@ function toggleComplete(id) {
   if (!t) return;
   if (!t.completed) {
     pauseClockIfTask(id); // finishing a task stops its clock
+    recordCompletionTime(t); // minutes worked since the break ended / the last task was ticked
     // Marking complete: lock it in as a "done" block that ends right now and is as long as the
     // task's estimate, trimmed so it never overlaps an event, a break, or another finished task.
     // Because it is locked, adding new tasks later can't disturb it.
@@ -1920,11 +2052,14 @@ function toggleComplete(id) {
     t.completed = true;
     if (settings.sound) playCompletionSound();
     maybeShowSaying();
+    if (settings.confetti !== false) launchConfetti();
   } else {
     // Un-completing: release it back into normal auto-scheduling.
     t.completed = false;
     delete t.fixedStartMin;
     delete t.fixedEndMin;
+    delete t.inferredNetMs;
+    delete t.chunkStartMs;
   }
   saveTasks();
   render();
@@ -1955,6 +2090,7 @@ let workState = (function() {
   ws.clocks = ws.clocks || {};
   ws.log = ws.log || [];
   ws.running = ws.running || null;
+  if (ws.markerAt === undefined) ws.markerAt = null; // when the last break ended or the last task was ticked
   if (ws.panelTaskId === undefined) ws.panelTaskId = null;
   return ws;
 })();
@@ -2001,7 +2137,7 @@ function ensureWorkToday() {
     while (keys.length > 90) delete hist[keys.shift()];
     localStorage.setItem('flowgrove_work_history', JSON.stringify(hist));
   }
-  workState = { date: today, clocks: {}, running: null, panelTaskId: null, log: [] };
+  workState = { date: today, clocks: {}, running: null, panelTaskId: null, log: [], markerAt: null };
   saveWork();
 }
 
@@ -2037,9 +2173,32 @@ function stopwatchElapsedMs(taskId) {
   return c.swElapsedMs + (r ? Date.now() - r.startedAt : 0);
 }
 
-// Minutes worked on a task: what the timer has counted down plus what the stopwatch has counted up.
+// Minutes worked on a task = what the timer has counted down + what the stopwatch has counted up
+// + (once the task is ticked done) the stretch since your break ended or you ticked the previous task,
+// not counting any minute twice.
 function workedMsFor(taskId) {
-  return timerElapsedMs(taskId) + stopwatchElapsedMs(taskId);
+  const t = taskById(taskId);
+  return timerElapsedMs(taskId) + stopwatchElapsedMs(taskId) + ((t && t.completed) ? (t.inferredNetMs || 0) : 0);
+}
+
+// Called when a task is ticked done. The assumption: you started this task when your last break ended or
+// when you ticked the previous task, so that stretch counts as work on it. Time already covered by a
+// timer or stopwatch session is left out so it isn't counted twice. Then the next task's stretch begins.
+function recordCompletionTime(task) {
+  const nowMs = Date.now();
+  let since = workState.markerAt;
+  if (!(since && since < nowMs && localDateStr(new Date(since)) === localDateStr())) {
+    since = nowMs - task.time * 60000; // nothing to go on (first task of the day): assume it took about as long as planned
+  }
+  let covered = 0;
+  workState.log.forEach(function(s) {
+    const a = Math.max(s.start, since), b = Math.min(s.end === null ? nowMs : s.end, nowMs);
+    if (b > a) covered += b - a;
+  });
+  task.chunkStartMs = since;
+  task.inferredNetMs = Math.max(0, (nowMs - since) - covered);
+  workState.markerAt = nowMs;
+  saveWork();
 }
 
 function startClock(taskId) {
@@ -2118,17 +2277,22 @@ function setClockMode(mode) {
   renderClockPanel();
 }
 
-// Editing the timer length keeps the time already counted, so extending a timer you've started works.
-function setTimerLength(value) {
+// Editing the timer length (minutes and seconds) keeps the time already counted, so extending a timer
+// you've started works.
+function setTimerLength() {
   const id = workState.panelTaskId;
   const task = taskById(id);
   if (!task) return;
   if (runningOn(id, 'timer')) { renderClockPanel(); return; } // pause first
   const c = getClock(id);
-  let m = Math.round(parseFloat(value));
-  if (!(m >= 1)) m = task.time;
-  m = Math.min(m, 600);
-  c.lenMs = m * 60000;
+  let m = parseInt(document.getElementById('clockLenMin').value, 10);
+  let s = parseInt(document.getElementById('clockLenSec').value, 10);
+  if (isNaN(m) || m < 0) m = 0;
+  if (isNaN(s) || s < 0) s = 0;
+  let total = m * 60 + s;
+  if (total < 1) total = task.time * 60; // nothing usable typed: back to the task's own time
+  total = Math.min(total, 600 * 60);
+  c.lenMs = total * 1000;
   c.timerElapsedMs = Math.min(c.timerElapsedMs, c.lenMs);
   saveWork();
   renderClockPanel();
@@ -2317,9 +2481,12 @@ function renderClockPanel() {
 
   const lenRow = document.getElementById('clockLenRow');
   lenRow.style.display = (mode === 'timer') ? 'flex' : 'none';
-  const lenInput = document.getElementById('clockLen');
-  lenInput.value = demo ? 25 : Math.round(timerLenMs(c, task) / 60000);
-  lenInput.disabled = demo || !!runningOn(id, 'timer');
+  const lenSec = demo ? 25 * 60 : Math.round(timerLenMs(c, task) / 1000);
+  const lenMinInput = document.getElementById('clockLenMin');
+  const lenSecInput = document.getElementById('clockLenSec');
+  lenMinInput.value = Math.floor(lenSec / 60);
+  lenSecInput.value = lenSec % 60;
+  lenMinInput.disabled = lenSecInput.disabled = demo || !!runningOn(id, 'timer');
 
   const startBtn = document.getElementById('clockStartBtn');
   startBtn.textContent = running ? 'Pause' : 'Start';
@@ -2376,21 +2543,52 @@ ensureWorkToday();
 
 /* ---- the black box when you right-click a task ---- */
 
-function showTaskTooltip(e, t) {
-  e.preventDefault();
+function placeTooltip(e, html) {
   const tip = document.getElementById('durationTooltip');
-  const worked = Math.floor(workedMsFor(t.id) / 60000);
-  const pLabel = t.priority === 3 ? 'Top' : t.priority === 2 ? 'Medium' : 'Low';
-  const repeats = t.repeatPattern && t.repeatPattern !== 'none';
-  const line1 = t.title + ': ' + worked + '/' + t.time + ' min ' + formatClockTime(t.startMin) + ' - ' + formatClockTime(t.endMin);
-  const line2 = [pLabel, 'Motivation ' + t.motivation].concat(repeats ? ['Repeat'] : []).join(' | ');
-  tip.innerHTML = '<div>' + escapeHtml(line1) + '</div><div>' + escapeHtml(line2) + '</div>';
+  tip.innerHTML = html;
   tip.style.display = 'block';
   const maxLeft = window.scrollX + document.documentElement.clientWidth - tip.offsetWidth - 8;
   tip.style.left = Math.max(window.scrollX + 4, Math.min(e.pageX, maxLeft)) + 'px';
   tip.style.top = e.pageY + 'px';
   clearTimeout(window._durationTooltipTimer);
   window._durationTooltipTimer = setTimeout(function() { tip.style.display = 'none'; }, 4000);
+}
+
+function showTaskTooltip(e, t) {
+  e.preventDefault();
+  const worked = Math.floor(workedMsFor(t.id) / 60000);
+  const pLabel = t.priority === 3 ? 'Top' : t.priority === 2 ? 'Medium' : 'Low';
+  const repeats = t.repeatPattern && t.repeatPattern !== 'none';
+  const line1 = t.title + ': ' + worked + '/' + t.time + ' min ' + formatClockTime(t.startMin) + ' - ' + formatClockTime(t.endMin);
+  const bits = [pLabel, 'Motivation ' + t.motivation];
+  if (t.optional) bits.push('Optional');
+  if (repeats) bits.push('Repeat');
+  placeTooltip(e, '<div>' + escapeHtml(line1) + '</div><div>' + escapeHtml(bits.join(' | ')) + '</div>');
+}
+
+// Google events: name and start to end. Your own fixed events: name, start to end, and how long it is.
+function showEventTooltip(e, title, startMin, endMin, showLength) {
+  e.preventDefault();
+  let html = '<div>' + escapeHtml(title + ': ' + formatClockTime(startMin) + ' - ' + formatClockTime(endMin)) + '</div>';
+  if (showLength) html += '<div>' + escapeHtml('Length: ' + formatDuration(startMin, endMin)) + '</div>';
+  placeTooltip(e, html);
+}
+
+// All-day Google events in the strip above the day: name, "All day", and the dates if it lasts several days.
+function showAllDayTooltip(e, index) {
+  e.preventDefault();
+  const ev = allDayStripItems[index];
+  if (!ev) return;
+  let line2 = 'All day';
+  if (ev.end && ev.end > ev.start) {
+    const first = new Date(ev.start + 'T00:00:00');
+    const last = new Date(ev.end + 'T00:00:00'); last.setDate(last.getDate() - 1);
+    if (localDateStr(last) !== localDateStr(first)) {
+      const f = function(d) { return d.toLocaleDateString('default', { month: 'short', day: 'numeric' }); };
+      line2 = 'All day: ' + f(first) + ' - ' + f(last);
+    }
+  }
+  placeTooltip(e, '<div>' + escapeHtml(ev.title) + '</div><div>' + escapeHtml(line2) + '</div>');
 }
 
 /* ---- tutorial helpers: show the clock panel while the tour points at it ---- */
@@ -2520,6 +2718,66 @@ function previewSound(name) {
   } catch (e) {}
 }
 
+// Confetti rains across the whole screen for a few seconds (can be turned off in Settings).
+let confettiPieces = [];
+let confettiAnimating = false;
+function launchConfetti() {
+  let cv = document.getElementById('confettiCanvas');
+  if (!cv) {
+    cv = document.createElement('canvas');
+    cv.id = 'confettiCanvas';
+    cv.style.cssText = 'position:fixed;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:650;';
+    document.body.appendChild(cv);
+  }
+  cv.width = window.innerWidth;
+  cv.height = window.innerHeight;
+  const colors = ['#f94144', '#f3722c', '#f9c74f', '#90be6d', '#43aa8b', '#4d96ff', '#c77dff', '#ff70a6'];
+  const startedAt = performance.now();
+  for (let i = 0; i < 170; i++) {
+    confettiPieces.push({
+      x: Math.random() * cv.width,
+      y: -20 - Math.random() * cv.height * 0.35,                 // start above the top edge, at different heights
+      vx: (Math.random() - 0.5) * 90,                            // sideways drift, pixels per second
+      vy: 140 + Math.random() * 190,                             // fall speed, pixels per second
+      w: 6 + Math.random() * 7, h: 9 + Math.random() * 8,
+      rot: Math.random() * Math.PI * 2, vr: (Math.random() - 0.5) * 9,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      delay: Math.random() * 1.2                                  // so it rains instead of dropping all at once
+    });
+  }
+  if (confettiAnimating) return;
+  confettiAnimating = true;
+  let last = performance.now();
+  function frame(now) {
+    const dt = Math.min(0.05, (now - last) / 1000);
+    last = now;
+    const ctx = cv.getContext('2d');
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    const elapsed = (now - startedAt) / 1000;
+    let alive = 0;
+    confettiPieces.forEach(function(p) {
+      if (p.delay > 0) { p.delay -= dt; alive++; return; }
+      p.x += p.vx * dt; p.y += p.vy * dt; p.rot += p.vr * dt;
+      if (p.y < cv.height + 30) alive++;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      ctx.restore();
+    });
+    confettiPieces = confettiPieces.filter(function(p) { return p.delay > 0 || p.y < cv.height + 30; });
+    if (alive > 0 && elapsed < 12) {
+      requestAnimationFrame(frame);
+    } else {
+      confettiPieces = [];
+      confettiAnimating = false;
+      cv.remove();
+    }
+  }
+  requestAnimationFrame(frame);
+}
+
 function playCompletionSound() {
   try { previewSound(settings.completionSound || 'sparkle'); } catch (e) {}
 }
@@ -2532,6 +2790,7 @@ function toggleBreak() {
   const btn = document.getElementById('breakBtn');
   if (!breakActive) {
     pauseRunningClock(); // starting a break pauses a running timer or stopwatch
+    workState.markerAt = null; saveWork(); // time during a break is not counted as work on a task
     breakActive = true; breakStart = Date.now(); breakStartMin = nowMinutesSinceMidnight();
     btn.classList.add('on');
     btn.style.background = labelColor('Break');
@@ -2549,6 +2808,7 @@ function toggleBreak() {
     btn.style.background = '';
     btn.style.color = '';
     btn.textContent = 'Click me to have an auto break';
+    workState.markerAt = Date.now(); saveWork(); // break over: assume you're starting your next task now
     const endMin = nowMinutesSinceMidnight();
     if (endMin > breakStartMin) {
       manualBreaks.push({ id: 'manual-' + Date.now(), startMin: breakStartMin, endMin: endMin });
@@ -2637,7 +2897,13 @@ function findCompletedSlot(task, nowMin) {
     busy.forEach(function(b) { if (b.startMin < end && end < b.endMin) { end = b.startMin; moved = true; } });
     if (!moved) break;
   }
+  // The block starts where the work stretch started (the break ended or the last task was ticked); with
+  // no stretch to go on, it is the task's own length counted back from now.
   let start = end - task.time;
+  if (task.chunkStartMs && localDateStr(new Date(task.chunkStartMs)) === localDateStr()) {
+    const cd = new Date(task.chunkStartMs);
+    start = cd.getHours() * 60 + cd.getMinutes();
+  }
   busy.forEach(function(b) { if (b.endMin <= end && b.endMin > start) start = b.endMin; });
   start = Math.max(0, start);
   if (end - start < 1) return null;
@@ -2841,14 +3107,16 @@ function getDayAgenda(dateObj) {
 }
 
 // The "All day" strip above today's schedule.
+let allDayStripItems = [];
 function renderAllDayStrip() {
   const box = document.getElementById('allDayStrip');
   if (!box) return;
   const g = googleOnDay(new Date());
+  allDayStripItems = g.allDay;
   if (!g.allDay.length) { box.style.display = 'none'; box.innerHTML = ''; return; }
   box.style.display = 'flex';
-  box.innerHTML = '<span class="allday-label">All day</span>' + g.allDay.map(function(e) {
-    return '<span class="allday-pill" style="background:' + e.color + ';color:' + readableText(e.color) + ';" title="' + escapeHtml(e.calName) + '">' + escapeHtml(e.title) + '</span>';
+  box.innerHTML = '<span class="allday-label">All day</span>' + g.allDay.map(function(e, i) {
+    return '<span class="allday-pill" style="background:' + e.color + ';color:' + readableText(e.color) + ';" oncontextmenu="showAllDayTooltip(event,' + i + ')">' + escapeHtml(e.title) + '</span>';
   }).join('');
 }
 
@@ -2986,7 +3254,7 @@ function renderGrid(sched) {
     el.style.background = evColor;
     el.style.color = readableText(evColor);
     el.innerHTML = '<span class="title">' + escapeHtml(ev.title) + '</span><span class="meta">' + escapeHtml(ev.calName || 'Google Calendar') + '</span>';
-    el.oncontextmenu = function(e) { showDurationTooltip(e, ev.title, ev.startMin, ev.endMin); };
+    el.oncontextmenu = function(e) { showEventTooltip(e, ev.title, ev.startMin, ev.endMin, false); };
     addItem(ev.startMin, ev.endMin, el);
   });
   fixed.manual.forEach(function(b) {
@@ -3002,10 +3270,11 @@ function renderGrid(sched) {
     const ev = item.ev;
     const el = document.createElement('div'); el.className = 'block event local-event';
     el.style.background = labelColor(ev.label || 'Fixed Events');
+    el.style.color = readableText(labelColor(ev.label || 'Fixed Events'));
     el.innerHTML = '<span class="title">' + escapeHtml(ev.title) + '</span><span class="meta">Fixed event (click to edit, drag to move)</span>';
     el.draggable = true;
     el.onclick = function() { startEditEvent(ev.id); };
-    el.oncontextmenu = function(e) { showDurationTooltip(e, ev.title, ev.startMin, ev.endMin); };
+    el.oncontextmenu = function(e) { showEventTooltip(e, ev.title, ev.startMin, ev.endMin, true); };
     el.ondragstart = function(e) { draggedLocalEventId = ev.id; e.dataTransfer.effectAllowed = 'move'; };
     addItem(ev.startMin, ev.endMin, el);
   });
@@ -3024,8 +3293,10 @@ function renderGrid(sched) {
     let filterClass = '';
     if (activeLabelFilter) filterClass = (t.label === activeLabelFilter) ? ' label-match' : ' label-dimmed';
     el.className = 'block task' + (t.optional ? ' optional' : '') + (t.completed ? ' completed' : '') + filterClass;
-    if (t.label) el.style.background = labelColor(t.label) + '33';
-    else el.style.background = settings.secondary === '#ffffff' ? '#f4f6f5' : settings.secondary;
+    // The label's EXACT color (no lighter tint). Text switches to white on dark colors so it stays readable.
+    const taskBg = t.label ? labelColor(t.label) : (settings.secondary === '#ffffff' ? '#f4f6f5' : settings.secondary);
+    el.style.background = taskBg;
+    el.style.color = readableText(taskBg);
 
     const duration = t.endMin - t.startMin;
     const partSuffix = (t.partCount > 1) ? ' (' + (t.partIndex + 1) + '/' + t.partCount + ')' : '';
@@ -3259,6 +3530,7 @@ function openSettings() {
   const timerRadio = document.querySelector('input[name="timerSoundChoice"][value="' + (settings.timerSound || 'bell') + '"]');
   if (timerRadio) timerRadio.checked = true;
   document.getElementById('timerSoundToggle').checked = settings.timerSoundOn !== false;
+  document.getElementById('confettiToggle').checked = settings.confetti !== false;
   document.getElementById('sayingsToggle').checked = settings.sayings;
   document.getElementById('timeFormatSelect').value = settings.timeFormat;
   document.getElementById('shortWorkMin').value = settings.shortWorkMin;
@@ -3425,6 +3697,7 @@ function saveSettings() {
   const soundChoice = document.querySelector('input[name="completionSoundChoice"]:checked');
   if (soundChoice) settings.completionSound = soundChoice.value;
   settings.timerSoundOn = document.getElementById('timerSoundToggle').checked;
+  settings.confetti = document.getElementById('confettiToggle').checked;
   const timerChoice = document.querySelector('input[name="timerSoundChoice"]:checked');
   if (timerChoice) settings.timerSound = timerChoice.value;
   settings.sayings = document.getElementById('sayingsToggle').checked;
@@ -3473,7 +3746,7 @@ const TUTORIAL_STEPS = [
   { target: '[data-tut="addTaskPanel"]', title: "Adding a task is easy", text: "Give it a title, a priority, a time estimate, a motivation level, a label, maybe a repeat pattern, whatever you need." },
   { target: '#prioritySeg', title: "Go however feels fastest", text: "Up top, choose 1 for Task or 2 for Event. Events are for fixed things like Lunch or Pick up, not synced from Google Calendar, just yours. Click an event to edit it, or drag it to a new time anytime. For priority, click Top, Medium, or Low, or just type 1, 2, or 3, totally up to you! Time and motivation work the same way, type a number or tap the arrow keys. Checkboxes toggle with a click or a quick tap of the Space bar. Hit Enter to hop to the next field, or Tab to go back a step." },
   { target: '[data-tut="scheduleGrid"]', title: "How your day gets ordered", text: "Priority comes first, then time estimate, then motivation as the tiebreaker. If an event is in the way, a long task pauses for it and finishes afterward, and short breaks and longer breaks are tucked in automatically after stretches of work. The list on the right is always in the same order as your schedule." },
-  { target: '#grid .block.task .task-checkbox-wrap', fallback: '[data-tut="scheduleGrid"]', title: "Completing a task", text: "Tick the little checkbox on a task when you're done. It turns into a finished block, and the rest of your day adjusts automatically." },
+  { target: '#grid .block.task .task-checkbox-wrap', fallback: '[data-tut="scheduleGrid"]', title: "Completing a task", text: "Tick the little checkbox on a task when you're done. It turns into a finished block, confetti rains down, and the rest of your day adjusts automatically. (If you'd rather skip the confetti, you can turn it off in Settings.)" },
   { target: '#grid .block.task .task-edit-btn', fallback: '[data-tut="scheduleGrid"]', title: "Editing a task", text: "Tap the pencil on the right side of a task to change its name, time, priority, label, or repeat." },
   { target: '#grid .block.task', fallback: '[data-tut="scheduleGrid"]', title: "Right-click for details", text: "Right-click a task to see how many minutes you've worked on it out of its total, its time slot, its priority and motivation, and whether it repeats." },
   { target: '#clockPanel', before: tutorialShowClockPanel, title: "Timer and Stopwatch", text: "Click a task (not its checkbox or pencil) and its clock opens here. The Timer counts down from the task's time, and you can change the length. The Stopwatch counts up, and you can mark Laps and rename them. Start turns into Pause, Reset starts over, and the timer rings when it reaches zero (pick the sound in Settings). Only one clock runs at a time." },

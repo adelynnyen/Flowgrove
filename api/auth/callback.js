@@ -11,11 +11,44 @@
 // registered in Google Cloud Console.
 const APP_DOMAIN = 'https://flowgrove.vercel.app';
 
+const CLEAR_STATE_COOKIE = 'fg_oauth_state=; HttpOnly; Secure; Path=/; Max-Age=0; SameSite=Lax';
+
+function safeDecode(v) {
+  try { return decodeURIComponent(v); } catch (e) { return v; }
+}
+
+function readCookie(header, name) {
+  if (!header) return null;
+  const parts = header.split(';');
+  for (let i = 0; i < parts.length; i++) {
+    const idx = parts[i].indexOf('=');
+    if (idx === -1) continue;
+    if (parts[i].slice(0, idx).trim() === name) return safeDecode(parts[i].slice(idx + 1).trim());
+  }
+  return null;
+}
+
+function redirect(res, location, cookies) {
+  res.setHeader('Set-Cookie', cookies || [CLEAR_STATE_COOKIE]);
+  res.writeHead(302, { Location: location });
+  res.end();
+}
+
 export default async function handler(req, res) {
+  // The person clicked "Cancel"/"Deny" on Google's screen.
+  if (req.query.error) {
+    return redirect(res, '/index.html?calendar_error=' + encodeURIComponent(String(req.query.error)));
+  }
+
   const code = req.query.code;
   if (!code) {
-    res.writeHead(302, { Location: '/index.html?calendar_error=missing_code' });
-    return res.end();
+    return redirect(res, '/index.html?calendar_error=missing_code');
+  }
+
+  // Check the one-time state from google.js: it must match the cookie we set.
+  const savedState = readCookie(req.headers.cookie, 'fg_oauth_state');
+  if (!savedState || savedState !== req.query.state) {
+    return redirect(res, '/index.html?calendar_error=bad_state');
   }
 
   const redirectUri = `${APP_DOMAIN}/api/auth/callback`;
@@ -36,24 +69,21 @@ export default async function handler(req, res) {
     const tokenData = await tokenResp.json();
 
     if (!tokenResp.ok) {
-      res.writeHead(302, { Location: '/index.html?calendar_error=token_exchange_failed' });
-      return res.end();
+      return redirect(res, '/index.html?calendar_error=token_exchange_failed');
     }
 
-    const cookies = [];
-    cookies.push(`fg_access_token=${tokenData.access_token}; HttpOnly; Secure; Path=/; Max-Age=${tokenData.expires_in || 3600}; SameSite=Lax`);
+    const lifetime = tokenData.expires_in || 3600;
+    const cookies = [CLEAR_STATE_COOKIE];
+    cookies.push(`fg_access_token=${tokenData.access_token}; HttpOnly; Secure; Path=/; Max-Age=${lifetime}; SameSite=Lax`);
     if (tokenData.refresh_token) {
       // Refresh tokens are long-lived; only returned the first time a user
       // consents (or after revoking access), so we only overwrite it if present.
       cookies.push(`fg_refresh_token=${tokenData.refresh_token}; HttpOnly; Secure; Path=/; Max-Age=31536000; SameSite=Lax`);
     }
-    cookies.push(`fg_access_token_expires=${Date.now() + ((tokenData.expires_in || 3600) * 1000)}; HttpOnly; Secure; Path=/; Max-Age=${tokenData.expires_in || 3600}; SameSite=Lax`);
+    cookies.push(`fg_access_token_expires=${Date.now() + (lifetime * 1000)}; HttpOnly; Secure; Path=/; Max-Age=${lifetime}; SameSite=Lax`);
 
-    res.setHeader('Set-Cookie', cookies);
-    res.writeHead(302, { Location: '/index.html?calendar_connected=1' });
-    res.end();
+    return redirect(res, '/index.html?calendar_connected=1', cookies);
   } catch (err) {
-    res.writeHead(302, { Location: '/index.html?calendar_error=server_error' });
-    res.end();
+    return redirect(res, '/index.html?calendar_error=server_error');
   }
 }

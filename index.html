@@ -38,6 +38,8 @@
   .week-col-head { white-space: nowrap; font-weight: 600; font-size: 12px; margin-bottom: 6px; }
   .week-task-row { font-size: 10.5px; padding: 4px 3px; margin-bottom: 3px; background: #f4f6f5; border-radius: 5px; word-break: break-word; }
   .week-task-row.done { opacity: 0.5; text-decoration: line-through; }
+  .week-task-row.allday { font-weight: 600; }
+  .week-time { font-weight: 600; color: var(--ink-soft); }
   .week-task-row.empty { background: none; color: var(--ink-soft); font-style: italic; }
   .week-col.today { border-color: var(--tertiary); background: #f3f8f5; }
   .week-col-head { font-size: 12px; font-weight: 600; margin-bottom: 6px; }
@@ -63,6 +65,9 @@
   .schedule-panel { padding: 18px 18px 24px; }
   .schedule-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
   .schedule-header h2 { margin: 0; font-size: 16.5px; font-weight: 600; }
+  .allday-strip { display: none; align-items: center; flex-wrap: wrap; gap: 6px; margin: 0 0 8px; }
+  .allday-label { width: 50px; font-size: 11px; color: var(--ink-soft); text-align: right; padding-right: 6px; }
+  .allday-pill { font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 6px; }
   .progress-pill { font-size: 12px; color: var(--ink-soft); background: #f4f6f5; border-radius: 20px; padding: 4px 10px; }
   .grid { position: relative; border-top: 1px solid var(--border); }
   #nowLine { position: absolute; left: 56px; right: 0; height: 2px; background: #1e5631; z-index: 5; pointer-events: none; }
@@ -89,8 +94,7 @@
   .block.compact .task-checkbox-wrap input { margin: 0; width: 13px; height: 13px; }
   .block.break-block { background: #f0ebf8; border: 1px dashed #b7a5d9; color: #5d4e78; }
   .block.break-block .title { font-size: 11px; font-weight: 500; }
-  .block.task { border-color: var(--border); cursor: pointer; }
-  .block.task.optional { background: var(--optional-bg) !important; border-color: var(--optional-line); }
+  .block.task { border-color: transparent; cursor: pointer; }
   .block.task.completed { opacity: 0.45; text-decoration: line-through; }
   .badge { display: inline-block; font-size: 9px; background: rgba(0,0,0,0.08); border-radius: 4px; padding: 0 4px; margin-left: 4px; text-decoration: none; }
   .month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
@@ -182,7 +186,7 @@
   .stub-note { font-size: 11px; color: #a3372f; margin-top: 4px; }
   .sound-option { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; font-size: 13px; }
   .block.task.label-dimmed { opacity: 0.35; }
-  .block.task.label-match { box-shadow: 0 0 0 2px var(--tertiary); }
+  .block .task-checkbox-wrap input:focus { box-shadow: none; outline: none; border-radius: 0; }
   #tutorialOverlay { position: fixed; inset: 0; z-index: 500; display: none; }
   #tutorialOverlay.show { display: block; }
   #tutorialDim { position: absolute; inset: 0; background: rgba(28,43,34,0.55); }
@@ -254,6 +258,7 @@
         <h2>Today's Schedule</h2>
         <span class="progress-pill" id="progressPill">0 of 0 tasks done</span>
       </div>
+      <div id="allDayStrip" class="allday-strip"></div>
       <div class="grid" id="grid" data-tut="scheduleGrid"></div>
     </div>
 
@@ -273,6 +278,7 @@
         <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
       </div>
       <div class="month-grid" id="monthGrid"></div>
+      <div id="monthNote" class="month-note" style="display:none;"></div>
     </div>
   </div>
 
@@ -450,7 +456,7 @@
     <div class="settings-section">
       <h4>Google Calendar</h4>
       <div id="calendarConnectionStatus"></div>
-      <p style="font-size:11px;color:var(--ink-soft);margin-top:6px;">Connected events show up as fixed blocks on your schedule and can't be moved or edited from within Flowgrove, only from Google Calendar itself.</p>
+      <p style="font-size:11px;color:var(--ink-soft);margin-top:6px;">Events from every calendar you have switched on in Google Calendar (yours, school, family, holidays...) show up as fixed blocks on your schedule, with all-day events at the top. They can't be moved or edited from within Flowgrove, only from Google Calendar itself. Flowgrove only reads your calendar, it never changes it.</p>
     </div>
 
     <div class="settings-section">
@@ -551,39 +557,149 @@ function isoToMinutesSinceMidnight(iso) {
   return d.getHours() * 60 + d.getMinutes();
 }
 
-function loadGoogleCalendarEvents() {
-  // Ask Google for exactly this device's "today" (midnight to midnight in YOUR timezone).
-  // The server runs on UTC, so it can't be trusted to work out where your day starts.
+// ---- Google Calendar data ----
+// Every calendar you have switched on in Google Calendar (your own, school, family, holidays, ...)
+// is loaded once into this cache, and the Day, Week, Weekdays and Month views all read from it.
+let googleCalendars = [];   // [{ id, name, color, primary }]
+let googleAll = [];         // every event in the loaded range: { calId, title, allDay, start, end, color, calName }
+let hiddenCalendars = JSON.parse(localStorage.getItem('flowgrove_hidden_calendars') || 'null') || [];
+let calendarStatus = { message: '', needsReconnect: false };
+const CALENDAR_API_VERSION = 3;
+
+// White text on dark colors, dark text on light colors.
+function readableText(hex) {
+  const h = (hex || '#347CFE').replace('#', '');
+  const r = parseInt(h.substr(0, 2), 16) || 0, g = parseInt(h.substr(2, 2), 16) || 0, b = parseInt(h.substr(4, 2), 16) || 0;
+  return ((0.299 * r + 0.587 * g + 0.114 * b) / 255) > 0.6 ? '#1c2b22' : '#ffffff';
+}
+
+function shortTime(mins) {
+  let h = Math.floor(mins / 60) % 24; const m = mins % 60;
+  const ap = h < 12 ? 'a' : 'p';
+  h = h % 12 || 12;
+  return h + (m ? ':' + (m < 10 ? '0' : '') + m : '') + ap;
+}
+
+function calendarVisible(calId) { return hiddenCalendars.indexOf(calId) === -1; }
+
+// The span of days loaded: the whole current month plus the current week (they can overlap two months).
+function calendarRange() {
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  const idx = (now.getDay() + 6) % 7; // Monday = 0
+  const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - idx);
+  const weekEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() - idx + 7);
+  return { start: new Date(Math.min(monthStart.getTime(), weekStart.getTime())), end: new Date(Math.max(monthEnd.getTime(), weekEnd.getTime())) };
+}
+
+// Today's timed Google events, as minutes since midnight (the day planner schedules around these).
+function rebuildTodayEvents() {
   const dayStart = new Date(); dayStart.setHours(0, 0, 0, 0);
   const dayEnd = new Date(dayStart); dayEnd.setDate(dayEnd.getDate() + 1);
-  const url = '/api/calendar/events?timeMin=' + encodeURIComponent(dayStart.toISOString()) + '&timeMax=' + encodeURIComponent(dayEnd.toISOString());
+  events = [];
+  googleAll.forEach(function(e) {
+    if (e.allDay || !calendarVisible(e.calId)) return;
+    const s = new Date(e.start), en = new Date(e.end);
+    if (en <= dayStart || s >= dayEnd) return;
+    const startMin = Math.max(0, Math.round((s - dayStart) / 60000));
+    const endMin = Math.min(1440, Math.round((en - dayStart) / 60000));
+    if (endMin > startMin) events.push({ title: e.title, color: e.color, calName: e.calName, calId: e.calId, startMin: startMin, endMin: endMin });
+  });
+  events.sort(function(a, b) { return a.startMin - b.startMin; });
+}
+
+// All Google events on one calendar day: all-day ones (shown first everywhere) and timed ones.
+function googleOnDay(dateObj) {
+  const dayStart = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
+  const dayEnd = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate() + 1);
+  const dayKey = localDateStr(dayStart);
+  const allDay = [], timed = [];
+  googleAll.forEach(function(e) {
+    if (!calendarVisible(e.calId)) return;
+    if (e.allDay) {
+      // All-day events are plain dates, and the end date is the day AFTER the last day.
+      const lastExclusive = (e.end && e.end > e.start) ? e.end : null;
+      if (e.start <= dayKey && (lastExclusive ? dayKey < lastExclusive : dayKey === e.start)) allDay.push(e);
+    } else {
+      const s = new Date(e.start), en = new Date(e.end);
+      if (en <= dayStart || s >= dayEnd) return;
+      const startMin = Math.max(0, Math.round((s - dayStart) / 60000));
+      const endMin = Math.min(1440, Math.round((en - dayStart) / 60000));
+      if (endMin > startMin) timed.push({ title: e.title, color: e.color, calName: e.calName, calId: e.calId, startMin: startMin, endMin: endMin });
+    }
+  });
+  timed.sort(function(a, b) { return a.startMin - b.startMin; });
+  return { allDay: allDay, timed: timed };
+}
+
+// Re-draws whichever of Weekdays / Week / Month is currently open, so every view stays in sync.
+function refreshVisibleViews() {
+  if (document.getElementById('weekdaysView').style.display === 'block') renderWeekGrid('weekdaysGrid', ['Mon','Tue','Wed','Thu','Fri']);
+  if (document.getElementById('weekView').style.display === 'block') renderWeekGrid('weekGrid', ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']);
+  if (document.getElementById('monthView').style.display === 'block') renderMonth();
+}
+
+function loadGoogleCalendarEvents() {
+  // Ask Google for this device's own days (midnight to midnight in YOUR timezone). The server runs
+  // on UTC, so it can't be trusted to work out where your day starts.
+  const range = calendarRange();
+  const url = '/api/calendar/events?timeMin=' + encodeURIComponent(range.start.toISOString()) + '&timeMax=' + encodeURIComponent(range.end.toISOString());
   fetch(url)
     .then(function(r) { return r.json(); })
     .then(function(data) {
       calendarConnected = !!data.connected;
-      if (data.connected && data.events) {
-        events = data.events.filter(function(e) { return !e.allDay; }).map(function(e) {
-          // Minutes since midnight, clamped so events that start before or run past
-          // midnight don't produce negative or wrapped-around times.
-          const s = Math.max(0, Math.round((new Date(e.start) - dayStart) / 60000));
-          const en = Math.min(1440, Math.round((new Date(e.end) - dayStart) / 60000));
-          return { title: e.title, startMin: s, endMin: en };
-        }).filter(function(e) { return e.endMin > e.startMin; });
+      calendarStatus = { message: '', needsReconnect: false };
+      if (data.connected) {
+        googleCalendars = data.calendars || [];
+        const byId = {};
+        googleCalendars.forEach(function(c) { byId[c.id] = c; });
+        googleAll = (data.events || []).map(function(e) {
+          const c = byId[e.calId] || {};
+          return { calId: e.calId, title: e.title, allDay: !!e.allDay, start: e.start, end: e.end, color: c.color || '#347CFE', calName: c.name || 'Google Calendar' };
+        });
+        if (data.apiVersion !== CALENDAR_API_VERSION) {
+          calendarStatus.message = "The calendar files on your website are out of date, so some events may be missing. Upload the newest files from the api folder to GitHub (events.js and google.js), then disconnect and connect again.";
+        } else if (data.limitedScope) {
+          calendarStatus.message = 'Only your main calendar is showing. Disconnect, then connect again and allow access to see your school, family and other calendars.';
+          calendarStatus.needsReconnect = true;
+        } else if (data.failedCalendars && data.failedCalendars.length) {
+          calendarStatus.message = "Couldn't load: " + data.failedCalendars.join(', ') + '.';
+        }
       } else {
-        events = [];
+        googleCalendars = []; googleAll = [];
+        if (data.needsReconnect) {
+          calendarStatus = { message: 'Your Google sign-in expired. Connect again to bring your events back.', needsReconnect: true };
+        } else if (data.error) {
+          calendarStatus.message = "Google Calendar couldn't load (" + data.error + ').';
+        }
       }
+      rebuildTodayEvents();
       updateCalendarConnectionUI();
       render();
     })
     .catch(function() {
-      calendarConnected = false;
+      // Server unreachable (or not set up here): keep whatever was loaded before.
+      calendarStatus.message = calendarConnected ? "Couldn't reach Google Calendar just now. Showing what was loaded earlier." : '';
       updateCalendarConnectionUI();
     });
+}
+
+function toggleCalendarVisible(index, on) {
+  const cal = googleCalendars[index];
+  if (!cal) return;
+  hiddenCalendars = hiddenCalendars.filter(function(id) { return id !== cal.id; });
+  if (!on) hiddenCalendars.push(cal.id);
+  localStorage.setItem('flowgrove_hidden_calendars', JSON.stringify(hiddenCalendars));
+  rebuildTodayEvents();
+  render();
 }
 
 function disconnectGoogleCalendar() {
   fetch('/api/calendar/disconnect', { method: 'POST' }).finally(function() {
     calendarConnected = false;
+    googleCalendars = []; googleAll = [];
+    calendarStatus = { message: '', needsReconnect: false };
     events = [];
     updateCalendarConnectionUI();
     render();
@@ -593,11 +709,20 @@ function disconnectGoogleCalendar() {
 function updateCalendarConnectionUI() {
   const statusBox = document.getElementById('calendarConnectionStatus');
   if (!statusBox) return;
-  if (calendarConnected) {
-    statusBox.innerHTML = '<span style="color:var(--tertiary);font-weight:600;">Connected</span> &middot; <button type="button" class="icon-btn" onclick="disconnectGoogleCalendar()">Disconnect</button>';
-  } else {
-    statusBox.innerHTML = '<a href="/api/auth/google" class="icon-btn" style="text-decoration:none;display:inline-block;">Connect Google Calendar</a>';
+  const note = calendarStatus.message ? '<p style="font-size:11.5px;color:#a3372f;margin:8px 0 0;">' + escapeHtml(calendarStatus.message) + '</p>' : '';
+  if (!calendarConnected) {
+    statusBox.innerHTML = '<a href="/api/auth/google" class="icon-btn" style="text-decoration:none;display:inline-block;">Connect Google Calendar</a>' + note;
+    return;
   }
+  let html = '<span style="color:var(--tertiary);font-weight:600;">Connected</span> &middot; <button type="button" class="icon-btn" onclick="disconnectGoogleCalendar()">Disconnect</button>' + note;
+  if (googleCalendars.length) {
+    html += '<div style="margin:10px 0 4px;font-size:12px;color:var(--ink-soft);">Calendars shown on your schedule:</div>';
+    html += googleCalendars.map(function(c, i) {
+      return '<div class="toggle-row"><span><span class="label-swatch" style="background:' + escapeHtml(c.color) + ';"></span> ' + escapeHtml(c.name) + '</span>' +
+        '<input type="checkbox" onchange="toggleCalendarVisible(' + i + ', this.checked)" ' + (calendarVisible(c.id) ? 'checked' : '') + '></div>';
+    }).join('');
+  }
+  statusBox.innerHTML = html;
 }
 
 let tasks = JSON.parse(localStorage.getItem('flowgrove_tasks') || 'null') || [
@@ -781,58 +906,35 @@ function switchView(v) {
   if (v === 'week') renderWeekGrid('weekGrid', ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']);
 }
 
-let monthEventsByDay = {}; // 'YYYY-MM-DD' -> array of Google event titles, refreshed per month
-
 function renderMonth() {
   const now = new Date();
   const year = now.getFullYear(), month = now.getMonth();
   document.getElementById('monthTitle').textContent = now.toLocaleString('default', { month: 'long', year: 'numeric' });
   buildMonthGrid(year, month);
-
-  // Ask for the WHOLE month (first day 12:00 AM up to the first of next month), in your timezone.
-  const monthStart = new Date(year, month, 1);
-  const monthEnd = new Date(year, month + 1, 1);
-  const url = '/api/calendar/events?timeMin=' + encodeURIComponent(monthStart.toISOString()) + '&timeMax=' + encodeURIComponent(monthEnd.toISOString());
-  fetch(url)
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      monthEventsByDay = {};
-      function addTo(dayKey, title) {
-        if (!monthEventsByDay[dayKey]) monthEventsByDay[dayKey] = [];
-        monthEventsByDay[dayKey].push(title);
-      }
-      if (data.connected && data.events) {
-        data.events.forEach(function(ev) {
-          if (ev.allDay) {
-            // All-day events come back as plain dates, and the end date is the day AFTER the last day.
-            const d = new Date(ev.start + 'T00:00:00');
-            const endD = new Date((ev.end || ev.start) + 'T00:00:00');
-            let added = 0;
-            while (d < endD && added < 62) { addTo(localDateStr(d), ev.title); d.setDate(d.getDate() + 1); added++; }
-            if (!added) addTo(ev.start.slice(0, 10), ev.title);
-          } else {
-            addTo(localDateStr(new Date(ev.start)), ev.title);
-          }
-        });
-      }
-      buildMonthGrid(year, month); // rebuild with event labels now that we have them
-    })
-    .catch(function() { /* leave the grid as-is if this fails */ });
+  const note = document.getElementById('monthNote');
+  if (note) {
+    let msg = '';
+    if (!calendarConnected) msg = 'Connect Google Calendar in Settings to see your calendar events here.' + (calendarStatus.message ? ' ' + calendarStatus.message : '');
+    else if (calendarStatus.message) msg = calendarStatus.message;
+    note.textContent = msg;
+    note.style.display = msg ? 'block' : 'none';
+  }
 }
 
-// Everything that belongs on a given calendar day, for the Month view: Google Calendar events and
-// your own fixed events. (Tasks are not shown here, only events.)
+// Everything that belongs on a given calendar day, for the Month view: Google Calendar events (all
+// of your calendars) and your own fixed events. All-day events come first, then timed ones by time.
+// (Tasks are not shown here, only events.)
 function itemsForDate(dateObj) {
   const dayKey = localDateStr(dateObj);
   const abbrev = DAY_NAMES[dateObj.getDay()];
-  const out = [];
-  (monthEventsByDay[dayKey] || []).forEach(function(title) {
-    out.push({ title: title, color: labelColor('Google Calendar') });
-  });
+  const g = googleOnDay(dateObj);
+  const out = g.allDay.map(function(e) { return { title: e.title, color: e.color, allDay: true }; });
+  const timed = g.timed.map(function(e) { return { title: e.title, color: e.color, start: e.startMin }; });
   localEvents.forEach(function(ev) {
-    if (localEventOnDate(ev, dayKey, abbrev)) out.push({ title: ev.title, color: labelColor(ev.label || 'Fixed Events') });
+    if (localEventOnDate(ev, dayKey, abbrev)) timed.push({ title: ev.title, color: labelColor(ev.label || 'Fixed Events'), start: ev.startMin });
   });
-  return out;
+  timed.sort(function(a, b) { return a.start - b.start; });
+  return out.concat(timed);
 }
 
 function buildMonthGrid(year, month) {
@@ -850,7 +952,8 @@ function buildMonthGrid(year, month) {
     const shown = items.slice(0, 3);
     const extra = items.length - shown.length;
     const itemHtml = shown.map(function(it) {
-      return '<div class="month-event-label" style="background:' + it.color + '33;" title="' + escapeHtml(it.title) + '">' + escapeHtml(it.title) + '</div>';
+      const style = it.allDay ? 'background:' + it.color + ';color:' + readableText(it.color) + ';' : 'background:' + it.color + '33;';
+      return '<div class="month-event-label" style="' + style + '" title="' + escapeHtml(it.title) + '">' + escapeHtml(it.title) + '</div>';
     }).join('') + (extra > 0 ? '<div class="month-more">+' + extra + ' more</div>' : '');
     cell.innerHTML = '<div>' + d + '</div>' + itemHtml;
     grid.appendChild(cell);
@@ -869,44 +972,39 @@ function taskRepeatsOnDay(task, dayAbbrev) {
 }
 
 // Weeks run Monday to Sunday here, so the "Sun" column is the Sunday at the END of this week.
-function getDateForDayInCurrentWeek(dayAbbrev) {
+function dateObjForDay(dayAbbrev) {
   const targetIdx = (DAY_NAMES.indexOf(dayAbbrev) + 6) % 7; // Mon=0 ... Sun=6
   const today = new Date();
   const todayIdx = (today.getDay() + 6) % 7;
-  const d = new Date(today);
-  d.setDate(d.getDate() + (targetIdx - todayIdx));
-  return localDateStr(d);
+  return new Date(today.getFullYear(), today.getMonth(), today.getDate() + (targetIdx - todayIdx));
 }
 
+// Each column lists, top to bottom: all-day events first, then everything else in the order it
+// happens that day. Tasks come out of the SAME planner as the Day view, so the order always matches
+// the Day view and "All Tasks Today".
 function renderWeekGrid(gridId, dayNames) {
   const grid = document.getElementById(gridId);
   grid.style.gridTemplateColumns = 'repeat(' + dayNames.length + ', 1fr)';
-  // Today's column only lists tasks that are actually active today
-  // (not tasks that repeat on other days, and not tasks sent to Tomorrow).
-  const todaysTasks = tasks.filter(isTaskActiveToday);
-  const todayShort = DAY_NAMES[new Date().getDay()];
+  const todayKey = localDateStr();
   grid.innerHTML = dayNames.map(function(d) {
-    const isToday = d === todayShort;
-    let listItems;
-    if (isToday) {
-      listItems = todaysTasks;
-    } else {
-      // Not today: only recurring tasks whose pattern matches this day of week
-      // AND existed by that day's actual date (not shown on days before the
-      // task was created, even if the pattern would otherwise match).
-      const colDate = getDateForDayInCurrentWeek(d);
-      listItems = tasks.filter(function(t) {
-        return taskRepeatsOnDay(t, d) && (!t.createdDate || t.createdDate <= colDate) && !(t.skipDates && t.skipDates.indexOf(colDate) !== -1);
-      });
-    }
-    const rows = listItems.map(function(t) {
+    const dateObj = dateObjForDay(d);
+    const isToday = localDateStr(dateObj) === todayKey;
+    const agenda = getDayAgenda(dateObj);
+    const allDayHtml = agenda.allDay.map(function(e) {
+      return '<div class="week-task-row allday" style="background:' + e.color + ';color:' + readableText(e.color) + ';" title="' + escapeHtml(e.calName + ': ' + e.title) + '">' + escapeHtml(e.title) + '</div>';
+    }).join('');
+    const itemHtml = agenda.items.map(function(it) {
+      if (it.kind === 'event') {
+        return '<div class="week-task-row" style="background:' + it.color + '33;"><span class="week-time">' + shortTime(it.start) + '</span> ' + escapeHtml(it.title) + '</div>';
+      }
+      const t = it.t;
       const bg = t.label ? (labelColor(t.label) + '55') : '';
       const style = bg ? ' style="background:' + bg + ';"' : '';
       const showDone = isToday && t.completed; // completion only applies to today's real instance
       return '<div class="week-task-row' + (showDone ? ' done' : '') + '"' + style + '>' + escapeHtml(t.title) + '</div>';
     }).join('');
-    const emptyMsg = isToday ? 'Nothing scheduled' : 'No repeating tasks';
-    return '<div class="week-col' + (isToday ? ' today' : '') + '"><div class="week-col-head">' + d + '</div><div class="week-col-body">' + (rows || '<div class="week-task-row empty">' + emptyMsg + '</div>') + '</div></div>';
+    const rows = allDayHtml + itemHtml;
+    return '<div class="week-col' + (isToday ? ' today' : '') + '"><div class="week-col-head">' + d + ' ' + dateObj.getDate() + '</div><div class="week-col-body">' + (rows || '<div class="week-task-row empty">Nothing scheduled</div>') + '</div></div>';
   }).join('');
 }
 
@@ -957,6 +1055,8 @@ function tickRender() {
   renderTaskList(sched);
   renderTomorrow();
   updateProgress();
+  renderAllDayStrip();
+  refreshVisibleViews();
 }
 
 let lastRenderedMinute = nowMinutesSinceMidnight();
@@ -1959,7 +2059,7 @@ function clipLongest(start, end, blockers) {
 function getFixedBlocks() {
   const todayKey = localDateStr();
   const todayAbbrev = DAY_NAMES[new Date().getDay()];
-  const google = events.map(function(ev) { return { startMin: ev.startMin, endMin: ev.endMin, title: ev.title }; });
+  const google = events.filter(function(ev) { return calendarVisible(ev.calId); }).map(function(ev) { return { startMin: ev.startMin, endMin: ev.endMin, title: ev.title, color: ev.color, calName: ev.calName }; });
   const locals = localEvents
     .filter(function(ev) { return localEventOnDate(ev, todayKey, todayAbbrev); })
     .map(function(ev) { return { startMin: ev.startMin, endMin: ev.endMin, ev: ev }; });
@@ -2004,30 +2104,27 @@ function findCompletedSlot(task, nowMin) {
 // The smallest piece a task may be split into when an event is in the way (in minutes).
 const MIN_PIECE = 10;
 
-// Builds today's schedule, strictly in priority order. Nothing is ever placed ahead of a task that
-// outranks it: if an event is in the way, a task is split (start, pause for the event, finish
-// afterward) instead of being skipped. Nothing overlaps, with ONE exception: a "quick" task
-// (under 5 minutes AND motivation 7 or higher) may sit inside a break. The returned array also
-// carries an `.unplaced` list: tasks that didn't fit before the end of today's working hours.
-function computeSchedule() {
-  const fixed = getFixedBlocks();
-  const pending = tasks.filter(function(t) { return isTaskActiveToday(t) && !t.completed; });
-
+// The planner. It builds one day's schedule, strictly in priority order. Nothing is ever placed ahead
+// of a task that outranks it: if an event is in the way, a task is split (start, pause for the event,
+// finish afterward) instead of being skipped. Nothing overlaps, with ONE exception: a "quick" task
+// (under 5 minutes AND motivation 7 or higher) may sit inside a break. The returned array also carries
+// an `.unplaced` list: tasks that didn't fit before the end of the working day.
+//   pending         tasks to place
+//   busyBlocks      [{startMin,endMin}] times that are already taken (events, finished tasks, ...)
+//   bounds          {start,end} the working hours
+//   nowMin          minutes since midnight when planning TODAY (nothing is placed in the past), or null
+//   completedPlaced already-finished blocks to include in the result (today only)
+function planDay(pending, busyBlocks, bounds, nowMin, completedPlaced) {
   function isQuick(t) { return t.time < 5 && t.motivation >= 7; }
   const reqNormal = pending.filter(function(t) { return !t.optional && !isQuick(t); }).sort(taskSortFn);
   const reqQuick = pending.filter(function(t) { return !t.optional && isQuick(t); }).sort(taskSortFn);
   const optNormal = pending.filter(function(t) { return t.optional && !isQuick(t); }).sort(taskSortFn);
   const optQuick = pending.filter(function(t) { return t.optional && isQuick(t); }).sort(taskSortFn);
 
-  // Busy time: calendar events, your own fixed events, breaks you took, and finished tasks.
-  function span(x) { return { startMin: x.startMin, endMin: x.endMin }; }
-  const busyBlocks = fixed.google.map(span).concat(fixed.locals.map(span), fixed.manual.map(span), fixed.completed.map(span));
-  busyBlocks.sort(function(a, b) { return a.startMin - b.startMin; });
-
-  const bounds = getDayBounds();
+  const busy = busyBlocks.slice().sort(function(a, b) { return a.startMin - b.startMin; });
   let windows = [];
   let cursor = bounds.start;
-  busyBlocks.forEach(function(b) {
+  busy.forEach(function(b) {
     if (b.startMin > cursor) windows.push({ start: cursor, end: b.startMin });
     cursor = Math.max(cursor, b.endMin);
   });
@@ -2035,14 +2132,13 @@ function computeSchedule() {
 
   // Nothing new (tasks or breaks) gets placed before the current moment: once time has
   // passed, that gap is gone, so unfinished work always starts from "now" forward.
-  const nowMin = nowMinutesSinceMidnight();
-  windows = windows
-    .map(function(w) { return { start: Math.max(w.start, nowMin), end: w.end }; })
-    .filter(function(w) { return w.end > w.start; });
+  if (nowMin !== null && nowMin !== undefined) {
+    windows = windows
+      .map(function(w) { return { start: Math.max(w.start, nowMin), end: w.end }; })
+      .filter(function(w) { return w.end > w.start; });
+  }
 
-  const placed = fixed.completed.map(function(c) {
-    return Object.assign({}, c.task, { startMin: c.startMin, endMin: c.endMin });
-  });
+  const placed = (completedPlaced || []).slice();
   const unplaced = [];
   const breaks = [];
 
@@ -2135,6 +2231,84 @@ function computeSchedule() {
   return placed;
 }
 
+// Today's schedule, built from today's real situation (events, finished tasks, breaks you took).
+function computeSchedule() {
+  const fixed = getFixedBlocks();
+  const pending = tasks.filter(function(t) { return isTaskActiveToday(t) && !t.completed; });
+  function span(x) { return { startMin: x.startMin, endMin: x.endMin }; }
+  const busy = fixed.google.map(span).concat(fixed.locals.map(span), fixed.manual.map(span), fixed.completed.map(span));
+  const completedPlaced = fixed.completed.map(function(c) {
+    return Object.assign({}, c.task, { startMin: c.startMin, endMin: c.endMin });
+  });
+  return planDay(pending, busy, getDayBounds(), nowMinutesSinceMidnight(), completedPlaced);
+}
+
+// Working hours for any weekday ("Mon", "Tue", ...).
+function hoursBoundsFor(abbrev) {
+  const h = settings.workingHours[abbrev] || { start: '09:00', end: '21:00' };
+  const start = parseTimeToMinutes(h.start);
+  let end = parseTimeToMinutes(h.end || '21:00');
+  if (end <= start) end = start + 60;
+  return { start: start, end: end };
+}
+
+// The same planner for any OTHER day (used by the Week and Weekdays views): repeating tasks that
+// fall on that day, plus anything you sent to Tomorrow when that day is tomorrow.
+function computeScheduleForDay(dateObj) {
+  const dayKey = localDateStr(dateObj);
+  if (dayKey === localDateStr()) return computeSchedule();
+  const abbrev = DAY_NAMES[dateObj.getDay()];
+  const tomorrowD = new Date(); tomorrowD.setDate(tomorrowD.getDate() + 1);
+  const tomorrowKey = localDateStr(tomorrowD);
+  const pending = tasks.filter(function(t) {
+    const rep = t.repeatPattern && t.repeatPattern !== 'none';
+    if (rep) return taskRepeatsOnDay(t, abbrev) && (!t.createdDate || t.createdDate <= dayKey) && !(t.skipDates && t.skipDates.indexOf(dayKey) !== -1);
+    return t.tomorrow && dayKey === tomorrowKey;
+  });
+  function span(x) { return { startMin: x.startMin, endMin: x.endMin }; }
+  const g = googleOnDay(dateObj);
+  const busy = g.timed.map(span).concat(
+    localEvents.filter(function(ev) { return localEventOnDate(ev, dayKey, abbrev); }).map(span)
+  );
+  return planDay(pending, busy, hoursBoundsFor(abbrev), null, []);
+}
+
+// What a Week/Weekdays column shows for one day: all-day events first, then tasks and timed events
+// in the order they happen. Tasks appear once each (at their first piece), in exactly the same
+// order as the Day view and "All Tasks Today".
+function getDayAgenda(dateObj) {
+  const dayKey = localDateStr(dateObj);
+  const abbrev = DAY_NAMES[dateObj.getDay()];
+  const g = googleOnDay(dateObj);
+  const sched = computeScheduleForDay(dateObj);
+  const items = [];
+  const seen = {};
+  sched.slice().sort(function(a, b) { return a.startMin - b.startMin; }).forEach(function(x) {
+    if (x.type === 'break' || seen[x.id]) return;
+    seen[x.id] = true;
+    items.push({ kind: 'task', t: x, start: x.startMin });
+  });
+  (sched.unplaced || []).forEach(function(t) { items.push({ kind: 'task', t: t, start: 100000 }); });
+  g.timed.forEach(function(e) { items.push({ kind: 'event', title: e.title, color: e.color, start: e.startMin }); });
+  localEvents.forEach(function(ev) {
+    if (localEventOnDate(ev, dayKey, abbrev)) items.push({ kind: 'event', title: ev.title, color: labelColor(ev.label || 'Fixed Events'), start: ev.startMin });
+  });
+  items.sort(function(a, b) { return a.start - b.start; });
+  return { allDay: g.allDay, items: items };
+}
+
+// The "All day" strip above today's schedule.
+function renderAllDayStrip() {
+  const box = document.getElementById('allDayStrip');
+  if (!box) return;
+  const g = googleOnDay(new Date());
+  if (!g.allDay.length) { box.style.display = 'none'; box.innerHTML = ''; return; }
+  box.style.display = 'flex';
+  box.innerHTML = '<span class="allday-label">All day</span>' + g.allDay.map(function(e) {
+    return '<span class="allday-pill" style="background:' + e.color + ';color:' + readableText(e.color) + ';" title="' + escapeHtml(e.calName) + '">' + escapeHtml(e.title) + '</span>';
+  }).join('');
+}
+
 // Today's tasks in the order they appear on the schedule (first piece of each task, earliest first).
 // "All Tasks Today" uses this, so the list and the schedule can never disagree.
 function getTodayOrder(sched) {
@@ -2178,6 +2352,8 @@ function render() {
   refreshLabelUI();
   renderEventsSidebar();
   updateProgress();
+  renderAllDayStrip();
+  refreshVisibleViews();
 }
 
 function renderEventsSidebar() {
@@ -2262,8 +2438,10 @@ function renderGrid(sched) {
 
   fixed.google.forEach(function(ev) {
     const el = document.createElement('div'); el.className = 'block event';
-    el.style.background = labelColor('Google Calendar');
-    el.innerHTML = '<span class="title">' + escapeHtml(ev.title) + '</span><span class="meta">Google Calendar</span>';
+    const evColor = ev.color || labelColor('Google Calendar');
+    el.style.background = evColor;
+    el.style.color = readableText(evColor);
+    el.innerHTML = '<span class="title">' + escapeHtml(ev.title) + '</span><span class="meta">' + escapeHtml(ev.calName || 'Google Calendar') + '</span>';
     el.oncontextmenu = function(e) { showDurationTooltip(e, ev.title, ev.startMin, ev.endMin); };
     addItem(ev.startMin, ev.endMin, el);
   });

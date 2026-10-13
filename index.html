@@ -89,12 +89,15 @@
   .block.compact { padding: 1px 8px; font-size: 11px; }
   .block.compact .title { line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .block.compact .meta { display: none; }
-  .block.task.compact { padding-left: 26px; }
+  .block.task.compact { padding-left: 26px; padding-right: 26px; }
+  .block.compact .task-edit-btn { top: 0; right: 5px; font-size: 13px; padding: 1px 4px; }
   .block.compact .task-checkbox-wrap { top: 2px; left: 6px; }
   .block.compact .task-checkbox-wrap input { margin: 0; width: 13px; height: 13px; }
   .block.break-block { background: #f0ebf8; border: 1px dashed #b7a5d9; color: #5d4e78; }
   .block.break-block .title { font-size: 11px; font-weight: 500; }
-  .block.task { border-color: transparent; cursor: pointer; }
+  .block.task { border-color: transparent; cursor: pointer; padding-left: 30px; padding-right: 30px; }
+  .task-edit-btn { position: absolute; top: 4px; right: 8px; border: none; background: none; cursor: pointer; font-size: 15px; line-height: 1; color: var(--ink-soft); padding: 3px 5px; border-radius: 6px; z-index: 2; }
+  .task-edit-btn:hover { color: var(--ink); background: rgba(0,0,0,0.07); }
   .block.task.completed { opacity: 0.45; text-decoration: line-through; }
   .badge { display: inline-block; font-size: 9px; background: rgba(0,0,0,0.08); border-radius: 4px; padding: 0 4px; margin-left: 4px; text-decoration: none; }
   .month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
@@ -198,6 +201,27 @@
   .tutorial-actions button { border: none; background: none; font-family: 'Lora', serif; font-size: 12.5px; cursor: pointer; }
   .tutorial-actions .skip { color: var(--ink-soft); }
   .tutorial-actions .next { background: var(--tertiary); color: #fff; border-radius: 6px; padding: 6px 14px; }
+
+  /* ---- task clock panel ---- */
+  .clock-panel { background: var(--accent-light); border-color: var(--accent-light-border); border-radius: 18px; padding: 16px 18px 18px; }
+  .clock-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+  .side-panel.clock-panel .clock-head h3 { margin: 0; flex: 1; text-align: center; padding-left: 24px; font-size: 15px; font-weight: 600; color: var(--accent-dark); word-break: break-word; }
+  .clock-close { border: none; background: none; font-size: 22px; line-height: 1; cursor: pointer; color: var(--ink-soft); width: 24px; padding: 0; }
+  .clock-panel .seg-group { background: #fff; }
+  .clock-display { font-size: 46px; font-weight: 700; text-align: center; color: var(--accent-dark); font-variant-numeric: tabular-nums; margin: 12px 0 8px; }
+  .clock-len-row { display: none; align-items: center; justify-content: center; gap: 8px; font-size: 12px; color: var(--ink-soft); margin-bottom: 6px; }
+  .clock-panel .clock-len-row input { width: 64px; text-align: center; padding: 4px 6px; }
+  .clock-buttons { display: flex; justify-content: center; gap: 8px; margin-top: 8px; }
+  .clock-buttons button { min-width: 78px; padding: 8px 14px; border-radius: 8px; border: 1px solid var(--border); background: #fff; font-family: 'Lora', serif; font-size: 13px; cursor: pointer; color: var(--ink); }
+  .clock-buttons button.primary-btn { background: var(--tertiary); border-color: var(--tertiary); color: #fff; font-weight: 600; }
+  .clock-buttons button:disabled { opacity: 0.45; cursor: default; }
+  .clock-note { font-size: 11.5px; color: var(--ink-soft); text-align: center; margin: 10px 0 0; }
+  .lap-list { list-style: none; margin: 12px 0 0; padding: 0; max-height: 170px; overflow-y: auto; }
+  .lap-list li { display: flex; align-items: center; gap: 6px; padding: 2px 0; font-size: 12px; font-variant-numeric: tabular-nums; }
+  .clock-panel input.lap-name { flex: 1; min-width: 0; width: auto; padding: 3px 6px; font-size: 12px; border: 1px solid transparent; background: transparent; border-radius: 6px; }
+  .clock-panel input.lap-name:hover, .clock-panel input.lap-name:focus { border-color: var(--border); background: #fff; }
+  .lap-time { font-weight: 600; color: var(--accent-dark); }
+  .lap-total { color: var(--ink-soft); }
 </style>
 </head>
 <body>
@@ -286,6 +310,30 @@
     <button type="button" class="collapse-btn" id="rightToggle" onclick="toggleSidebar('right')" title="Collapse" aria-label="Collapse or expand the right panels">&raquo;</button>
     <div class="rail-label">Add · Tomorrow · Tasks</div>
     <div class="sb-content">
+      <div class="panel side-panel clock-panel" id="clockPanel" data-tut="clockPanel" style="display:none;">
+        <div class="clock-head">
+          <h3 id="clockTitle">Name of Task</h3>
+          <button type="button" class="clock-close" onclick="closeClockPanel()" title="Close" aria-label="Close the clock">&times;</button>
+        </div>
+        <div class="seg-group" id="clockModeSeg">
+          <button type="button" class="seg-btn selected" id="clockModeTimer" onclick="setClockMode('timer')">Timer</button>
+          <button type="button" class="seg-btn" id="clockModeStopwatch" onclick="setClockMode('stopwatch')">Stopwatch</button>
+        </div>
+        <div class="clock-display" id="clockDisplay">30:00</div>
+        <div class="clock-len-row" id="clockLenRow">
+          <label for="clockLen" style="margin:0;">Length</label>
+          <input type="number" id="clockLen" min="1" max="600" onchange="setTimerLength(this.value)" onkeydown="if(event.key==='Enter'){this.blur();}">
+          <span>min</span>
+        </div>
+        <div class="clock-buttons">
+          <button type="button" class="primary-btn" id="clockStartBtn" onclick="toggleClock()">Start</button>
+          <button type="button" id="clockLapBtn" onclick="lapPanelClock()" style="display:none;">Lap</button>
+          <button type="button" id="clockResetBtn" onclick="resetPanelClock()">Reset</button>
+        </div>
+        <ul class="lap-list" id="lapList" style="display:none;"></ul>
+        <p class="clock-note" id="clockRunningNote" style="display:none;"></p>
+      </div>
+
       <div class="panel side-panel" data-tut="addTaskPanel" onclick="focusTypeIfPanelBackground(event)">
         <h3>Add a Task/Event</h3>
         <p style="font-size:11px;color:var(--ink-soft);margin:0 0 10px;">Click any field, or use the fast keyboard shortcuts shown (type a number, hit Space, or press Enter to jump to the next field).</p>
@@ -420,6 +468,17 @@
     </div>
 
     <div class="settings-section">
+      <h4>Timer Sound</h4>
+      <div class="toggle-row"><span>Ring when the timer ends</span><input type="checkbox" id="timerSoundToggle" checked></div>
+      <div style="margin:6px 0 4px;font-size:12px;color:var(--ink-soft);">Pick a sound (tap ▶ to preview):</div>
+      <div class="sound-option"><label><input type="radio" name="timerSoundChoice" value="bell"> Ring Bell</label><button type="button" class="icon-btn" onclick="previewTimerSound('bell')">▶</button></div>
+      <div class="sound-option"><label><input type="radio" name="timerSoundChoice" value="marimba"> Marimba</label><button type="button" class="icon-btn" onclick="previewTimerSound('marimba')">▶</button></div>
+      <div class="sound-option"><label><input type="radio" name="timerSoundChoice" value="harp"> Harp</label><button type="button" class="icon-btn" onclick="previewTimerSound('harp')">▶</button></div>
+      <div class="sound-option"><label><input type="radio" name="timerSoundChoice" value="dingdong"> Ding Dong</label><button type="button" class="icon-btn" onclick="previewTimerSound('dingdong')">▶</button></div>
+      <div class="sound-option"><label><input type="radio" name="timerSoundChoice" value="windchimes"> Wind Chimes</label><button type="button" class="icon-btn" onclick="previewTimerSound('windchimes')">▶</button></div>
+    </div>
+
+    <div class="settings-section">
       <h4>Motivational Quotes</h4>
       <p style="font-size:11px;color:var(--ink-soft);margin:0 0 8px;">Turn a whole category off, delete a quote you don't love, or add your own.</p>
       <div id="quoteCategoryToggles"></div>
@@ -495,7 +554,7 @@
   </div>
 </div>
 
-<div id="durationTooltip" style="display:none;position:absolute;background:#1c2b22;color:#fff;padding:6px 10px;border-radius:6px;font-size:12px;z-index:600;pointer-events:none;"></div>
+<div id="durationTooltip" style="display:none;position:absolute;background:#1c2b22;color:#fff;padding:8px 14px;border-radius:8px;font-size:12.5px;line-height:1.5;text-align:center;z-index:600;pointer-events:none;"></div>
 
 <div id="tutorialOverlay">
   <div id="tutorialDim"></div>
@@ -747,7 +806,7 @@ for (let i = SYSTEM_LABEL_DEFAULTS.length - 1; i >= 0; i--) {
 }
 let settings = JSON.parse(localStorage.getItem('flowgrove_settings') || 'null') || {
   theme: 'modern', primary: '#ffffff', secondary: '#ffffff', tertiary: '#6fa287',
-  sound: true, sayings: true, timeFormat: '12', completionSound: 'sparkle',
+  sound: true, sayings: true, timeFormat: '12', completionSound: 'sparkle', timerSound: 'bell', timerSoundOn: true,
   quoteCategories: { Wellness: true, Encouragement: true, Bible: true },
   shortWorkMin: 25, shortBreakMin: 5, medBreakMin: 15,
   workingHours: {
@@ -1754,6 +1813,7 @@ function removeTask(id) {
   if (!t) return;
   const isRepeating = t.repeatPattern && t.repeatPattern !== 'none';
   if (!isRepeating) {
+    forgetTaskClock(id);
     tasks = tasks.filter(function(x) { return x.id !== id; });
     saveTasks();
     render();
@@ -1802,6 +1862,7 @@ function deleteChoice(option) {
   } else {
     // "This and following" and "All" both remove the recurring definition entirely —
     // this build doesn't keep separate historical instances to distinguish them further.
+    forgetTaskClock(pendingDeleteId);
     tasks = tasks.filter(function(x) { return x.id !== pendingDeleteId; });
     saveTasks();
   }
@@ -1844,6 +1905,7 @@ function toggleComplete(id) {
   const t = tasks.find(x => x.id === id);
   if (!t) return;
   if (!t.completed) {
+    pauseClockIfTask(id); // finishing a task stops its clock
     // Marking complete: lock it in as a "done" block that ends right now and is as long as the
     // task's estimate, trimmed so it never overlaps an event, a break, or another finished task.
     // Because it is locked, adding new tasks later can't disturb it.
@@ -1871,6 +1933,486 @@ function toggleComplete(id) {
 const REPEAT_FREQUENCY_ITEMS = ['Every weekday', 'Every day', 'Every week', 'Every biweekly', 'Weekends', 'Monthly'];
 const REPEAT_DAY_ITEMS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const REPEAT_CHECKLIST_ITEMS = REPEAT_FREQUENCY_ITEMS.concat(REPEAT_DAY_ITEMS); // kept for anything iterating the full flat list
+
+/* ============================================================================================
+   Task clocks: a Timer and a Stopwatch for each task, plus a quiet "work log".
+
+   - Click a task on the day view to open its clock above "Add a Task/Event".
+   - Only ONE clock runs at a time. Starting one pauses any other.
+   - The break button pauses whatever is running.
+   - Every stretch of work is written to the day's work log: which task, when you pressed Start, and
+     when you stopped. (Nothing in the log is shown on screen yet; it is saved in this browser, and is
+     included in "Export my data".)
+   - All times come from the real clock (timestamps), so a clock stays correct even if the tab is
+     in the background or the page is reloaded.
+   ============================================================================================ */
+
+let workState = (function() {
+  let ws = null;
+  try { ws = JSON.parse(localStorage.getItem('flowgrove_work') || 'null'); } catch (e) { ws = null; }
+  if (!ws || typeof ws !== 'object') ws = {};
+  ws.date = ws.date || localDateStr();
+  ws.clocks = ws.clocks || {};
+  ws.log = ws.log || [];
+  ws.running = ws.running || null;
+  if (ws.panelTaskId === undefined) ws.panelTaskId = null;
+  return ws;
+})();
+let clockDemo = false;     // the tutorial can show the clock with a made-up task when you have no tasks yet
+let timerRingCtx = null;   // sound already scheduled to ring when the running timer ends
+
+function saveWork() { localStorage.setItem('flowgrove_work', JSON.stringify(workState)); }
+
+function taskById(id) {
+  return tasks.find(function(t) { return t.id === id; }) || null;
+}
+
+/* ---- the work log ---- */
+
+function openSession(task, mode) {
+  workState.log.push({
+    id: 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    taskId: task.id, title: task.title, mode: mode, start: Date.now(), end: null
+  });
+}
+
+function closeOpenSession(atMs) {
+  for (let i = workState.log.length - 1; i >= 0; i--) {
+    if (workState.log[i].end === null) {
+      workState.log[i].end = atMs || Date.now();
+      if (workState.log[i].end - workState.log[i].start < 1000) workState.log.splice(i, 1); // ignore accidental taps
+      return;
+    }
+  }
+}
+
+// A new day: yesterday's log moves into history (kept for 90 days) and the clocks start fresh.
+function ensureWorkToday() {
+  const today = localDateStr();
+  if (workState.date === today) return;
+  const parts = workState.date.split('-').map(Number);
+  const endOfThatDay = new Date(parts[0], parts[1] - 1, parts[2] + 1).getTime();
+  if (workState.running) { closeOpenSession(Math.min(Date.now(), endOfThatDay)); cancelTimerRing(); }
+  if (workState.log.length) {
+    let hist = {};
+    try { hist = JSON.parse(localStorage.getItem('flowgrove_work_history') || '{}') || {}; } catch (e) { hist = {}; }
+    hist[workState.date] = workState.log;
+    const keys = Object.keys(hist).sort();
+    while (keys.length > 90) delete hist[keys.shift()];
+    localStorage.setItem('flowgrove_work_history', JSON.stringify(hist));
+  }
+  workState = { date: today, clocks: {}, running: null, panelTaskId: null, log: [] };
+  saveWork();
+}
+
+/* ---- clocks ---- */
+
+function getClock(taskId) {
+  let c = workState.clocks[taskId];
+  if (!c) c = workState.clocks[taskId] = { mode: 'timer', lenMs: null, timerElapsedMs: 0, swElapsedMs: 0, laps: [] };
+  return c;
+}
+
+// The timer starts at the task's own time (what you typed when adding it) unless you edit it.
+function timerLenMs(c, task) {
+  return (typeof c.lenMs === 'number') ? c.lenMs : task.time * 60000;
+}
+
+function runningOn(taskId, mode) {
+  const r = workState.running;
+  return (r && r.taskId === taskId && (!mode || r.mode === mode)) ? r : null;
+}
+
+function timerElapsedMs(taskId) {
+  const c = workState.clocks[taskId];
+  if (!c) return 0;
+  const r = runningOn(taskId, 'timer');
+  return c.timerElapsedMs + (r ? Date.now() - r.startedAt : 0);
+}
+
+function stopwatchElapsedMs(taskId) {
+  const c = workState.clocks[taskId];
+  if (!c) return 0;
+  const r = runningOn(taskId, 'stopwatch');
+  return c.swElapsedMs + (r ? Date.now() - r.startedAt : 0);
+}
+
+// Minutes worked on a task: what the timer has counted down plus what the stopwatch has counted up.
+function workedMsFor(taskId) {
+  return timerElapsedMs(taskId) + stopwatchElapsedMs(taskId);
+}
+
+function startClock(taskId) {
+  const task = taskById(taskId);
+  if (!task) return;
+  const c = getClock(taskId);
+  if (workState.running) pauseRunningClock();
+  if (c.mode === 'timer' && timerLenMs(c, task) - c.timerElapsedMs <= 0) return; // already finished: Reset first
+  workState.running = { taskId: taskId, mode: c.mode, startedAt: Date.now() };
+  openSession(task, c.mode);
+  if (c.mode === 'timer') scheduleTimerRing(timerLenMs(c, task) - c.timerElapsedMs);
+  saveWork();
+  renderClockPanel();
+}
+
+function pauseRunningClock() {
+  const r = workState.running;
+  if (!r) return;
+  const c = workState.clocks[r.taskId];
+  const spent = Date.now() - r.startedAt;
+  if (c) {
+    if (r.mode === 'timer') {
+      const task = taskById(r.taskId);
+      const len = task ? timerLenMs(c, task) : Infinity;
+      c.timerElapsedMs = Math.min(len, c.timerElapsedMs + spent);
+    } else {
+      c.swElapsedMs += spent;
+    }
+  }
+  closeOpenSession();
+  cancelTimerRing();
+  workState.running = null;
+  saveWork();
+  renderClockPanel();
+}
+
+function resetClock(taskId) {
+  const c = getClock(taskId);
+  if (runningOn(taskId, c.mode)) pauseRunningClock();
+  if (c.mode === 'timer') {
+    c.timerElapsedMs = 0;
+  } else {
+    c.swElapsedMs = 0;
+    c.laps = [];
+  }
+  saveWork();
+  renderClockPanel();
+}
+
+function lapClock(taskId) {
+  const c = getClock(taskId);
+  if (c.mode !== 'stopwatch' || !runningOn(taskId, 'stopwatch')) return;
+  const total = stopwatchElapsedMs(taskId);
+  const prev = c.laps.length ? c.laps[c.laps.length - 1].totalMs : 0;
+  c.laps.push({ name: 'Lap ' + (c.laps.length + 1), lapMs: total - prev, totalMs: total });
+  saveWork();
+  renderLapList();
+}
+
+function renameLap(taskId, index, name) {
+  const c = getClock(taskId);
+  if (!c.laps[index]) return;
+  c.laps[index].name = name.trim() || ('Lap ' + (index + 1)); // blank goes back to the default
+  saveWork();
+  renderLapList();
+}
+
+function setClockMode(mode) {
+  const id = workState.panelTaskId;
+  if (id === null || !taskById(id)) return;
+  const c = getClock(id);
+  if (c.mode === mode) return;
+  if (runningOn(id)) pauseRunningClock(); // switching clocks pauses the one that was running
+  c.mode = mode;
+  saveWork();
+  renderClockPanel();
+}
+
+// Editing the timer length keeps the time already counted, so extending a timer you've started works.
+function setTimerLength(value) {
+  const id = workState.panelTaskId;
+  const task = taskById(id);
+  if (!task) return;
+  if (runningOn(id, 'timer')) { renderClockPanel(); return; } // pause first
+  const c = getClock(id);
+  let m = Math.round(parseFloat(value));
+  if (!(m >= 1)) m = task.time;
+  m = Math.min(m, 600);
+  c.lenMs = m * 60000;
+  c.timerElapsedMs = Math.min(c.timerElapsedMs, c.lenMs);
+  saveWork();
+  renderClockPanel();
+}
+
+function finishTimer(taskId) {
+  const r = workState.running;
+  if (!r || r.taskId !== taskId || r.mode !== 'timer') return;
+  const task = taskById(taskId);
+  const c = getClock(taskId);
+  const len = task ? timerLenMs(c, task) : c.timerElapsedMs;
+  const endAt = r.startedAt + Math.max(0, len - c.timerElapsedMs); // when it really hit zero
+  c.timerElapsedMs = len;
+  closeOpenSession(Math.min(Date.now(), endAt));
+  workState.running = null;
+  const ctx = timerRingCtx;
+  timerRingCtx = null;
+  if (settings.timerSoundOn !== false) {
+    if (ctx) setTimeout(function() { try { ctx.close(); } catch (e) {} }, 9000); // already ringing, close it afterwards
+    else previewTimerSound(settings.timerSound || 'bell');
+  } else if (ctx) {
+    try { ctx.close(); } catch (e) {}
+  }
+  saveWork();
+  renderClockPanel();
+  showToast('Timer finished' + (task ? ': ' + task.title : '') + '.');
+}
+
+// Called when the break button is pressed, a task is ticked done, or a task is removed.
+function pauseClockIfTask(taskId) {
+  if (workState.running && workState.running.taskId === taskId) pauseRunningClock();
+}
+
+function forgetTaskClock(taskId) {
+  pauseClockIfTask(taskId);
+  delete workState.clocks[taskId];
+  if (workState.panelTaskId === taskId) workState.panelTaskId = null;
+  saveWork();
+  renderClockPanel();
+}
+
+/* ---- timer ring sounds ---- */
+
+const TIMER_SOUNDS = { bell: 'Ring Bell', marimba: 'Marimba', harp: 'Harp', dingdong: 'Ding Dong', windchimes: 'Wind Chimes' };
+
+function makeRingDest(ctx) {
+  // A gentle limiter so overlapping notes never crackle.
+  const comp = ctx.createDynamicsCompressor();
+  comp.threshold.value = -12; comp.knee.value = 10; comp.ratio.value = 8;
+  comp.attack.value = 0.003; comp.release.value = 0.25;
+  comp.connect(ctx.destination);
+  return comp;
+}
+
+// Schedules a ring (about 6 seconds, repeating a few times so you notice it) to start `delay` seconds from now.
+function scheduleRing(ctx, name, delay, dest) {
+  function tone(freq, at, dur, type, vol) { playTone(ctx, freq, delay + at, dur, type, vol, dest); }
+  if (name === 'marimba') {
+    [0, 1.7, 3.4].forEach(function(t) {
+      [523.25, 659.25, 783.99, 1046.5].forEach(function(f, i) { tone(f, t + i * 0.13, 0.6, 'sine', 0.28); });
+    });
+  } else if (name === 'harp') {
+    [0, 2.6].forEach(function(t) {
+      [523.25, 587.33, 659.25, 783.99, 880, 1046.5, 1318.5].forEach(function(f, i) { tone(f, t + i * 0.11, 1.4, 'triangle', 0.17); });
+    });
+  } else if (name === 'dingdong') {
+    [0, 1.9, 3.8].forEach(function(t) {
+      tone(659.25, t, 0.9, 'sine', 0.32); tone(1318.5, t, 0.5, 'sine', 0.10);
+      tone(523.25, t + 0.55, 1.2, 'sine', 0.32); tone(1046.5, t + 0.55, 0.6, 'sine', 0.10);
+    });
+  } else if (name === 'windchimes') {
+    const notes = [1046.5, 1318.5, 1568, 1760, 2093, 1568, 1318.5, 1760, 2093, 1046.5];
+    [0, 2.4].forEach(function(t) {
+      notes.forEach(function(f, i) { tone(f, t + i * 0.17 + (i % 3) * 0.04, 1.5, 'sine', 0.11); });
+    });
+  } else { // bell
+    [0, 1.9, 3.8].forEach(function(t) {
+      tone(523.25, t, 1.7, 'sine', 0.30); tone(1046.5, t, 1.1, 'sine', 0.14); tone(784, t, 1.3, 'sine', 0.10);
+    });
+  }
+}
+
+// The ring is scheduled in the audio system the moment you press Start, so it still goes off on time
+// even if this tab is in the background and the browser is slowing the page down.
+function scheduleTimerRing(remainingMs) {
+  cancelTimerRing();
+  if (settings.timerSoundOn === false) return;
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    const ctx = new AC();
+    if (ctx.state === 'suspended' && ctx.resume) ctx.resume();
+    scheduleRing(ctx, settings.timerSound || 'bell', Math.max(0, remainingMs / 1000), makeRingDest(ctx));
+    timerRingCtx = ctx;
+  } catch (e) { timerRingCtx = null; }
+}
+
+function cancelTimerRing() {
+  if (timerRingCtx) {
+    try { timerRingCtx.close(); } catch (e) {}
+    timerRingCtx = null;
+  }
+}
+
+function previewTimerSound(name) {
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    const ctx = new AC();
+    scheduleRing(ctx, name, 0, makeRingDest(ctx));
+    setTimeout(function() { try { ctx.close(); } catch (e) {} }, 9000);
+  } catch (e) {}
+}
+
+/* ---- the clock panel (above "Add a Task/Event") ---- */
+
+function formatClock(ms, tenths) {
+  ms = Math.max(0, ms);
+  const totalSec = tenths ? Math.floor(ms / 1000) : Math.ceil(ms / 1000);
+  const h = Math.floor(totalSec / 3600), m = Math.floor((totalSec % 3600) / 60), s = totalSec % 60;
+  let out = (h ? h + ':' : '') + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+  if (tenths) out += '.' + Math.floor((ms % 1000) / 100);
+  return out;
+}
+
+function openClockPanel(taskId) {
+  clockDemo = false;
+  workState.panelTaskId = taskId;
+  saveWork();
+  setSidebar('right', false); // make sure it can be seen
+  renderClockPanel();
+  const panel = document.getElementById('clockPanel');
+  if (panel && panel.scrollIntoView) panel.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
+
+function closeClockPanel() {
+  clockDemo = false;
+  workState.panelTaskId = null;
+  saveWork();
+  renderClockPanel();
+}
+
+function toggleClock() {
+  const id = workState.panelTaskId;
+  if (id === null || !taskById(id)) return;
+  const c = getClock(id);
+  if (runningOn(id, c.mode)) pauseRunningClock(); else startClock(id);
+}
+function resetPanelClock() { const id = workState.panelTaskId; if (id !== null && taskById(id)) resetClock(id); }
+function lapPanelClock() { const id = workState.panelTaskId; if (id !== null && taskById(id)) lapClock(id); }
+
+function renderLapList() {
+  const ul = document.getElementById('lapList');
+  if (!ul) return;
+  const id = workState.panelTaskId;
+  const c = (id !== null && taskById(id)) ? workState.clocks[id] : null;
+  if (!c || c.mode !== 'stopwatch' || !c.laps.length) { ul.innerHTML = ''; ul.style.display = 'none'; return; }
+  ul.style.display = 'block';
+  let html = '';
+  for (let i = c.laps.length - 1; i >= 0; i--) { // newest lap on top
+    const lap = c.laps[i];
+    html += '<li><input type="text" class="lap-name" value="' + escapeHtml(lap.name) + '" aria-label="Lap name" onfocus="this.select()" onchange="renameLap(' + id + ',' + i + ',this.value)" onkeydown="if(event.key===\'Enter\'){this.blur();}">' +
+      '<span class="lap-time">' + formatClock(lap.lapMs, true) + '</span><span class="lap-total">' + formatClock(lap.totalMs, true) + '</span></li>';
+  }
+  ul.innerHTML = html;
+}
+
+// Full redraw of the panel (buttons, mode, length, laps). The ticking numbers are updateClockDisplay().
+function renderClockPanel() {
+  const panel = document.getElementById('clockPanel');
+  if (!panel) return;
+  const id = workState.panelTaskId;
+  const task = (id !== null && id !== undefined) ? taskById(id) : null;
+  if (!task && !clockDemo) { panel.style.display = 'none'; return; }
+  panel.style.display = 'block';
+  const demo = !task;
+  const c = demo ? null : getClock(id);
+  const mode = demo ? 'timer' : c.mode;
+  const running = !demo && !!runningOn(id, mode);
+
+  document.getElementById('clockTitle').textContent = demo ? 'Name of Task' : task.title;
+  document.getElementById('clockModeTimer').classList.toggle('selected', mode === 'timer');
+  document.getElementById('clockModeStopwatch').classList.toggle('selected', mode === 'stopwatch');
+  document.getElementById('clockModeTimer').disabled = demo;
+  document.getElementById('clockModeStopwatch').disabled = demo;
+
+  const lenRow = document.getElementById('clockLenRow');
+  lenRow.style.display = (mode === 'timer') ? 'flex' : 'none';
+  const lenInput = document.getElementById('clockLen');
+  lenInput.value = demo ? 25 : Math.round(timerLenMs(c, task) / 60000);
+  lenInput.disabled = demo || !!runningOn(id, 'timer');
+
+  const startBtn = document.getElementById('clockStartBtn');
+  startBtn.textContent = running ? 'Pause' : 'Start';
+  const timerDone = !demo && mode === 'timer' && (timerLenMs(c, task) - c.timerElapsedMs) <= 0;
+  startBtn.disabled = demo || timerDone;
+  const lapBtn = document.getElementById('clockLapBtn');
+  lapBtn.style.display = (mode === 'stopwatch') ? '' : 'none';
+  lapBtn.disabled = !running;
+  document.getElementById('clockResetBtn').disabled = demo;
+
+  // If a clock for a DIFFERENT task is still running, say so (it keeps running until you pause it or start this one).
+  const note = document.getElementById('clockRunningNote');
+  const r = workState.running;
+  const other = (!demo && r && r.taskId !== id) ? taskById(r.taskId) : null;
+  if (other) {
+    note.style.display = 'block';
+    note.innerHTML = 'Still running: <b>' + escapeHtml(other.title) + '</b> &middot; <a href="#" onclick="openClockPanel(' + other.id + '); return false;">open it</a>';
+  } else {
+    note.style.display = 'none';
+  }
+
+  renderLapList();
+  updateClockDisplay();
+}
+
+function updateClockDisplay() {
+  const el = document.getElementById('clockDisplay');
+  const panel = document.getElementById('clockPanel');
+  if (!el || !panel || panel.style.display === 'none') return;
+  const id = workState.panelTaskId;
+  const task = (id !== null && id !== undefined) ? taskById(id) : null;
+  if (!task) { el.textContent = '25:00'; return; }
+  const c = getClock(id);
+  if (c.mode === 'timer') el.textContent = formatClock(timerLenMs(c, task) - timerElapsedMs(id), false);
+  else el.textContent = formatClock(stopwatchElapsedMs(id), true);
+}
+
+function clockTick() {
+  ensureWorkToday();
+  const r = workState.running;
+  if (r) {
+    const task = taskById(r.taskId);
+    if (!task) {
+      pauseRunningClock(); // the task was removed
+    } else if (r.mode === 'timer') {
+      const c = getClock(r.taskId);
+      if (timerLenMs(c, task) - c.timerElapsedMs - (Date.now() - r.startedAt) <= 0) finishTimer(r.taskId);
+    }
+  }
+  updateClockDisplay();
+}
+setInterval(clockTick, 100);
+ensureWorkToday();
+
+/* ---- the black box when you right-click a task ---- */
+
+function showTaskTooltip(e, t) {
+  e.preventDefault();
+  const tip = document.getElementById('durationTooltip');
+  const worked = Math.floor(workedMsFor(t.id) / 60000);
+  const pLabel = t.priority === 3 ? 'Top' : t.priority === 2 ? 'Medium' : 'Low';
+  const repeats = t.repeatPattern && t.repeatPattern !== 'none';
+  const line1 = t.title + ': ' + worked + '/' + t.time + ' min ' + formatClockTime(t.startMin) + ' - ' + formatClockTime(t.endMin);
+  const line2 = [pLabel, 'Motivation ' + t.motivation].concat(repeats ? ['Repeat'] : []).join(' | ');
+  tip.innerHTML = '<div>' + escapeHtml(line1) + '</div><div>' + escapeHtml(line2) + '</div>';
+  tip.style.display = 'block';
+  const maxLeft = window.scrollX + document.documentElement.clientWidth - tip.offsetWidth - 8;
+  tip.style.left = Math.max(window.scrollX + 4, Math.min(e.pageX, maxLeft)) + 'px';
+  tip.style.top = e.pageY + 'px';
+  clearTimeout(window._durationTooltipTimer);
+  window._durationTooltipTimer = setTimeout(function() { tip.style.display = 'none'; }, 4000);
+}
+
+/* ---- tutorial helpers: show the clock panel while the tour points at it ---- */
+
+let tutorialPanelBackup;   // undefined = the tour hasn't touched the panel
+function tutorialShowClockPanel() {
+  if (tutorialPanelBackup === undefined) tutorialPanelBackup = workState.panelTaskId;
+  const order = getTodayOrder();
+  const first = order.filter(function(t) { return !t.completed; })[0] || order[0];
+  if (first) { workState.panelTaskId = first.id; clockDemo = false; }
+  else { workState.panelTaskId = null; clockDemo = true; }
+  renderClockPanel();
+}
+function tutorialRestoreClockPanel() {
+  if (tutorialPanelBackup === undefined) return;
+  const prev = tutorialPanelBackup;
+  tutorialPanelBackup = undefined;
+  clockDemo = false;
+  workState.panelTaskId = (prev !== null && taskById(prev)) ? prev : null;
+  saveWork();
+  renderClockPanel();
+}
 
 function personalizeQuote(text) {
   if (text.indexOf('{name}') === -1) return text;
@@ -1989,6 +2531,7 @@ let breakActive = false, breakStart = null, breakStartMin = null, breakInterval 
 function toggleBreak() {
   const btn = document.getElementById('breakBtn');
   if (!breakActive) {
+    pauseRunningClock(); // starting a break pauses a running timer or stopwatch
     breakActive = true; breakStart = Date.now(); breakStartMin = nowMinutesSinceMidnight();
     btn.classList.add('on');
     btn.style.background = labelColor('Break');
@@ -2354,6 +2897,7 @@ function render() {
   updateProgress();
   renderAllDayStrip();
   refreshVisibleViews();
+  renderClockPanel();
 }
 
 function renderEventsSidebar() {
@@ -2494,9 +3038,9 @@ function renderGrid(sched) {
     }
     // Short blocks only show the title: there isn't room for a second line without cutting something off.
     const showMeta = duration >= 30;
-    el.innerHTML = '<label class="task-checkbox-wrap" onclick="event.stopPropagation()"><input type="checkbox" ' + (t.completed ? 'checked' : '') + ' onchange="toggleComplete(' + t.id + ')"></label><span class="title">' + escapeHtml(t.title + partSuffix) + (t.optional ? '<span class="badge">Optional</span>' : '') + '</span>' + (showMeta ? '<span class="meta">' + escapeHtml(metaText) + '</span>' : '');
-    el.onclick = function() { startEditTask(t.id); };
-    el.oncontextmenu = function(e) { showDurationTooltip(e, t.title, t.startMin, t.endMin); };
+    el.innerHTML = '<label class="task-checkbox-wrap" onclick="event.stopPropagation()"><input type="checkbox" ' + (t.completed ? 'checked' : '') + ' onchange="toggleComplete(' + t.id + ')"></label><span class="title">' + escapeHtml(t.title + partSuffix) + (t.optional ? '<span class="badge">Optional</span>' : '') + '</span>' + (showMeta ? '<span class="meta">' + escapeHtml(metaText) + '</span>' : '') + '<button type="button" class="task-edit-btn" title="Edit this task" aria-label="Edit this task" onclick="event.stopPropagation(); startEditTask(' + t.id + ')">&#9998;</button>';
+    el.onclick = function() { openClockPanel(t.id); };
+    el.oncontextmenu = function(e) { showTaskTooltip(e, t); };
     el.draggable = true;
     el.ondragstart = function(e) { draggedTaskId = t.id; e.dataTransfer.effectAllowed = 'move'; e.stopPropagation(); };
     el.ondragover = function(e) { e.preventDefault(); e.stopPropagation(); };
@@ -2712,6 +3256,9 @@ function openSettings() {
   document.getElementById('soundToggle').checked = settings.sound;
   const soundRadio = document.querySelector('input[name="completionSoundChoice"][value="' + (settings.completionSound || 'sparkle') + '"]');
   if (soundRadio) soundRadio.checked = true;
+  const timerRadio = document.querySelector('input[name="timerSoundChoice"][value="' + (settings.timerSound || 'bell') + '"]');
+  if (timerRadio) timerRadio.checked = true;
+  document.getElementById('timerSoundToggle').checked = settings.timerSoundOn !== false;
   document.getElementById('sayingsToggle').checked = settings.sayings;
   document.getElementById('timeFormatSelect').value = settings.timeFormat;
   document.getElementById('shortWorkMin').value = settings.shortWorkMin;
@@ -2877,6 +3424,9 @@ function saveSettings() {
   settings.sound = document.getElementById('soundToggle').checked;
   const soundChoice = document.querySelector('input[name="completionSoundChoice"]:checked');
   if (soundChoice) settings.completionSound = soundChoice.value;
+  settings.timerSoundOn = document.getElementById('timerSoundToggle').checked;
+  const timerChoice = document.querySelector('input[name="timerSoundChoice"]:checked');
+  if (timerChoice) settings.timerSound = timerChoice.value;
   settings.sayings = document.getElementById('sayingsToggle').checked;
   settings.timeFormat = document.getElementById('timeFormatSelect').value;
   settings.shortWorkMin = parseInt(document.getElementById('shortWorkMin').value, 10) || 25;
@@ -2899,7 +3449,7 @@ function saveSettings() {
 }
 
 function exportData() {
-  const data = { profile: JSON.parse(localStorage.getItem('flowgrove_profile') || 'null'), tasks: tasks, events: localEvents, labels: labels, quotes: quotes, settings: settings };
+  const data = { profile: JSON.parse(localStorage.getItem('flowgrove_profile') || 'null'), tasks: tasks, events: localEvents, labels: labels, quotes: quotes, settings: settings, workToday: workState, workHistory: JSON.parse(localStorage.getItem('flowgrove_work_history') || '{}') };
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -2923,8 +3473,11 @@ const TUTORIAL_STEPS = [
   { target: '[data-tut="addTaskPanel"]', title: "Adding a task is easy", text: "Give it a title, a priority, a time estimate, a motivation level, a label, maybe a repeat pattern, whatever you need." },
   { target: '#prioritySeg', title: "Go however feels fastest", text: "Up top, choose 1 for Task or 2 for Event. Events are for fixed things like Lunch or Pick up, not synced from Google Calendar, just yours. Click an event to edit it, or drag it to a new time anytime. For priority, click Top, Medium, or Low, or just type 1, 2, or 3, totally up to you! Time and motivation work the same way, type a number or tap the arrow keys. Checkboxes toggle with a click or a quick tap of the Space bar. Hit Enter to hop to the next field, or Tab to go back a step." },
   { target: '[data-tut="scheduleGrid"]', title: "How your day gets ordered", text: "Priority comes first, then time estimate, then motivation as the tiebreaker. If an event is in the way, a long task pauses for it and finishes afterward, and short breaks and longer breaks are tucked in automatically after stretches of work. The list on the right is always in the same order as your schedule." },
-  { target: '[data-tut="scheduleGrid"]', title: "Marking things done", text: "Tick the little checkbox in the corner of a task to mark it done, and watch the rest of your day adjust automatically. Clicking the task itself opens it so you can edit it instead." },
-  { target: '[data-tut="breakBtn"]', title: "Need a breather?", text: "Tap this anytime for an instant break. It'll keep time for you, tap again whenever you're ready to jump back in." },
+  { target: '#grid .block.task .task-checkbox-wrap', fallback: '[data-tut="scheduleGrid"]', title: "Completing a task", text: "Tick the little checkbox on a task when you're done. It turns into a finished block, and the rest of your day adjusts automatically." },
+  { target: '#grid .block.task .task-edit-btn', fallback: '[data-tut="scheduleGrid"]', title: "Editing a task", text: "Tap the pencil on the right side of a task to change its name, time, priority, label, or repeat." },
+  { target: '#grid .block.task', fallback: '[data-tut="scheduleGrid"]', title: "Right-click for details", text: "Right-click a task to see how many minutes you've worked on it out of its total, its time slot, its priority and motivation, and whether it repeats." },
+  { target: '#clockPanel', before: tutorialShowClockPanel, title: "Timer and Stopwatch", text: "Click a task (not its checkbox or pencil) and its clock opens here. The Timer counts down from the task's time, and you can change the length. The Stopwatch counts up, and you can mark Laps and rename them. Start turns into Pause, Reset starts over, and the timer rings when it reaches zero (pick the sound in Settings). Only one clock runs at a time." },
+  { target: '[data-tut="breakBtn"]', title: "Need a breather?", text: "Tap this anytime for an instant break. It also pauses any running timer or stopwatch, so press Start on your clock when you're back. It keeps time for you, and you tap it again whenever you're ready to jump back in." },
   { target: '[data-tut="tomorrowPanel"]', title: "Tomorrow's got your back", text: "Anything that doesn't fit before the end of your day moves here automatically instead of vanishing, and you'll get a heads up when it happens. You can also drag any task onto this panel yourself, or drag one back out to bring it into today. Tomorrow's list becomes today's list when the new day starts." },
   { target: '#labelsSidebarPanel', title: "Make it yours with Labels", text: "Give a label its own name and color to keep things visually organized, don't worry, labels never change your schedule order." },
   { target: '#leftToggle', title: "Need more room?", text: "These little arrows on each side collapse the panels so your schedule has more space. Click again to bring them back, they remember how you left them." },
@@ -2941,6 +3494,7 @@ function startTutorial() {
   showTutorialStep();
 }
 function endTutorial() {
+  tutorialRestoreClockPanel();
   document.getElementById('tutorialOverlay').classList.remove('show');
   localStorage.setItem('flowgrove_tutorial_seen', 'true');
 }
@@ -2951,12 +3505,14 @@ function nextTutorialStep() {
 }
 function showTutorialStep() {
   const step = TUTORIAL_STEPS[tutStep];
+  if (step.before) step.before(); else tutorialRestoreClockPanel();
   document.getElementById('tutTitle').textContent = step.title;
   document.getElementById('tutText').textContent = step.text;
   const spot = document.getElementById('tutorialSpot');
   const card = document.getElementById('tutorialCard');
   if (step.target) {
-    const el = document.querySelector(step.target);
+    let el = document.querySelector(step.target);
+    if (!el && step.fallback) el = document.querySelector(step.fallback);
     if (el && el.getBoundingClientRect().width === 0 && el.getBoundingClientRect().height === 0) {
       // Not actually rendered/visible yet (e.g. layout hasn't settled). Retry
       // shortly rather than positioning the card at a broken (0,0) spot.
@@ -2977,10 +3533,13 @@ function showTutorialStep() {
       spot.style.height = (r.height + 12) + 'px';
 
       const cardWidth = 280;
+      const cardH = card.offsetHeight || 200;
       let cardTop = r.bottom + 14;
-      // If the card would run off the bottom of the screen, place it above the target instead.
-      if (cardTop + 160 > window.innerHeight) {
-        cardTop = Math.max(10, r.top - 170);
+      // If the card would run off the bottom of the screen, place it above the target instead; if
+      // neither fits (a very tall target), keep the card fully on screen so Next is always reachable.
+      if (cardTop + cardH > window.innerHeight - 10) {
+        cardTop = r.top - cardH - 14;
+        if (cardTop < 10) cardTop = Math.max(10, window.innerHeight - cardH - 10);
       }
       let cardLeft = Math.min(r.left, window.innerWidth - cardWidth - 20);
       cardLeft = Math.max(10, cardLeft);
@@ -3042,6 +3601,7 @@ function checkDayRollover() {
   manualBreaks = [];
   saveManualBreaks();
 
+  ensureWorkToday();
   localStorage.setItem('flowgrove_last_date', todayStr);
 }
 

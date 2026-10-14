@@ -47,7 +47,7 @@
   .week-task-row { font-size: 10.5px; padding: 4px 3px; margin-bottom: 3px; background: #f4f6f5; border-radius: 5px; word-break: break-word; }
   .week-task-row.done { opacity: 0.5; text-decoration: line-through; }
   .week-task-row.allday { font-weight: 600; }
-  .week-time { font-weight: 600; color: var(--ink-soft); }
+  .week-time { font-weight: 700; color: inherit; }   /* same color as the event's name, so the time is easy to read */
   .week-task-row.empty { background: none; color: var(--ink-soft); font-style: italic; }
   .week-col.today { border-color: var(--tertiary); background: #f3f8f5; }
   .week-col-head { font-size: 12px; font-weight: 600; margin-bottom: 6px; }
@@ -60,10 +60,12 @@
   .icon-btn:hover { background: #f7f9f8; }
   #breakBtn { border: 1px solid var(--tertiary); background: var(--tertiary); color: #fff; border-radius: 8px; padding: 7px 14px; font-family: 'Lora', serif; font-size: 12.5px; cursor: pointer; white-space: nowrap; }
   #breakBtn.on { background: #fff; color: var(--tertiary); }
-  main { --left-w: 220px; --right-w: 320px; max-width: 1240px; margin: 0 auto; padding: 20px 24px 64px; display: grid; grid-template-columns: 1fr; gap: 22px; }
+  main { --left-w: 220px; --right-w: 320px; max-width: calc(1240px + var(--extra-left, 0px) + var(--extra-right, 0px)); margin: 0 auto; padding: 20px 24px 64px; display: grid; grid-template-columns: 1fr; gap: 22px; }
   main > div { min-width: 0; }
   main.left-collapsed { --left-w: 56px; }
-  main.right-collapsed { --right-w: 108px; }
+  main.right-collapsed { --right-w: 120px; }
+  main.left-collapsed.left-popped { --left-w: 220px; --extra-left: 164px; }
+  main.right-collapsed.right-popped { --right-w: 320px; --extra-right: 200px; }
   @media (min-width: 900px) { main { grid-template-columns: var(--left-w) 1fr var(--right-w); align-items: start; } }
   .leftbar { display: flex; flex-direction: column; gap: 16px; }
   .panel.motivation-panel { background: var(--accent-light); border-color: var(--accent-light-border); color: var(--motivation-text); border-left: 4px solid var(--tertiary); box-shadow: 0 2px 10px rgba(111,162,135,0.2); }
@@ -98,17 +100,24 @@
   .block.compact .title { line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .block.compact .meta { display: none; }
   .block.task.compact { padding-left: 26px; padding-right: 26px; }
+  .block.task.worked.compact { padding-left: 8px; padding-right: 8px; }
   .block.compact .task-edit-btn { top: 0; right: 5px; font-size: 13px; padding: 1px 4px; }
   .block.compact .task-checkbox-wrap { top: 2px; left: 6px; }
   .block.compact .task-checkbox-wrap input { margin: 0; width: 13px; height: 13px; }
   .block.break-block { background: #f0ebf8; border: 1px dashed #b7a5d9; color: #5d4e78; }
   .block.break-block .title { font-size: 11px; font-weight: 500; }
   .block.task { border-color: transparent; cursor: pointer; padding-left: 30px; padding-right: 30px; }
+  .block.task.worked { padding-left: 9px; padding-right: 9px; cursor: pointer; }
   .task-edit-btn { position: absolute; top: 4px; right: 8px; border: none; background: none; cursor: pointer; font-size: 15px; line-height: 1; color: inherit; opacity: 0.7; padding: 3px 5px; border-radius: 6px; z-index: 2; }
   .task-edit-btn:hover { opacity: 1; background: rgba(0,0,0,0.10); }
   .block.task.completed { opacity: 0.45; text-decoration: line-through; }
   .badge { display: inline-block; font-size: 9px; background: rgba(0,0,0,0.08); border-radius: 4px; padding: 0 4px; margin-left: 4px; text-decoration: none; }
   .month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+  .month-week { position: relative; display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 6px; }
+  .month-lane { position: absolute; top: 25px; left: 0; right: 0; display: grid; grid-template-columns: repeat(7, 1fr); column-gap: 6px; row-gap: 3px; grid-auto-rows: 17px; pointer-events: none; z-index: 2; }
+  .month-bar { pointer-events: auto; margin: 0 5px; font-size: 10px; font-weight: 600; line-height: 17px; padding: 0 6px; border-radius: 5px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; text-align: left; }
+  .month-bar.cont-left { margin-left: 0; border-top-left-radius: 0; border-bottom-left-radius: 0; }
+  .month-bar.cont-right { margin-right: 0; border-top-right-radius: 0; border-bottom-right-radius: 0; }
   .month-header-row { margin-bottom: 4px; }
   .month-header-row div { text-align: center; font-size: 11px; font-weight: 600; color: var(--ink-soft); }
   .month-cell { border: 1px solid var(--border); border-radius: 8px; min-height: 60px; padding: 6px; font-size: 11.5px; color: var(--ink-soft); width: 100%; box-sizing: border-box; align-self: start; min-width: 0; }
@@ -120,17 +129,18 @@
   .sb-content { display: flex; flex-direction: column; gap: 16px; }
   .collapse-btn { align-self: flex-end; border: 1px solid var(--border); background: #fff; border-radius: 8px; width: 34px; height: 28px; cursor: pointer; font-size: 15px; line-height: 1; color: var(--ink-soft); }
   .collapse-btn:hover { background: #f7f9f8; color: var(--ink); }
-  .rail-icons { display: none; }
-
-  /* ---- a collapsed side: a strip of icons. Click an icon to pop out just that block. ---- */
-  .collapsed-side { position: sticky; top: 12px; z-index: 110; align-self: start; }
-  .collapsed-side .collapse-btn { align-self: center; }
-  .collapsed-side .rail-icons { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
-  .leftbar.collapsed-side .rail-icons { align-items: center; }
-  .rail-btn { display: flex; align-items: center; gap: 8px; width: 100%; padding: 7px 8px; border: 1px solid transparent; border-radius: 12px; background: transparent; color: var(--accent-dark); cursor: pointer; font-family: 'Lora', serif; font-size: 13px; font-weight: 700; text-align: left; transition: background 0.15s ease, border-color 0.15s ease; }
-  .leftbar .rail-btn { justify-content: center; width: auto; padding: 8px; }
+  /* ---- a collapsed side: every block is either a small icon, or (once you tap the icon) the full block in
+         its place, in the same column, never on top of the day ---- */
+  .collapsed-side:not(.has-popped) { position: sticky; top: 12px; z-index: 110; }
+  .leftbar.collapsed-side .collapse-btn { align-self: flex-start; }
+  .sidebar.collapsed-side .collapse-btn { align-self: flex-end; }
+  .collapsed-side .sb-content { gap: 8px; margin-top: 8px; }
+  .rail-btn { display: none; align-items: center; gap: 8px; padding: 7px 8px; border: 1px solid transparent; border-radius: 12px; background: transparent; color: var(--accent-dark); cursor: pointer; font-family: 'Lora', serif; font-size: 13px; font-weight: 700; text-align: left; transition: background 0.15s ease; }
+  .collapsed-side .sb-content > .rail-btn { display: flex; }
+  .leftbar.collapsed-side .sb-content > .rail-btn { align-self: flex-start; }
+  .sidebar.collapsed-side .sb-content > .rail-btn { align-self: flex-end; }
+  .collapsed-side .sb-content > .rail-btn.is-open { display: none !important; }
   .rail-btn:hover { background: var(--accent-light); }
-  .rail-btn.is-open { background: var(--accent-light); border-color: var(--accent-light-border); }
   .rail-btn svg { width: 26px; height: 26px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; transform-origin: 50% 50%; transition: transform 0.35s ease; }
   .rail-btn svg.fill { fill: currentColor; stroke: none; }
   .rail-btn svg .pie-bg { fill: #e6ebe7; stroke: none; }
@@ -140,19 +150,16 @@
   @keyframes railSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
   .rail-text { font-variant-numeric: tabular-nums; white-space: nowrap; }
 
-  /* blocks that are popped out float next to the strip, over the schedule; several can be open at once */
-  .collapsed-side .sb-content { display: none; position: absolute; top: 0; flex-direction: column; gap: 12px; max-height: calc(100vh - 24px); overflow-y: auto; padding: 6px 18px 26px; z-index: 120; }
-  .leftbar.collapsed-side .sb-content { left: calc(100% - 12px); width: 336px; }
-  .sidebar.collapsed-side .sb-content { right: calc(100% - 12px); width: 386px; }
-  .collapsed-side.has-popped .sb-content { display: flex; }
+  .panel[data-pop] { position: relative; }
+  .pop-close { display: none; position: absolute; top: -9px; right: 10px; width: 22px; height: 22px; padding: 0; border-radius: 50%; border: 1px solid var(--border); background: #fff; color: var(--ink-soft); font-size: 15px; line-height: 1; cursor: pointer; z-index: 4; box-shadow: var(--shadow); }
+  .pop-close:hover { color: var(--ink); background: #f7f9f8; }
+  .collapsed-side .sb-content > .panel.popped .pop-close { display: block; }
   .collapsed-side .sb-content > .panel { display: none !important; }
-  .collapsed-side .sb-content > .panel.popped { display: block !important; box-shadow: 0 6px 16px rgba(0,0,0,0.16); animation: popIn 0.2s ease-out; }
+  .collapsed-side .sb-content > .panel.popped { display: block !important; animation: popIn 0.2s ease-out; }
   .collapsed-side .sb-content > .panel.popped[style*="display:none"], .collapsed-side .sb-content > .panel.popped[style*="display: none"] { display: none !important; }
   .collapsed-side .sb-content > .panel.popped.pop-out { animation: popOut 0.17s ease-in forwards; }
-  .leftbar.collapsed-side .sb-content > .panel { --pop-from: -26px; }
-  .sidebar.collapsed-side .sb-content > .panel { --pop-from: 26px; }
-  @keyframes popIn { from { opacity: 0; transform: translateX(var(--pop-from, 26px)) scale(0.97); } to { opacity: 1; transform: none; } }
-  @keyframes popOut { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateX(var(--pop-from, 26px)) scale(0.97); } }
+  @keyframes popIn { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: none; } }
+  @keyframes popOut { from { opacity: 1; transform: none; } to { opacity: 0; transform: scale(0.94); } }
   .side-panel { padding: 14px 16px 16px; }
   .side-panel h3 { margin: 0 0 10px; font-size: 13.5px; font-weight: 600; }
   .tab-row { display: flex; gap: 6px; margin-bottom: 10px; }
@@ -293,11 +300,8 @@
 <main>
   <div class="leftbar" id="leftbar">
     <button type="button" class="collapse-btn" id="leftToggle" onclick="toggleSidebar('left')" title="Collapse" aria-label="Collapse or expand the left panels">&laquo;</button>
-    <div class="rail-icons">
-      <button type="button" class="rail-btn" data-pop="motivation" title="Motivation" aria-label="Motivation" onclick="railClick('motivation', this)"><svg class="ico ico-spin fill" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1.5Q13 11 22.5 12Q13 13 12 22.5Q11 13 1.5 12Q11 11 12 1.5Z"/></svg></button>
-      <button type="button" class="rail-btn" data-pop="labels" title="Labels" aria-label="Labels" onclick="railClick('labels', this)"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L2.2 12.2V2.2h10l8.4 8.4a2 2 0 0 1 0 2.8z"/><circle cx="7.4" cy="7.4" r="1.5" fill="currentColor" stroke="none"/></svg></button>
-    </div>
     <div class="sb-content">
+      <button type="button" class="rail-btn" data-pop="motivation" title="Motivation" aria-label="Motivation" onclick="railClick('motivation', this)"><svg class="ico ico-spin fill" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1.5Q13 11 22.5 12Q13 13 12 22.5Q11 13 1.5 12Q11 11 12 1.5Z"/></svg></button>
       <div class="panel side-panel motivation-panel" id="motivationPanel" data-pop="motivation">
         <div style="display:flex;justify-content:space-between;align-items:center;">
           <h3 style="margin:0;">Motivation</h3>
@@ -306,6 +310,7 @@
         <p id="motivationText" style="font-size:13px;margin:8px 0 0;font-style:italic;"></p>
       </div>
 
+      <button type="button" class="rail-btn" data-pop="labels" title="Labels" aria-label="Labels" onclick="railClick('labels', this)"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L2.2 12.2V2.2h10l8.4 8.4a2 2 0 0 1 0 2.8z"/><circle cx="7.4" cy="7.4" r="1.5" fill="currentColor" stroke="none"/></svg></button>
       <div class="panel side-panel" id="labelsSidebarPanel" data-pop="labels">
         <h3>Labels</h3>
         <p style="font-size:11px;color:var(--ink-soft);margin:0 0 6px;">Click a label to highlight matching tasks. Click × to delete.</p>
@@ -345,25 +350,19 @@
       <div class="month-grid month-header-row">
         <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
       </div>
-      <div class="month-grid" id="monthGrid"></div>
+      <div class="month-weeks" id="monthGrid"></div>
       <div id="monthNote" class="month-note" style="display:none;"></div>
     </div>
   </div>
 
   <div class="sidebar" id="rightbar">
     <button type="button" class="collapse-btn" id="rightToggle" onclick="toggleSidebar('right')" title="Collapse" aria-label="Collapse or expand the right panels">&raquo;</button>
-    <div class="rail-icons">
+    <div class="sb-content">
       <button type="button" class="rail-btn" id="railClockBtn" data-pop="clock" style="display:none;" title="Timer / stopwatch" aria-label="Timer or stopwatch" onclick="railClick('clock', this)">
         <svg class="ico" id="railPie" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" class="pie-bg"/><path id="railPieDark" class="pie-dark" d=""/></svg>
         <svg class="ico" id="railStopwatch" viewBox="0 0 24 24" aria-hidden="true" style="display:none;"><circle cx="12" cy="13.6" r="7.6"/><path d="M12 13.6V9M9.4 2.8h5.2M12 2.8v3.4M18.6 6.4l1.5-1.5"/></svg>
         <span class="rail-text" id="railClockText"></span>
       </button>
-      <button type="button" class="rail-btn" data-pop="add" title="Add a Task/Event" aria-label="Add a Task/Event" onclick="railClick('add', this)"><svg class="ico ico-spin" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.5v15M4.5 12h15" stroke-width="2.8"/></svg></button>
-      <button type="button" class="rail-btn" data-pop="tasks" title="All Tasks Today" aria-label="All Tasks Today" onclick="railClick('tasks', this)"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="4.5"/><path d="M8 12.4l2.9 2.9 5.4-5.8"/></svg><span class="rail-text" id="railTasksCount">0</span></button>
-      <button type="button" class="rail-btn" data-pop="events" title="Fixed Events" aria-label="Fixed Events" onclick="railClick('events', this)"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="3.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><circle cx="8.5" cy="14.2" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="14.2" r="1" fill="currentColor" stroke="none"/><circle cx="15.5" cy="14.2" r="1" fill="currentColor" stroke="none"/></svg><span class="rail-text" id="railEventsCount">0</span></button>
-      <button type="button" class="rail-btn" data-pop="tomorrow" title="Tomorrow" aria-label="Tomorrow" onclick="railClick('tomorrow', this)"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.2"/><path d="M8.4 8l4 4-4 4M12.8 8l4 4-4 4"/></svg><span class="rail-text" id="railTomorrowCount">0</span></button>
-    </div>
-    <div class="sb-content">
       <div class="panel side-panel clock-panel" id="clockPanel" data-pop="clock" data-tut="clockPanel" style="display:none;">
         <div class="clock-head">
           <h3 id="clockTitle">Name of Task</h3>
@@ -390,6 +389,7 @@
         <p class="clock-note" id="clockRunningNote" style="display:none;"></p>
       </div>
 
+      <button type="button" class="rail-btn" data-pop="add" title="Add a Task/Event" aria-label="Add a Task/Event" onclick="railClick('add', this)"><svg class="ico ico-spin" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.5v15M4.5 12h15" stroke-width="2.8"/></svg></button>
       <div class="panel side-panel" id="addPanel" data-pop="add" data-tut="addTaskPanel" onclick="focusTypeIfPanelBackground(event)">
         <h3>Add a Task/Event</h3>
         <p style="font-size:11px;color:var(--ink-soft);margin:0 0 10px;">Click any field, or use the fast keyboard shortcuts shown (type a number, hit Space, or press Enter to jump to the next field).</p>
@@ -463,17 +463,20 @@
 
 
 
+      <button type="button" class="rail-btn" data-pop="tasks" title="All Tasks Today" aria-label="All Tasks Today" onclick="railClick('tasks', this)"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="4.5"/><path d="M8 12.4l2.9 2.9 5.4-5.8"/></svg><span class="rail-text" id="railTasksCount">0</span></button>
       <div class="panel task-list" id="tasksPanel" data-pop="tasks" data-tut="taskListPanel">
         <h3>All Tasks Today</h3>
         <ul id="taskListUI"></ul>
       </div>
 
+      <button type="button" class="rail-btn" data-pop="events" title="Fixed Events" aria-label="Fixed Events" onclick="railClick('events', this)"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="3.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><circle cx="8.5" cy="14.2" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="14.2" r="1" fill="currentColor" stroke="none"/><circle cx="15.5" cy="14.2" r="1" fill="currentColor" stroke="none"/></svg><span class="rail-text" id="railEventsCount">0</span></button>
       <div class="panel side-panel" id="eventsSidebarPanel" data-pop="events">
         <h3>Events</h3>
         <p style="font-size:11px;color:var(--ink-soft);margin:0 0 6px;">Fixed events you've created (not from Google Calendar). Click one to edit it, or drag it on the schedule to move it.</p>
         <div id="eventsSidebarList"></div>
       </div>
 
+      <button type="button" class="rail-btn" data-pop="tomorrow" title="Tomorrow" aria-label="Tomorrow" onclick="railClick('tomorrow', this)"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.2"/><path d="M8.4 8l4 4-4 4M12.8 8l4 4-4 4"/></svg><span class="rail-text" id="railTomorrowCount">0</span></button>
       <div class="panel side-panel" id="tomorrowPanel" data-pop="tomorrow" data-tut="tomorrowPanel">
         <h3>Tomorrow</h3>
         <ul id="tomorrowListUI" style="list-style:none;margin:0;padding:0;font-size:12.5px;"></ul>
@@ -1077,43 +1080,81 @@ function renderMonth() {
   }
 }
 
-// Everything that belongs on a given calendar day, for the Month view: Google Calendar events (all
-// of your calendars) and your own fixed events. All-day events come first, then timed ones by time.
-// (Tasks are not shown here, only events.)
+// The timed events on a given calendar day, for the Month view: Google Calendar events (all of your
+// calendars) and your own fixed events, by time. (All-day events are drawn as bars; tasks aren't shown here.)
 function itemsForDate(dateObj) {
   const dayKey = localDateStr(dateObj);
   const abbrev = DAY_NAMES[dateObj.getDay()];
   const g = googleOnDay(dateObj);
-  const out = g.allDay.map(function(e) { return { title: e.title, color: e.monthColor, allDay: true, solid: true }; });
-  const timed = g.timed.map(function(e) { return { title: e.title, color: e.monthColor, start: e.startMin, solid: true }; });
+  const timed = g.timed.map(function(e) { return { title: e.title, color: e.monthColor, start: e.startMin, startMin: e.startMin, endMin: e.endMin, solid: true, showLength: false }; });
   localEvents.forEach(function(ev) {
-    if (localEventOnDate(ev, dayKey, abbrev)) timed.push({ title: ev.title, color: labelColor(ev.label || 'Fixed Events'), start: ev.startMin });
+    if (localEventOnDate(ev, dayKey, abbrev)) timed.push({ title: ev.title, color: labelColor(ev.label || 'Fixed Events'), start: ev.startMin, startMin: ev.startMin, endMin: ev.endMin, solid: false, showLength: true });
   });
   timed.sort(function(a, b) { return a.start - b.start; });
-  return out.concat(timed);
+  return timed;
 }
 
+// One row per week. An all-day event that lasts several days is ONE bar stretched across all the days it
+// covers (and carried on into the next week's row), like Google Calendar. Right-click anything for details.
 function buildMonthGrid(year, month) {
   const now = new Date();
-  const grid = document.getElementById('monthGrid');
-  grid.innerHTML = '';
+  const container = document.getElementById('monthGrid');
+  viewTipItems = [];
+  function tip(item) { viewTipItems.push(item); return ' oncontextmenu="viewTip(event,' + (viewTipItems.length - 1) + ')"'; }
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
-  for (let i = 0; i < firstDay; i++) grid.appendChild(document.createElement('div'));
-  for (let d = 1; d <= daysInMonth; d++) {
-    const cell = document.createElement('div');
-    const isToday = (d === now.getDate() && month === now.getMonth() && year === now.getFullYear());
-    cell.className = 'month-cell' + (isToday ? ' today' : '');
-    const items = itemsForDate(new Date(year, month, d));
-    const shown = items.slice(0, 3);
-    const extra = items.length - shown.length;
-    const itemHtml = shown.map(function(it) {
-      const style = (it.allDay || it.solid) ? 'background:' + it.color + ';color:' + readableText(it.color) + ';' : 'background:' + it.color + '33;';
-      return '<div class="month-event-label" style="' + style + '" title="' + escapeHtml(it.title) + '">' + escapeHtml(it.title) + '</div>';
-    }).join('') + (extra > 0 ? '<div class="month-more">+' + extra + ' more</div>' : '');
-    cell.innerHTML = '<div>' + d + '</div>' + itemHtml;
-    grid.appendChild(cell);
+  const cells = [];
+  for (let i = 0; i < firstDay; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+  while (cells.length % 7) cells.push(null);
+
+  let html = '';
+  for (let w = 0; w < cells.length / 7; w++) {
+    const week = cells.slice(w * 7, w * 7 + 7);
+    const realCols = [];
+    week.forEach(function(d, c) { if (d !== null) realCols.push(c); });
+    const firstKey = localDateStr(new Date(year, month, week[realCols[0]]));
+    const afterLastKey = localDateStr(new Date(year, month, week[realCols[realCols.length - 1]] + 1));
+
+    // all-day events in this week, packed into lanes
+    const bars = [];
+    const seen = {};
+    week.forEach(function(d, col) {
+      if (d === null) return;
+      googleOnDay(new Date(year, month, d)).allDay.forEach(function(e) {
+        const id = e.calId + '|' + e.title + '|' + e.start + '|' + e.end;
+        if (seen[id] === undefined) { seen[id] = bars.length; bars.push({ e: e, from: col, to: col }); }
+        else bars[seen[id]].to = col;
+      });
+    });
+    bars.sort(function(a, b) { return (a.from - b.from) || (b.to - a.to); });
+    const laneEnds = [];
+    bars.forEach(function(b) {
+      let l = 0;
+      while (l < laneEnds.length && laneEnds[l] >= b.from) l++;
+      laneEnds[l] = b.to;
+      b.lane = l;
+    });
+    const spacer = bars.length ? '<div style="height:' + (laneEnds.length * 20) + 'px"></div>' : '';
+
+    html += '<div class="month-week">' + week.map(function(d) {
+      if (d === null) return '<div></div>';
+      const isToday = (d === now.getDate() && month === now.getMonth() && year === now.getFullYear());
+      const items = itemsForDate(new Date(year, month, d));
+      const shown = items.slice(0, 3);
+      const extra = items.length - shown.length;
+      const itemHtml = shown.map(function(it) {
+        const style = it.solid ? 'background:' + it.color + ';color:' + readableText(it.color) + ';' : 'background:' + it.color + '33;';
+        return '<div class="month-event-label" style="' + style + '"' + tip({ kind: 'event', title: it.title, startMin: it.startMin, endMin: it.endMin, showLength: it.showLength }) + '>' + escapeHtml(it.title) + '</div>';
+      }).join('') + (extra > 0 ? '<div class="month-more">+' + extra + ' more</div>' : '');
+      return '<div class="month-cell' + (isToday ? ' today' : '') + '"><div>' + d + '</div>' + spacer + itemHtml + '</div>';
+    }).join('') + (bars.length ? '<div class="month-lane">' + bars.map(function(b) {
+      const cl = b.e.start < firstKey ? ' cont-left' : '';
+      const cr = b.e.end > afterLastKey ? ' cont-right' : '';
+      return '<div class="month-bar' + cl + cr + '" style="grid-column:' + (b.from + 1) + ' / ' + (b.to + 2) + ';grid-row:' + (b.lane + 1) + ';background:' + b.e.monthColor + ';color:' + readableText(b.e.monthColor) + ';"' + tip({ kind: 'allday', ev: b.e }) + '>' + escapeHtml(b.e.title) + '</div>';
+    }).join('') + '</div>' : '') + '</div>';
   }
+  container.innerHTML = html;
 }
 
 const DAY_FULL_NAMES = { Mon:'Monday', Tue:'Tuesday', Wed:'Wednesday', Thu:'Thursday', Fri:'Friday', Sat:'Saturday', Sun:'Sunday' };
@@ -1139,11 +1180,15 @@ function dateObjForDay(dayAbbrev) {
 // day they cover (like Google Calendar), then each day's tasks and timed events in the order they happen.
 // Tasks come out of the SAME planner as the Day view, so the order always matches the Day view and
 // "All Tasks Today". Colors are exact: Google events are always the Google blue, tasks and fixed events
-// use their label's exact color.
+// use their label's exact color. Right-click anything for its details.
+let viewTipItems = []; // what each right-clickable item in Weekdays / Week / Month should show
+
 function renderWeekGrid(gridId, dayNames) {
   const grid = document.getElementById(gridId);
   grid.style.display = 'block';
   grid.style.gridTemplateColumns = '';
+  viewTipItems = [];
+  function tip(item) { viewTipItems.push(item); return ' oncontextmenu="viewTip(event,' + (viewTipItems.length - 1) + ')"'; }
   const n = dayNames.length;
   const todayKey = localDateStr();
   const colsStyle = 'grid-template-columns:repeat(' + n + ',1fr);';
@@ -1180,19 +1225,19 @@ function renderWeekGrid(gridId, dayNames) {
     html += '<div class="week-cols week-lane" style="' + colsStyle + '">' + bars.map(function(b) {
       const continuesLeft = b.e.start < days[0].key;
       const continuesRight = b.e.end > afterLastKey;
-      return '<div class="week-bar' + (continuesLeft ? ' cont-left' : '') + (continuesRight ? ' cont-right' : '') + '" style="grid-column:' + (b.from + 1) + ' / ' + (b.to + 2) + ';grid-row:' + (b.lane + 1) + ';background:' + b.e.color + ';color:' + readableText(b.e.color) + ';" title="' + escapeHtml(b.e.calName + ': ' + b.e.title) + '">' + escapeHtml(b.e.title) + '</div>';
+      return '<div class="week-bar' + (continuesLeft ? ' cont-left' : '') + (continuesRight ? ' cont-right' : '') + '" style="grid-column:' + (b.from + 1) + ' / ' + (b.to + 2) + ';grid-row:' + (b.lane + 1) + ';background:' + b.e.color + ';color:' + readableText(b.e.color) + ';"' + tip({ kind: 'allday', ev: b.e }) + '>' + escapeHtml(b.e.title) + '</div>';
     }).join('') + '</div>';
   }
 
   html += '<div class="week-cols" style="' + colsStyle + '">' + days.map(function(x) {
     const itemHtml = x.agenda.items.map(function(it) {
       if (it.kind === 'event') {
-        return '<div class="week-task-row" style="background:' + it.color + ';color:' + readableText(it.color) + ';"><span class="week-time">' + shortTime(it.start) + '</span> ' + escapeHtml(it.title) + '</div>';
+        return '<div class="week-task-row" style="background:' + it.color + ';color:' + readableText(it.color) + ';"' + tip({ kind: 'event', title: it.title, startMin: it.start, endMin: it.end, showLength: !it.google }) + '><span class="week-time">' + shortTime(it.start) + '</span> ' + escapeHtml(it.title) + '</div>';
       }
       const t = it.t;
       const style = t.label ? ' style="background:' + labelColor(t.label) + ';color:' + readableText(labelColor(t.label)) + ';"' : '';
       const showDone = x.isToday && t.completed; // completion only applies to today's real instance
-      return '<div class="week-task-row' + (showDone ? ' done' : '') + '"' + style + '>' + escapeHtml(t.title) + '</div>';
+      return '<div class="week-task-row' + (showDone ? ' done' : '') + '"' + style + tip({ kind: 'task', t: t, today: x.isToday }) + '>' + escapeHtml(t.title) + '</div>';
     }).join('');
     return '<div class="week-col' + (x.isToday ? ' today' : '') + '"><div class="week-col-body">' + (itemHtml || '<div class="week-task-row empty">Nothing scheduled</div>') + '</div></div>';
   }).join('') + '</div>';
@@ -2153,6 +2198,24 @@ function taskById(id) {
 
 /* ---- the work log ---- */
 
+// Today's stretches of real work (every time you pressed Start on a timer or stopwatch until it stopped), as
+// minutes since midnight. The day view draws these, so switching between tasks shows up as A, then B, then A.
+function sessionBlocksToday() {
+  const out = [];
+  const todayKey = localDateStr();
+  const nowMin = nowMinutesSinceMidnight();
+  function minuteOf(ms) { const d = new Date(ms); return Math.round(d.getHours() * 60 + d.getMinutes() + d.getSeconds() / 60); }
+  workState.log.forEach(function(s) {
+    const task = taskById(s.taskId);
+    if (!task || localDateStr(new Date(s.start)) !== todayKey) return;
+    const startMin = minuteOf(s.start);
+    let endMin = (s.end === null) ? nowMin : minuteOf(s.end);
+    if (endMin <= startMin) endMin = startMin + 1; // even a very short stretch gets a minute so it can be seen
+    out.push({ id: s.id, taskId: s.taskId, task: task, startMin: startMin, endMin: endMin, running: s.end === null });
+  });
+  return out;
+}
+
 function openSession(task, mode) {
   workState.log.push({
     id: 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
@@ -2312,7 +2375,7 @@ function startClock(taskId) {
   if (c.mode === 'timer') scheduleTimerRing(timerLenMs(c, task) - c.timerElapsedMs);
   saveWork();
   renderClockPanel();
-  if (endedEarly.length) render(); // the event or break that ended early is redrawn shorter
+  render(); // the schedule now shows this stretch of work (and an event/break that ended early, shorter)
 }
 
 function pauseRunningClock() {
@@ -2347,6 +2410,7 @@ function resetClock(taskId) {
   }
   saveWork();
   renderClockPanel();
+  render();
 }
 
 function lapClock(taskId) {
@@ -2376,6 +2440,7 @@ function setClockMode(mode) {
   c.mode = mode;
   saveWork();
   renderClockPanel();
+  render();
 }
 
 // Editing the timer length (minutes and seconds) keeps the time already counted, so extending a timer
@@ -2419,6 +2484,7 @@ function finishTimer(taskId) {
   }
   saveWork();
   renderClockPanel();
+  render();
   showToast('Timer finished' + (task ? ': ' + task.title : '') + '.');
 }
 
@@ -2534,13 +2600,15 @@ function closeClockPanel() {
   workState.panelTaskId = null;
   saveWork();
   renderClockPanel();
+  if (popped.indexOf('clock') !== -1) popIn('clock'); // collapsed side: back to its icon
+  updateRailClock();
 }
 
 function toggleClock() {
   const id = workState.panelTaskId;
   if (id === null || !taskById(id)) return;
   const c = getClock(id);
-  if (runningOn(id, c.mode)) pauseRunningClock(); else startClock(id);
+  if (runningOn(id, c.mode)) { pauseRunningClock(); render(); } else startClock(id);
 }
 function resetPanelClock() { const id = workState.panelTaskId; if (id !== null && taskById(id)) resetClock(id); }
 function lapPanelClock() { const id = workState.panelTaskId; if (id !== null && taskById(id)) lapClock(id); }
@@ -2657,12 +2725,13 @@ function placeTooltip(e, html) {
   window._durationTooltipTimer = setTimeout(function() { tip.style.display = 'none'; }, 4000);
 }
 
-function showTaskTooltip(e, t) {
+function showTaskTooltip(e, t, workedOverride) {
   e.preventDefault();
-  const worked = Math.floor(workedMsFor(t.id) / 60000);
+  const worked = (workedOverride !== undefined) ? workedOverride : Math.floor(workedMsFor(t.id) / 60000);
   const pLabel = t.priority === 3 ? 'Top' : t.priority === 2 ? 'Medium' : 'Low';
   const repeats = t.repeatPattern && t.repeatPattern !== 'none';
-  const line1 = t.title + ': ' + worked + '/' + t.time + ' min ' + formatClockTime(t.startMin) + ' - ' + formatClockTime(t.endMin);
+  const hasTime = (typeof t.startMin === 'number' && typeof t.endMin === 'number');
+  const line1 = t.title + ': ' + worked + '/' + t.time + ' min' + (hasTime ? ' ' + formatClockTime(t.startMin) + ' - ' + formatClockTime(t.endMin) : '');
   const bits = [pLabel, 'Motivation ' + t.motivation];
   if (t.optional) bits.push('Optional');
   if (repeats) bits.push('Repeat');
@@ -2684,10 +2753,9 @@ function showEventTooltip(e, title, startMin, endMin, showLength, info) {
   placeTooltip(e, html);
 }
 
-// All-day Google events in the strip above the day: name, "All day", and the dates if it lasts several days.
-function showAllDayTooltip(e, index) {
+// All-day Google events: name, "All day", and the dates if it lasts several days.
+function showAllDayInfo(e, ev) {
   e.preventDefault();
-  const ev = allDayStripItems[index];
   if (!ev) return;
   let line2 = 'All day';
   if (ev.end && ev.end > ev.start) {
@@ -2699,6 +2767,16 @@ function showAllDayTooltip(e, index) {
     }
   }
   placeTooltip(e, '<div>' + escapeHtml(ev.title) + '</div><div>' + escapeHtml(line2) + '</div>');
+}
+function showAllDayTooltip(e, index) { showAllDayInfo(e, allDayStripItems[index]); }
+
+// Right-click on anything in Weekdays / Week / Month.
+function viewTip(e, i) {
+  const it = viewTipItems[i];
+  if (!it) return;
+  if (it.kind === 'task') showTaskTooltip(e, it.t, it.today ? undefined : 0); // minutes worked only exist for today
+  else if (it.kind === 'allday') showAllDayInfo(e, it.ev);
+  else showEventTooltip(e, it.title, it.startMin, it.endMin, !!it.showLength);
 }
 
 /* ---- tutorial helpers: show the clock panel while the tour points at it ---- */
@@ -2739,7 +2817,7 @@ try { popped = JSON.parse(localStorage.getItem('flowgrove_popped') || '[]') || [
 popped = popped.filter(function(k) { return POP_SIDE[k]; });
 function savePopped() { localStorage.setItem('flowgrove_popped', JSON.stringify(popped)); }
 
-// Makes the page match the list of popped-out blocks (which panels float, which icons look pressed).
+// Makes the page match the list of opened blocks (which blocks show in place of their icon).
 function syncPop() {
   document.querySelectorAll('.panel[data-pop]').forEach(function(panel) {
     const on = popped.indexOf(panel.dataset.pop) !== -1;
@@ -2749,9 +2827,12 @@ function syncPop() {
   document.querySelectorAll('.rail-btn').forEach(function(b) {
     b.classList.toggle('is-open', popped.indexOf(b.dataset.pop) !== -1);
   });
+  const main = document.querySelector('main');
   ['left', 'right'].forEach(function(side) {
     const bar = document.getElementById(side === 'left' ? 'leftbar' : 'rightbar');
-    if (bar) bar.classList.toggle('has-popped', popped.some(function(k) { return POP_SIDE[k] === side; }));
+    const any = popped.some(function(k) { return POP_SIDE[k] === side; });
+    if (bar) bar.classList.toggle('has-popped', any);
+    if (main) main.classList.toggle(side + '-popped', any && !!sidebarState[side]); // widen only while that side is collapsed
   });
 }
 
@@ -2911,6 +2992,20 @@ document.addEventListener('keydown', function(e) {
 });
 document.addEventListener('keyup', function(e) {
   if (e.key === ' ' && swallowSpaceUp) { swallowSpaceUp = false; e.preventDefault(); }
+});
+
+// A small round "x" on each block, so an opened block can be put away again (its icon comes back).
+document.querySelectorAll('.panel[data-pop]').forEach(function(panel) {
+  const key = panel.dataset.pop;
+  if (key === 'clock') return;
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'pop-close';
+  b.title = 'Put away (back to an icon)';
+  b.setAttribute('aria-label', 'Put this block away');
+  b.innerHTML = '&times;';
+  b.onclick = function(e) { e.stopPropagation(); popIn(key); };
+  panel.appendChild(b);
 });
 
 syncPop();
@@ -3151,7 +3246,7 @@ function isTaskActiveToday(t) {
 
 // Returns the longest piece of [start, end) that is NOT covered by any blocker,
 // or null if less than a minute is left.
-function clipLongest(start, end, blockers) {
+function clipPieces(start, end, blockers) {
   let segs = [[start, end]];
   blockers.forEach(function(b) {
     const next = [];
@@ -3162,11 +3257,12 @@ function clipLongest(start, end, blockers) {
     });
     segs = next;
   });
+  return segs.filter(function(sg) { return sg[1] - sg[0] >= 1; }).map(function(sg) { return { s: sg[0], e: sg[1] }; });
+}
+function clipLongest(start, end, blockers) {
   let best = null;
-  segs.forEach(function(sg) {
-    if (sg[1] - sg[0] >= 1 && (!best || (sg[1] - sg[0]) > (best[1] - best[0]))) best = sg;
-  });
-  return best ? { s: best[0], e: best[1] } : null;
+  clipPieces(start, end, blockers).forEach(function(c) { if (!best || (c.e - c.s) > (best.e - best.s)) best = c; });
+  return best;
 }
 
 // Everything on today's schedule that is already locked in: Google Calendar events and your own
@@ -3203,16 +3299,22 @@ function getFixedBlocks() {
 
   const blockers = authoritative.concat(manual);
   const completed = [];
+  const sessions = sessionBlocksToday().map(function(s) { return { startMin: s.startMin, endMin: s.endMin, taskId: s.taskId }; });
   tasks.filter(function(t) { return isTaskActiveToday(t) && t.completed && typeof t.fixedStartMin === 'number'; })
     .sort(function(a, b) { return a.fixedStartMin - b.fixedStartMin; })
     .forEach(function(t) {
       // Events and breaks this task ended early may overlap its block: you were working through them.
+      // The stretches you really worked (timer/stopwatch, on this or any task) are drawn separately, so a
+      // finished task's block only covers the time in between them.
       const skip = t.cutKeys || [];
-      const mine = blockers.filter(function(b) { return !b.key || skip.indexOf(b.key) === -1; });
-      let c = clipLongest(t.fixedStartMin, t.fixedEndMin, mine);
-      if (!c) c = { s: t.fixedStartMin, e: Math.max(t.fixedEndMin, t.fixedStartMin + 1) }; // a finished task is never hidden
-      completed.push({ task: t, startMin: c.s, endMin: c.e });
-      blockers.push({ startMin: c.s, endMin: c.e });
+      const mine = blockers.filter(function(b) { return !b.key || skip.indexOf(b.key) === -1; }).concat(sessions);
+      let pieces = clipPieces(t.fixedStartMin, t.fixedEndMin, mine);
+      const hasOwnWork = sessions.some(function(s) { return s.taskId === t.id; });
+      if (!pieces.length && !hasOwnWork) pieces = [{ s: t.fixedStartMin, e: Math.max(t.fixedEndMin, t.fixedStartMin + 1) }]; // a finished task is never hidden
+      pieces.forEach(function(c) {
+        completed.push({ task: t, startMin: c.s, endMin: c.e });
+        blockers.push({ startMin: c.s, endMin: c.e });
+      });
     });
 
   return { google: google, locals: locals, manual: manual, completed: completed };
@@ -3298,7 +3400,7 @@ function planDay(pending, busyBlocks, bounds, nowMin, completedPlaced) {
   // is never split). Returns the open stretch where the LAST piece ended (so a break can go
   // right after it), or null if the whole task doesn't fit today.
   function placeTask(task) {
-    let remaining = task.time;
+    let remaining = task.planMin || task.time; // minutes still to plan (less if you already worked on it)
     const undo = [];
     const pieces = [];
     let lastIdx = -1;
@@ -3340,7 +3442,7 @@ function planDay(pending, busyBlocks, bounds, nowMin, completedPlaced) {
   reqNormal.forEach(function(task, idx) {
     const w = placeTask(task);
     if (!w) { unplaced.push(task); return; }
-    workSinceBreak += task.time;
+    workSinceBreak += (task.planMin || task.time);
     const isLast = (idx === reqNormal.length - 1);
     if (workSinceBreak >= workThreshold && !isLast) {
       const isLong = (shortBreakCount % 2 === 1);
@@ -3359,11 +3461,12 @@ function planDay(pending, busyBlocks, bounds, nowMin, completedPlaced) {
   // Quick tasks go inside the first break that still has room for them (one after another, never
   // on top of each other). With no break available they just take normal free time.
   function placeQuick(task) {
+    const need = task.planMin || task.time;
     for (let i = 0; i < breaks.length; i++) {
       const b = breaks[i];
-      if (b.startMin + b.used + task.time <= b.endMin) {
-        placed.push(Object.assign({}, task, { startMin: b.startMin + b.used, endMin: b.startMin + b.used + task.time }));
-        b.used += task.time;
+      if (b.startMin + b.used + need <= b.endMin) {
+        placed.push(Object.assign({}, task, { startMin: b.startMin + b.used, endMin: b.startMin + b.used + need }));
+        b.used += need;
         return true;
       }
     }
@@ -3380,9 +3483,13 @@ function planDay(pending, busyBlocks, bounds, nowMin, completedPlaced) {
 // Today's schedule, built from today's real situation (events, finished tasks, breaks you took).
 function computeSchedule() {
   const fixed = getFixedBlocks();
-  const pending = tasks.filter(function(t) { return isTaskActiveToday(t) && !t.completed; });
+  // A task you already worked on only needs the rest of its time planned (the worked part is on the schedule already).
+  const pending = tasks.filter(function(t) { return isTaskActiveToday(t) && !t.completed; }).map(function(t) {
+    const workedMin = workedMsFor(t.id) / 60000;
+    return workedMin > 0 ? Object.assign({}, t, { planMin: Math.max(1, Math.round(t.time - workedMin)) }) : t;
+  });
   function span(x) { return { startMin: x.startMin, endMin: x.endMin }; }
-  const busy = fixed.google.map(span).concat(fixed.locals.map(span), fixed.manual.map(span), fixed.completed.map(span));
+  const busy = fixed.google.map(span).concat(fixed.locals.map(span), fixed.manual.map(span), fixed.completed.map(span), sessionBlocksToday().map(span));
   const completedPlaced = fixed.completed.map(function(c) {
     return Object.assign({}, c.task, { startMin: c.startMin, endMin: c.endMin });
   });
@@ -3435,10 +3542,17 @@ function getDayAgenda(dateObj) {
     items.push({ kind: 'task', t: x, start: x.startMin });
   });
   (sched.unplaced || []).forEach(function(t) { items.push({ kind: 'task', t: t, start: 100000 }); });
-  g.timed.forEach(function(e) { items.push({ kind: 'event', title: e.title, color: e.color, start: e.startMin }); });
+  g.timed.forEach(function(e) { items.push({ kind: 'event', title: e.title, color: e.color, start: e.startMin, end: e.endMin, google: true }); });
   localEvents.forEach(function(ev) {
-    if (localEventOnDate(ev, dayKey, abbrev)) items.push({ kind: 'event', title: ev.title, color: labelColor(ev.label || 'Fixed Events'), start: ev.startMin });
+    if (localEventOnDate(ev, dayKey, abbrev)) items.push({ kind: 'event', title: ev.title, color: labelColor(ev.label || 'Fixed Events'), start: ev.startMin, end: ev.endMin, google: false });
   });
+  if (dayKey === localDateStr()) { // today: tasks you already worked on start where you first worked on them
+    sessionBlocksToday().forEach(function(s) {
+      const hit = items.find(function(it) { return it.kind === 'task' && it.t.id === s.taskId; });
+      if (hit) hit.start = Math.min(hit.start, s.startMin);
+      else items.push({ kind: 'task', t: s.task, start: s.startMin });
+    });
+  }
   items.sort(function(a, b) { return a.start - b.start; });
   return { allDay: g.allDay, items: items };
 }
@@ -3465,6 +3579,9 @@ function getTodayOrder(sched) {
   sched.forEach(function(s) {
     if (s.type === 'break') return;
     if (firstStart[s.id] === undefined || s.startMin < firstStart[s.id]) firstStart[s.id] = s.startMin;
+  });
+  sessionBlocksToday().forEach(function(s) { // a task you already worked on starts where you first worked on it
+    if (firstStart[s.taskId] === undefined || s.startMin < firstStart[s.taskId]) firstStart[s.taskId] = s.startMin;
   });
   return tasks.filter(isTaskActiveToday).slice().sort(function(a, b) {
     const sa = firstStart[a.id], sb = firstStart[b.id];
@@ -3616,6 +3733,21 @@ function renderGrid(sched) {
     el.ondragstart = function(e) { draggedLocalEventId = ev.id; e.dataTransfer.effectAllowed = 'move'; };
     addItem(item.startMin, item.endMin, el);
   });
+  // The stretches you really worked on a task with the timer or stopwatch. Switching tasks shows as task A,
+  // then task B, then task A again. Click one to open that task's clock; right-click for its details.
+  sessionBlocksToday().forEach(function(s) {
+    const t = s.task;
+    const bg = t.label ? labelColor(t.label) : (settings.secondary === '#ffffff' ? '#f4f6f5' : settings.secondary);
+    const el = document.createElement('div');
+    el.className = 'block task worked' + (t.completed ? ' completed' : '');
+    el.style.background = bg;
+    el.style.color = readableText(bg);
+    const mins = s.endMin - s.startMin;
+    el.innerHTML = '<span class="title">' + escapeHtml(t.title) + '</span>' + (mins >= 30 ? '<span class="meta">' + escapeHtml('worked ' + mins + ' min' + (s.running ? ' (now)' : '')) + '</span>' : '');
+    el.onclick = function() { openClockPanel(t.id); };
+    el.oncontextmenu = function(e) { showTaskTooltip(e, Object.assign({}, t, { startMin: s.startMin, endMin: s.endMin })); };
+    addItem(s.startMin, s.endMin, el);
+  });
   (sched || computeSchedule()).forEach(function(t) {
     const el = document.createElement('div');
 
@@ -3643,7 +3775,7 @@ function renderGrid(sched) {
     if (t.completed) {
       metaText = 'Done: ' + formatClockTime(t.startMin) + ' - ' + formatClockTime(t.endMin);
     } else {
-      metaText = pLabel + ' - ' + (t.partCount > 1 ? (duration + ' of ' + t.time + 'm') : (t.time + 'm')) + ' - Motivation ' + t.motivation + (t.label ? ' - ' + t.label : '');
+      metaText = pLabel + ' - ' + (t.partCount > 1 ? (duration + ' of ' + t.time + 'm') : (t.planMin && t.planMin < t.time ? (t.planMin + 'm left') : (t.time + 'm'))) + ' - Motivation ' + t.motivation + (t.label ? ' - ' + t.label : '');
     }
     // Short blocks only show the title: there isn't room for a second line without cutting something off.
     const showMeta = duration >= 30;
@@ -4091,7 +4223,7 @@ const TUTORIAL_STEPS = [
   { target: '[data-tut="breakBtn"]', title: "Need a breather?", text: "Tap this anytime for an instant break. It also pauses any running timer or stopwatch, so press Start on your clock when you're back. It keeps time for you, and you tap it again whenever you're ready to jump back in." },
   { target: '[data-tut="tomorrowPanel"]', title: "Tomorrow's got your back", text: "Anything that doesn't fit before the end of your day moves here automatically instead of vanishing, and you'll get a heads up when it happens. You can also drag any task onto this panel yourself, or drag one back out to bring it into today. Tomorrow's list becomes today's list when the new day starts." },
   { target: '#labelsSidebarPanel', title: "Make it yours with Labels", text: "Give a label its own name and color to keep things visually organized, don't worry, labels never change your schedule order." },
-  { target: '#leftToggle', title: "Need more room?", text: "These little arrows on each side collapse the panels so your schedule has more space. When a side is collapsed, tap an icon to pop out just that block (you can leave several open), and tap the arrow to bring the whole panel back. They remember how you left them." },
+  { target: '#leftToggle', title: "Need more room?", text: "These little arrows on each side collapse the panels so your schedule has more space. When a side is collapsed, tap an icon and that block opens in its place (you can open several), and tap the arrow to bring the whole panel back. They remember how you left them." },
   { target: null, title: "That's it, you're ready!", text: "Go ahead and start adding your day. You can always pull this tour back up with the Tutorial button whenever you want a refresher." }
 ];
 let tutStep = 0;

@@ -2,7 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#6fa287">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Flowgrove">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>Flowgrove</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -29,8 +36,8 @@
     --motivation-text: #1c2b22;
   }
   * { box-sizing: border-box; }
-  body { margin: 0; font-family: 'Lora', serif; background: var(--primary); color: var(--ink); line-height: 1.5; }
-  .topbar { display: flex; align-items: center; justify-content: space-between; padding: 14px 24px; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 10px; }
+  body { margin: 0; font-family: 'Lora', serif; background: var(--primary); color: var(--ink); line-height: 1.5; display: flex; flex-direction: column; height: 100vh; height: 100dvh; overflow: hidden; }
+  .topbar { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 14px 24px; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 10px; }
   .brand { font-size: 19px; font-weight: 700; }
   .live-clock { font-size: 15px; font-weight: 600; color: var(--accent-dark); margin-top: 2px; }
   .week-grid { display: grid; gap: 6px; }
@@ -60,13 +67,18 @@
   .icon-btn:hover { background: #f7f9f8; }
   #breakBtn { border: 1px solid var(--tertiary); background: var(--tertiary); color: #fff; border-radius: 8px; padding: 7px 14px; font-family: 'Lora', serif; font-size: 12.5px; cursor: pointer; white-space: nowrap; }
   #breakBtn.on { background: #fff; color: var(--tertiary); }
-  main { --left-w: 220px; --right-w: 320px; max-width: calc(1240px + var(--extra-left, 0px) + var(--extra-right, 0px)); margin: 0 auto; padding: 20px 24px 64px; display: grid; grid-template-columns: 1fr; gap: 22px; }
-  main > div { min-width: 0; }
+  main { --left-w: 220px; --right-w: 320px; flex: 1 1 auto; min-height: 0; width: 100%; max-width: calc(1240px + var(--extra-left, 0px) + var(--extra-right, 0px)); margin: 0 auto; padding: 16px 24px 16px; display: grid; grid-template-columns: var(--left-w) minmax(0, 1fr) var(--right-w); gap: 22px; align-items: stretch; overflow: hidden; }
+  /* each column (left blocks, the day/week/month, right blocks) has its own scroll bar */
+  main > div { min-width: 0; min-height: 0; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; padding-right: 3px; }
+  .leftbar > *, .sidebar > *, .sb-content > * { flex-shrink: 0; }   /* a column that scrolls must not squash its contents */
+  main.no-left { grid-template-columns: minmax(0, 1fr) var(--right-w); }
+  main.no-right { grid-template-columns: var(--left-w) minmax(0, 1fr); }
+  main.no-left.no-right { grid-template-columns: minmax(0, 1fr); }
+  main.no-left #leftbar, main.no-right #rightbar { display: none; }
   main.left-collapsed { --left-w: 56px; }
   main.right-collapsed { --right-w: 120px; }
   main.left-collapsed.left-popped { --left-w: 220px; --extra-left: 164px; }
   main.right-collapsed.right-popped { --right-w: 320px; --extra-right: 200px; }
-  @media (min-width: 900px) { main { grid-template-columns: var(--left-w) 1fr var(--right-w); align-items: start; } }
   .leftbar { display: flex; flex-direction: column; gap: 16px; }
   .panel.motivation-panel { background: var(--accent-light); border-color: var(--accent-light-border); color: var(--motivation-text); border-left: 4px solid var(--tertiary); box-shadow: 0 2px 10px rgba(111,162,135,0.2); }
   .motivation-panel h3::before { content: "✦ "; }
@@ -80,12 +92,12 @@
   .allday-pill { font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 6px; }
   .progress-pill { font-size: 12px; color: var(--ink-soft); background: #f4f6f5; border-radius: 20px; padding: 4px 10px; }
   .grid { position: relative; border-top: 1px solid var(--border); }
-  #nowLine { position: absolute; left: 56px; right: 0; height: 2px; background: #1e5631; z-index: 5; pointer-events: none; }
-  #nowLineLabel { position: absolute; left: 2px; width: 52px; text-align: right; font-size: 10px; font-weight: 700; color: #1e5631; z-index: 6; pointer-events: none; }
+  #nowLine { position: absolute; left: var(--hour-w, 56px); right: 0; height: 2px; background: #1e5631; z-index: 5; pointer-events: none; }
+  #nowLineLabel { position: absolute; left: 2px; width: calc(var(--hour-w, 56px) - 4px); text-align: right; font-size: 10px; font-weight: 700; color: #1e5631; z-index: 6; pointer-events: none; }
   #completionPopup { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(0.9); background: #1e5631; color: #fff; padding: 20px 32px; border-radius: 14px; font-size: 18px; font-weight: 600; text-align: center; max-width: 80vw; box-shadow: 0 12px 40px rgba(0,0,0,0.25); z-index: 700; opacity: 0; pointer-events: none; transition: opacity 0.25s ease, transform 0.25s ease; }
   #completionPopup.show { opacity: 1; transform: translate(-50%,-50%) scale(1); }
   .hour-row { position: relative; height: 60px; border-bottom: 1px solid var(--border); display: flex; }
-  .hour-label { width: 56px; flex-shrink: 0; font-size: 11px; color: var(--ink-soft); padding-top: 3px; text-align: right; padding-right: 10px; }
+  .hour-label { width: var(--hour-w, 56px); flex-shrink: 0; font-size: 11px; color: var(--ink-soft); padding-top: 3px; text-align: right; padding-right: 10px; }
   .hour-track { flex: 1; position: relative; }
   .block { position: absolute; left: 4px; right: 4px; border-radius: 7px; padding: 5px 9px; font-size: 12px; overflow: hidden; box-shadow: var(--shadow); border: 1px solid transparent; display: flex; flex-direction: column; justify-content: center; }
   .block .title { font-weight: 600; display: block; text-align: center; }
@@ -94,7 +106,7 @@
   .block .meta { display: block; font-size: 10.5px; opacity: 0.8; margin-top: 1px; text-align: center; }
   .block.event { background: repeating-linear-gradient(135deg, var(--event-bg), var(--event-bg) 6px, #dfe3e0 6px, #dfe3e0 12px); border: 1px dashed #9aa79f; }
   .block.local-event { cursor: pointer; }
-  .blocks-layer { position: absolute; top: 0; left: 56px; right: 0; pointer-events: none; }
+  .blocks-layer { position: absolute; top: 0; left: var(--hour-w, 56px); right: 0; pointer-events: none; }
   .blocks-layer .block { pointer-events: auto; }
   .block.compact { padding: 1px 8px; font-size: 11px; }
   .block.compact .title { line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -112,9 +124,9 @@
   .task-edit-btn:hover { opacity: 1; background: rgba(0,0,0,0.10); }
   .block.task.completed { opacity: 0.45; text-decoration: line-through; }
   .badge { display: inline-block; font-size: 9px; background: rgba(0,0,0,0.08); border-radius: 4px; padding: 0 4px; margin-left: 4px; text-decoration: none; }
-  .month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
-  .month-week { position: relative; display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 6px; }
-  .month-lane { position: absolute; top: 25px; left: 0; right: 0; display: grid; grid-template-columns: repeat(7, 1fr); column-gap: 6px; row-gap: 3px; grid-auto-rows: 17px; pointer-events: none; z-index: 2; }
+  .month-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+  .month-week { position: relative; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; margin-bottom: 6px; }
+  .month-lane { position: absolute; top: 25px; left: 0; right: 0; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); column-gap: 6px; row-gap: 3px; grid-auto-rows: 17px; pointer-events: none; z-index: 2; }
   .month-bar { pointer-events: auto; margin: 0 5px; font-size: 10px; font-weight: 600; line-height: 17px; padding: 0 6px; border-radius: 5px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; text-align: left; }
   .month-bar.cont-left { margin-left: 0; border-top-left-radius: 0; border-bottom-left-radius: 0; }
   .month-bar.cont-right { margin-right: 0; border-top-right-radius: 0; border-bottom-right-radius: 0; }
@@ -131,7 +143,6 @@
   .collapse-btn:hover { background: #f7f9f8; color: var(--ink); }
   /* ---- a collapsed side: every block is either a small icon, or (once you tap the icon) the full block in
          its place, in the same column, never on top of the day ---- */
-  .collapsed-side:not(.has-popped) { position: sticky; top: 12px; z-index: 110; }
   .leftbar.collapsed-side .collapse-btn { align-self: flex-start; }
   .sidebar.collapsed-side .collapse-btn { align-self: flex-end; }
   .collapsed-side .sb-content { gap: 8px; margin-top: 8px; }
@@ -275,12 +286,102 @@
   .confirm-buttons { display: flex; justify-content: center; gap: 8px; margin-top: 10px; }
   .confirm-buttons button.primary { margin-top: 0; width: auto; padding: 8px 26px; }
   .confirm-buttons .icon-btn { padding: 8px 22px; }
+
+  /* ---- Motivation box (full size on a computer; the phone layout makes it smaller below) ---- */
+  .motivation-panel .mot-head { display: flex; justify-content: space-between; align-items: center; }
+  .motivation-panel h3 { margin: 0; }
+  #motivationText { font-size: 13px; line-height: 1.4; margin: 8px 0 0; font-style: italic; }
+
+  /* ---- top bar icons (phone only) and the Layout rows in Settings ---- */
+  .tb-ico { display: none; width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+  #breakShort { display: none; }
+  .move-btn { display: none; background: none; border: 1px solid var(--border); border-radius: 6px; color: var(--ink-soft); font-family: 'Lora', serif; font-size: 11px; padding: 2px 7px; margin-right: 6px; cursor: pointer; }
+  .row-actions { display: inline-flex; align-items: center; flex-shrink: 0; }
+  .layout-group { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; color: var(--ink-soft); margin: 10px 0 4px; }
+  .layout-row { display: flex; align-items: center; gap: 6px; padding: 4px 0; font-size: 13px; }
+  .layout-row .name { flex: 1; }
+  .layout-btn { border: 1px solid var(--border); background: #fff; border-radius: 6px; padding: 2px 9px; font-family: 'Lora', serif; font-size: 12px; cursor: pointer; color: var(--ink); }
+  .layout-btn:disabled { opacity: 0.35; cursor: default; }
+  #durationTooltip { max-width: min(340px, 80vw); }
+
+  /* ---- phones and small tablets: the day on the left, one column of blocks (or icons) on the right ---- */
+  @media (max-width: 900px) {
+    :root { --hour-w: 44px; }
+    .topbar { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: 8px; row-gap: 6px; padding: 8px 10px 8px; }
+    .brand { font-size: 17px; line-height: 1.1; }
+    .live-clock { font-size: 11.5px; margin-top: 1px; }
+    .topbar-actions { gap: 6px; }
+    .topbar-actions .btn-label, #breakLong { display: none; }
+    .tb-ico, #breakShort { display: inline; }
+    .topbar-actions .icon-btn { padding: 6px 8px; display: inline-flex; align-items: center; }
+    #breakBtn { padding: 6px 9px; display: inline-flex; align-items: center; gap: 5px; }
+    .view-switch { grid-column: 1 / -1; order: 3; }
+    .view-switch button { flex: 1; padding: 6px 2px; font-size: 12px; }
+
+    main { grid-template-columns: minmax(0, 1fr) var(--right-w); --right-w: min(52vw, 330px); gap: 8px; padding: 8px 6px calc(8px + env(safe-area-inset-bottom)) 8px; }
+    main.right-collapsed { --right-w: 92px; }
+    main.right-collapsed.right-popped { --right-w: min(52vw, 330px); --extra-right: 0px; }
+    #leftbar { display: none; }
+
+    .schedule-panel { padding: 10px 8px 14px; }
+    .schedule-header { flex-wrap: wrap; gap: 4px 8px; }
+    .schedule-header h2 { font-size: 13.5px; }
+    .progress-pill { font-size: 10px; padding: 2px 7px; white-space: nowrap; }
+    #nowLineLabel { font-size: 8.5px; white-space: nowrap; }
+    .hour-label { font-size: 9.5px; padding-right: 4px; }
+    .block { font-size: 10.5px; padding: 3px 6px; }
+    .block.task { padding-left: 20px; padding-right: 17px; }
+    .block.task.compact { padding-left: 20px; padding-right: 17px; }
+    .task-edit-btn { right: 1px; font-size: 11px; padding: 1px 2px; }
+    .task-checkbox-wrap { left: 4px; }
+    .task-checkbox-wrap input { width: 12px; height: 12px; margin: 0; }
+    .allday-label { width: 36px; font-size: 10px; padding-right: 4px; }
+    .allday-pill { font-size: 11px; padding: 2px 7px; }
+
+    .week-col { padding: 5px 2px; }
+    .week-col-head { font-size: 9.5px; white-space: normal; text-align: center; line-height: 1.15; }
+    .week-head-row .week-col-head { white-space: normal; }
+    .week-task-row { font-size: 8.5px; padding: 3px 2px; word-break: normal; overflow-wrap: break-word; hyphens: auto; line-height: 1.2; }
+    .week-time { display: block; }
+    .week-task-row.empty { font-size: 0; padding: 0; min-height: 10px; background: none; }
+    .week-bar { font-size: 9.5px; padding: 1px 4px; }
+    .month-cell { min-height: 46px; padding: 3px; font-size: 10px; }
+    .month-event-label { font-size: 8px; padding: 1px 3px; }
+    .month-bar { font-size: 9px; padding: 0 4px; margin: 0 3px; }
+    .month-lane { top: 20px; }
+    .month-header-row div { font-size: 10px; }
+
+    .side-panel { padding: 10px; }
+    .panel.motivation-panel { padding: 7px 10px 8px; }
+    .motivation-panel h3 { font-size: 11.5px; letter-spacing: 0.02em; }
+    .mot-refresh { border: none; background: transparent; padding: 0 3px; font-size: 16px; line-height: 1; border-radius: 6px; color: var(--accent-dark); }
+    .mot-refresh:hover { background: rgba(0,0,0,0.08); }
+    .mot-refresh-label { display: none; }
+    #motivationText { font-size: 12.5px; line-height: 1.3; margin: 3px 0 0; }
+    .task-list { padding: 10px; }
+    .clock-panel { padding: 12px; }
+    .clock-display { font-size: 34px; }
+    #eventOnlyFields .row2 { grid-template-columns: 1fr; }
+    .modal { padding: 16px; }
+    .modal-overlay { padding: 12px 8px; }
+    .move-btn { display: inline-block; }
+    .block, .week-task-row, .week-bar, .month-event-label, .month-bar, .allday-pill { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+  }
+  @media (pointer: coarse) { .move-btn { display: inline-block; } }
+
+  /* ---- account and sync ---- */
+  .sync-who { font-size: 13px; }
+  .sync-status { font-size: 12px; color: var(--ink-soft); margin: 4px 0 2px; }
+  .sync-status.bad { color: #a3372f; }
+  .sync-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  .sync-signin, .welcome-primary { display: inline-block; background: var(--tertiary); color: #fff; border-radius: 8px; padding: 8px 14px; font-family: 'Lora', serif; font-size: 13px; font-weight: 600; text-decoration: none; text-align: center; }
+  .welcome-primary { display: block; padding: 11px 14px; font-size: 14px; }
 </style>
 </head>
 <body>
 
 <div class="topbar">
-  <div>
+  <div class="topbar-title">
     <div class="brand">Flowgrove</div>
     <div id="liveClock" class="live-clock"></div>
   </div>
@@ -291,9 +392,18 @@
     <button id="monthTabBtn" onclick="switchView('month')">Month</button>
   </div>
   <div class="topbar-actions">
-    <button class="icon-btn" onclick="openSettings()" data-tut="settingsBtn">Settings</button>
-    <button class="icon-btn" onclick="startTutorial()" data-tut="helpBtn">Tutorial</button>
-    <button id="breakBtn" onclick="toggleBreak()" data-tut="breakBtn">Click me to have an auto break</button>
+    <button class="icon-btn" onclick="openSettings()" data-tut="settingsBtn" title="Settings" aria-label="Settings"><svg class="tb-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span class="btn-label">Settings</span></button>
+    <button class="icon-btn" onclick="startTutorial()" data-tut="helpBtn" title="Tutorial" aria-label="Tutorial"><svg class="tb-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-2.9 2.6-2.9 4.2"/><circle cx="12" cy="17.4" r="0.9" fill="currentColor" stroke="none"/></svg><span class="btn-label">Tutorial</span></button>
+    <button id="breakBtn" onclick="toggleBreak()" data-tut="breakBtn" title="Take a break" aria-label="Take a break"><svg class="tb-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M17.5 9h1a3.5 3.5 0 0 1 0 7h-1"/><path d="M3 9h14.5v6.5a4.5 4.5 0 0 1-4.5 4.5H7.5A4.5 4.5 0 0 1 3 15.5V9z"/><path d="M7 3v3M11 3v3M15 3v3"/></svg><span id="breakLong">Click me to have an auto break</span><span id="breakShort"></span></button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="welcomeOverlay">
+  <div class="modal" style="text-align:center;max-width:360px;">
+    <div class="brand" style="font-size:24px;margin-bottom:6px;">Flowgrove</div>
+    <p style="margin:0 0 16px;color:var(--ink-soft);font-size:14px;">Sign in with Google to bring your tasks and settings to this device.</p>
+    <a class="welcome-primary" href="/api/auth/login">Sign in with Google</a>
+    <button type="button" class="icon-btn" style="width:100%;margin-top:10px;" onclick="window.location.href='account-setup.html'">Continue without an account</button>
   </div>
 </div>
 
@@ -303,11 +413,11 @@
     <div class="sb-content">
       <button type="button" class="rail-btn" data-pop="motivation" title="Motivation" aria-label="Motivation" onclick="railClick('motivation', this)"><svg class="ico ico-spin fill" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1.5Q13 11 22.5 12Q13 13 12 22.5Q11 13 1.5 12Q11 11 12 1.5Z"/></svg></button>
       <div class="panel side-panel motivation-panel" id="motivationPanel" data-pop="motivation">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          <h3 style="margin:0;">Motivation</h3>
-          <button type="button" class="icon-btn" onclick="refreshMotivationQuote()" title="Get a new quote">↻ Refresh</button>
+        <div class="mot-head">
+          <h3>Motivation</h3>
+          <button type="button" class="icon-btn mot-refresh" onclick="refreshMotivationQuote()" title="Get a new quote" aria-label="Get a new quote">&#8635;<span class="mot-refresh-label"> Refresh</span></button>
         </div>
-        <p id="motivationText" style="font-size:13px;margin:8px 0 0;font-style:italic;"></p>
+        <p id="motivationText"></p>
       </div>
 
       <button type="button" class="rail-btn" data-pop="labels" title="Labels" aria-label="Labels" onclick="railClick('labels', this)"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L2.2 12.2V2.2h10l8.4 8.4a2 2 0 0 1 0 2.8z"/><circle cx="7.4" cy="7.4" r="1.5" fill="currentColor" stroke="none"/></svg></button>
@@ -458,6 +568,7 @@
 
           <button type="submit" class="primary" id="taskSubmitBtn">Add &amp; Reschedule</button>
           <button type="button" class="icon-btn" id="cancelEditBtn" style="display:none;width:100%;margin-top:6px;" onclick="cancelEditTask()">Cancel Edit</button>
+          <button type="button" class="icon-btn" id="deleteEditBtn" style="display:none;width:100%;margin-top:6px;color:#a3372f;border-color:#e3c4c0;" onclick="deleteEditing()">Delete</button>
         </form>
       </div>
 
@@ -491,6 +602,11 @@
     <button class="modal-close" onclick="closeSettings()">x</button>
     <h2>Settings</h2>
 
+    <div class="settings-section" id="syncSection">
+      <h4>Account &amp; sync</h4>
+      <div id="syncBox"></div>
+    </div>
+
     <div class="settings-section">
       <h4>Appearance</h4>
       <select id="themeSelect" onchange="applyThemePreset()">
@@ -506,6 +622,13 @@
         <label>Tertiary (buttons + Optional tag)</label><input type="color" id="tertiaryColor" onchange="applyCustomColors()">
       </div>
       <p style="font-size:11px;color:var(--ink-soft);margin-top:6px;">Font is fixed to Lora across all themes.</p>
+    </div>
+
+    <div class="settings-section">
+      <h4>Layout</h4>
+      <p style="font-size:11px;color:var(--ink-soft);margin:0 0 8px;">Choose the order of the blocks<span id="layoutSideNote"> and which side each one is on</span>. This is saved on this device only. It isn't shared with your other devices, because their screens are different.</p>
+      <div id="layoutSettings"></div>
+      <button type="button" class="icon-btn" style="margin-top:8px;" onclick="resetLayout()">Reset layout</button>
     </div>
 
     <div class="settings-section">
@@ -689,7 +812,7 @@ let editingEventId = null;
 let localEvents = JSON.parse(localStorage.getItem('flowgrove_local_events') || 'null') || [];
 localEvents.forEach(function(ev) { if (!ev.createdDate) ev.createdDate = localDateStr(); });
 let nextLocalEventId = Math.max(0, ...localEvents.map(function(e) { return e.id; })) + 1;
-function saveLocalEvents() { localStorage.setItem('flowgrove_local_events', JSON.stringify(localEvents)); }
+function saveLocalEvents() { syncMarkDirty('events'); localStorage.setItem('flowgrove_local_events', JSON.stringify(localEvents)); }
 let calendarConnected = false;
 
 function localEventOnDate(ev, dayKey, abbrev) {
@@ -985,7 +1108,7 @@ const DEFAULT_QUOTES = [
 ];
 const QUOTE_CATEGORIES = ["Wellness", "Encouragement", "Bible"];
 let quotes = JSON.parse(localStorage.getItem('flowgrove_quotes') || 'null') || DEFAULT_QUOTES.slice();
-function saveQuotes() { localStorage.setItem('flowgrove_quotes', JSON.stringify(quotes)); }
+function saveQuotes() { syncMarkDirty('quotes'); localStorage.setItem('flowgrove_quotes', JSON.stringify(quotes)); }
 
 // Quotes added after the first release. Added once to existing saved lists (and to
 // brand-new lists), without bringing back anything the user already deleted.
@@ -1007,7 +1130,18 @@ const COMMON_NAMES = ["sarah","tyler","emma","jacob","olivia","liam","ava","noah
 const DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
 /* ---- Collapsible side panels (remembered between visits) ---- */
-let sidebarState = JSON.parse(localStorage.getItem('flowgrove_sidebars') || 'null') || { left: false, right: false };
+// Phones and small screens (900px wide or less) use the phone layout; anything wider uses the computer layout.
+const PHONE_QUERY = '(max-width: 900px)';
+function isPhone() { return window.matchMedia(PHONE_QUERY).matches; }
+// The side panels' open/collapsed state is remembered separately for the phone layout and the computer layout.
+// On a phone the side panel starts collapsed to its strip of icons.
+function sbKey() { return isPhone() ? 'flowgrove_sidebars_phone' : 'flowgrove_sidebars'; }
+function loadSidebarState() {
+  let s = null;
+  try { s = JSON.parse(localStorage.getItem(sbKey()) || 'null'); } catch (e) { s = null; }
+  return s || (isPhone() ? { left: false, right: true } : { left: false, right: false });
+}
+let sidebarState = loadSidebarState();
 function applySidebars() {
   const main = document.querySelector('main');
   ['left', 'right'].forEach(function(side) {
@@ -1023,7 +1157,7 @@ function applySidebars() {
 }
 function setSidebar(side, collapsed) {
   sidebarState[side] = collapsed;
-  localStorage.setItem('flowgrove_sidebars', JSON.stringify(sidebarState));
+  localStorage.setItem(sbKey(), JSON.stringify(sidebarState));
   applySidebars();
 }
 function toggleSidebar(side) { setSidebar(side, !sidebarState[side]); }
@@ -1191,7 +1325,7 @@ function renderWeekGrid(gridId, dayNames) {
   function tip(item) { viewTipItems.push(item); return ' oncontextmenu="viewTip(event,' + (viewTipItems.length - 1) + ')"'; }
   const n = dayNames.length;
   const todayKey = localDateStr();
-  const colsStyle = 'grid-template-columns:repeat(' + n + ',1fr);';
+  const colsStyle = 'grid-template-columns:repeat(' + n + ',minmax(0,1fr));';
   const days = dayNames.map(function(d) {
     const dateObj = dateObjForDay(d);
     return { d: d, dateObj: dateObj, key: localDateStr(dateObj), isToday: localDateStr(dateObj) === todayKey, agenda: getDayAgenda(dateObj) };
@@ -1666,7 +1800,7 @@ function populateRepeat(pattern) {
   }
 }
 
-function saveLabels() { localStorage.setItem('flowgrove_labels', JSON.stringify(labels)); }
+function saveLabels() { syncMarkDirty('labels'); localStorage.setItem('flowgrove_labels', JSON.stringify(labels)); }
 
 function randomUnusedColor() {
   const used = labels.map(l => l.color);
@@ -1838,7 +1972,7 @@ function autoCapitalizeTitle(str) {
   return capitalizeFirst(str);
 }
 
-function saveTasks() { localStorage.setItem('flowgrove_tasks', JSON.stringify(tasks)); }
+function saveTasks() { syncMarkDirty('tasks'); localStorage.setItem('flowgrove_tasks', JSON.stringify(tasks)); }
 
 // Checks a new or edited fixed event against your other fixed events (on every day it would
 // repeat over the next two weeks) and against today's Google Calendar events.
@@ -1933,7 +2067,7 @@ function submitTaskForm(e) {
         existingEv.repeatPattern = repeatPattern; existingEv.label = label ? label.name : null; existingEv.optional = optionalEv;
       }
     } else {
-      localEvents.push({ id: nextLocalEventId++, title: title, startMin: startMin, endMin: endMin, repeatPattern: repeatPattern, label: label ? label.name : null, optional: optionalEv, createdDate: localDateStr() });
+      localEvents.push({ id: newUniqueId(), title: title, startMin: startMin, endMin: endMin, repeatPattern: repeatPattern, label: label ? label.name : null, optional: optionalEv, createdDate: localDateStr() });
     }
     saveLocalEvents();
     resetTaskForm();
@@ -1955,7 +2089,7 @@ function submitTaskForm(e) {
       existing.repeatPattern = repeatPattern; existing.label = label ? label.name : null;
     }
   } else {
-    const task = { id: nextId++, title: title, priority: currentPriority, time: time, motivation: motivation, optional: optional, completed: false, label: label ? label.name : null, tomorrow: false, repeatPattern: repeatPattern, createdDate: localDateStr() };
+    const task = { id: newUniqueId(), title: title, priority: currentPriority, time: time, motivation: motivation, optional: optional, completed: false, label: label ? label.name : null, tomorrow: false, repeatPattern: repeatPattern, createdDate: localDateStr() };
     tasks.push(task);
   }
   saveTasks();
@@ -1981,6 +2115,7 @@ function resetTaskForm() {
   setEntryType('task');
   document.getElementById('taskSubmitBtn').textContent = 'Add & Reschedule';
   document.getElementById('cancelEditBtn').style.display = 'none';
+  document.getElementById('deleteEditBtn').style.display = 'none';
   // Start focused on the Type selector itself (not Title), so 1/2 work
   // immediately without needing to click into anything first.
   document.getElementById('typeSeg').focus();
@@ -2003,6 +2138,7 @@ function startEditTask(id) {
 
   document.getElementById('taskSubmitBtn').textContent = 'Save Changes';
   document.getElementById('cancelEditBtn').style.display = 'block';
+  document.getElementById('deleteEditBtn').style.display = 'block';
   document.getElementById('title').scrollIntoView({ block: 'center', behavior: 'smooth' });
   document.getElementById('title').focus();
 }
@@ -2023,12 +2159,30 @@ function startEditEvent(id) {
 
   document.getElementById('taskSubmitBtn').textContent = 'Save Changes';
   document.getElementById('cancelEditBtn').style.display = 'block';
+  document.getElementById('deleteEditBtn').style.display = 'block';
   document.getElementById('title').scrollIntoView({ block: 'center', behavior: 'smooth' });
   document.getElementById('title').focus();
 }
 
 function cancelEditTask() {
   resetTaskForm();
+}
+
+// The Delete button shown while you are editing a task or an event.
+// A repeating task asks which ones to delete (just like the Remove button in the list). A repeating event is
+// deleted along with all of its repeats.
+function deleteEditing() {
+  if (editingTaskId !== null) {
+    const t = tasks.find(function(x) { return x.id === editingTaskId; });
+    if (t) showToast('Deleting "' + t.title + '"...');
+    removeTask(editingTaskId);
+  } else if (editingEventId !== null) {
+    const idx = localEvents.findIndex(function(x) { return x.id === editingEventId; });
+    if (idx !== -1) {
+      showToast('Deleted "' + localEvents[idx].title + '".');
+      deleteLocalEvent(idx); // also clears the form
+    }
+  }
 }
 
 function removeTask(id) {
@@ -2039,6 +2193,7 @@ function removeTask(id) {
     forgetTaskClock(id);
     tasks = tasks.filter(function(x) { return x.id !== id; });
     saveTasks();
+    if (editingTaskId === id) resetTaskForm();
     render();
     return;
   }
@@ -2090,6 +2245,7 @@ function deleteChoice(option) {
     saveTasks();
   }
   pendingDeleteId = null;
+  if (editingTaskId === t.id) resetTaskForm();
   render();
 }
 
@@ -2592,7 +2748,7 @@ function openClockPanel(taskId) {
   renderClockPanel();
   revealPanel('clock'); // if the side is collapsed, pop out just the clock
   const panel = document.getElementById('clockPanel');
-  if (!sidebarState.right && panel && panel.scrollIntoView) panel.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  if (!sidebarState[POP_SIDE.clock] && panel && panel.scrollIntoView) panel.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 }
 
 function closeClockPanel() {
@@ -2812,10 +2968,14 @@ function tutorialRestoreClockPanel() {
 // Which side each block lives on.
 const POP_SIDE = { motivation: 'left', labels: 'left', clock: 'right', add: 'right', tasks: 'right', events: 'right', tomorrow: 'right' };
 
-let popped = [];
-try { popped = JSON.parse(localStorage.getItem('flowgrove_popped') || '[]') || []; } catch (e) { popped = []; }
-popped = popped.filter(function(k) { return POP_SIDE[k]; });
-function savePopped() { localStorage.setItem('flowgrove_popped', JSON.stringify(popped)); }
+function popKey() { return isPhone() ? 'flowgrove_popped_phone' : 'flowgrove_popped'; }
+function loadPopped() {
+  let list = [];
+  try { list = JSON.parse(localStorage.getItem(popKey()) || '[]') || []; } catch (e) { list = []; }
+  return list.filter(function(k) { return POP_SIDE[k]; });
+}
+let popped = loadPopped();
+function savePopped() { localStorage.setItem(popKey(), JSON.stringify(popped)); }
 
 // Makes the page match the list of opened blocks (which blocks show in place of their icon).
 function syncPop() {
@@ -3010,6 +3170,672 @@ document.querySelectorAll('.panel[data-pop]').forEach(function(panel) {
 
 syncPop();
 
+/* ============================================================================================
+   Layout: where each block lives, and what changes on a phone.
+   - On a computer there are two sides. You choose each block's side and the order in Settings.
+   - On a phone (a narrow screen) there is one column of blocks, in the order you choose.
+   - The layout is saved on THIS device only. It is deliberately not part of anything that syncs between
+     devices, because a phone screen and a computer screen are different.
+   - On touch screens, pressing and holding does what right-click does on a computer.
+   ============================================================================================ */
+
+const BLOCK_INFO = {
+  motivation: 'Motivation', labels: 'Labels', clock: 'Timer / stopwatch', add: 'Add task or event',
+  tasks: 'All tasks today', events: 'Fixed events', tomorrow: 'Tomorrow'
+};
+
+const LAYOUT_DEFAULT = {
+  desktop: {
+    order: ['motivation', 'labels', 'clock', 'add', 'tasks', 'events', 'tomorrow'],
+    side: { motivation: 'left', labels: 'left', clock: 'right', add: 'right', tasks: 'right', events: 'right', tomorrow: 'right' }
+  },
+  phone: { order: ['motivation', 'clock', 'add', 'tasks', 'events', 'tomorrow', 'labels'] }
+};
+
+function cloneJson(o) { return JSON.parse(JSON.stringify(o)); }
+
+let layout = (function() {
+  const d = cloneJson(LAYOUT_DEFAULT);
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem('flowgrove_layout') || 'null'); } catch (e) { saved = null; }
+  if (!saved || typeof saved !== 'object') return d;
+  const allKeys = Object.keys(BLOCK_INFO);
+  // keep what is valid, and make sure every block appears exactly once
+  function cleanOrder(arr, fallback) {
+    const out = [];
+    (Array.isArray(arr) ? arr : []).forEach(function(k) { if (allKeys.indexOf(k) !== -1 && out.indexOf(k) === -1) out.push(k); });
+    fallback.forEach(function(k) { if (out.indexOf(k) === -1) out.push(k); });
+    return out;
+  }
+  if (saved.desktop) {
+    d.desktop.order = cleanOrder(saved.desktop.order, d.desktop.order);
+    if (saved.desktop.side) {
+      Object.keys(d.desktop.side).forEach(function(k) {
+        const v = saved.desktop.side[k];
+        if (v === 'left' || v === 'right') d.desktop.side[k] = v;
+      });
+    }
+  }
+  if (saved.phone) d.phone.order = cleanOrder(saved.phone.order, d.phone.order);
+  return d;
+})();
+
+function saveLayout() { localStorage.setItem('flowgrove_layout', JSON.stringify(layout)); }
+
+function layoutSideOf(key) { return isPhone() ? 'right' : layout.desktop.side[key]; }
+function layoutOrder() { return isPhone() ? layout.phone.order : layout.desktop.order; }
+
+// Puts every block (and its icon) in the right column, in the right order.
+function applyLayout() {
+  const phone = isPhone();
+  const left = document.querySelector('#leftbar .sb-content');
+  const right = document.querySelector('#rightbar .sb-content');
+  const count = { left: 0, right: 0 };
+  layoutOrder().forEach(function(key) {
+    const side = layoutSideOf(key);
+    POP_SIDE[key] = side;
+    count[side]++;
+    const container = (side === 'left') ? left : right;
+    const btn = document.querySelector('.rail-btn[data-pop="' + key + '"]');
+    const panel = document.querySelector('.panel[data-pop="' + key + '"]');
+    if (btn) container.appendChild(btn);
+    if (panel) container.appendChild(panel);
+  });
+  const main = document.querySelector('main');
+  // a side with no blocks disappears (on a phone the left side is always hidden by the stylesheet)
+  main.classList.toggle('no-left', !phone && count.left === 0);
+  main.classList.toggle('no-right', !phone && count.right === 0);
+}
+
+/* ---- the Layout section in Settings ---- */
+
+function renderLayoutSettings() {
+  const box = document.getElementById('layoutSettings');
+  if (!box) return;
+  const phone = isPhone();
+  document.getElementById('layoutSideNote').style.display = phone ? 'none' : '';
+  const order = layoutOrder();
+  function rows(keys, groupSide) {
+    return keys.map(function(k, i) {
+      const sideBtn = phone ? '' : '<button type="button" class="layout-btn" onclick="moveBlockSide(\'' + k + '\')" title="Move to the other side">' + (groupSide === 'left' ? 'Right &rarr;' : '&larr; Left') + '</button>';
+      return '<div class="layout-row"><span class="name">' + escapeHtml(BLOCK_INFO[k]) + '</span>' +
+        '<button type="button" class="layout-btn" onclick="moveBlock(\'' + k + '\', -1)" aria-label="Move up"' + (i === 0 ? ' disabled' : '') + '>&uarr;</button>' +
+        '<button type="button" class="layout-btn" onclick="moveBlock(\'' + k + '\', 1)" aria-label="Move down"' + (i === keys.length - 1 ? ' disabled' : '') + '>&darr;</button>' +
+        sideBtn + '</div>';
+    }).join('');
+  }
+  if (phone) {
+    box.innerHTML = '<div class="layout-group">Side panel, top to bottom</div>' + rows(order, 'right');
+  } else {
+    const leftKeys = order.filter(function(k) { return layoutSideOf(k) === 'left'; });
+    const rightKeys = order.filter(function(k) { return layoutSideOf(k) === 'right'; });
+    box.innerHTML = '<div class="layout-group">Left side</div>' + (leftKeys.length ? rows(leftKeys, 'left') : '<div class="layout-row" style="color:var(--ink-soft);">Nothing here</div>') +
+      '<div class="layout-group">Right side</div>' + (rightKeys.length ? rows(rightKeys, 'right') : '<div class="layout-row" style="color:var(--ink-soft);">Nothing here</div>');
+  }
+}
+
+function afterLayoutChange() {
+  saveLayout();
+  applyLayout();
+  applySidebars();
+  renderLayoutSettings();
+}
+
+// Moves a block up (-1) or down (+1) among the blocks on its side.
+function moveBlock(key, dir) {
+  const order = layoutOrder();
+  const side = layoutSideOf(key);
+  const group = order.filter(function(k) { return layoutSideOf(k) === side; });
+  const target = group[group.indexOf(key) + dir];
+  if (!target) return;
+  const i = order.indexOf(key), j = order.indexOf(target);
+  order[i] = target; order[j] = key;
+  afterLayoutChange();
+}
+
+// Computer only: sends a block to the other side (at the bottom there).
+function moveBlockSide(key) {
+  if (isPhone()) return;
+  layout.desktop.side[key] = (layout.desktop.side[key] === 'left') ? 'right' : 'left';
+  layout.desktop.order = layout.desktop.order.filter(function(k) { return k !== key; });
+  layout.desktop.order.push(key);
+  afterLayoutChange();
+}
+
+function resetLayout() {
+  if (isPhone()) layout.phone = cloneJson(LAYOUT_DEFAULT.phone);
+  else layout.desktop = cloneJson(LAYOUT_DEFAULT.desktop);
+  afterLayoutChange();
+}
+
+/* ---- switching between the phone layout and the computer layout (rotating, resizing) ---- */
+
+function onModeChange() {
+  sidebarState = loadSidebarState();
+  popped = loadPopped();
+  applyLayout();
+  applySidebars();
+  render();
+}
+(function watchScreenSize() {
+  const mq = window.matchMedia(PHONE_QUERY);
+  if (mq.addEventListener) mq.addEventListener('change', onModeChange);
+  else if (mq.addListener) mq.addListener(onModeChange);
+})();
+
+/* ---- press and hold = right-click, for touch screens ---- */
+
+(function enableLongPress() {
+  let timer = null, startX = 0, startY = 0, swallowClick = false;
+  const HOLDABLE = '.block, .week-task-row, .week-bar, .month-event-label, .month-bar, .allday-pill';
+  document.addEventListener('touchstart', function(e) {
+    clearTimeout(timer);
+    if (e.touches.length !== 1) return;
+    const touch = e.touches[0];
+    startX = touch.clientX; startY = touch.clientY;
+    const target = e.target;
+    timer = setTimeout(function() {
+      const el = target && target.closest ? target.closest(HOLDABLE) : null;
+      if (!el) return;
+      swallowClick = true;
+      setTimeout(function() { swallowClick = false; }, 800);
+      el.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true, clientX: startX, clientY: startY, view: window }));
+    }, 500);
+  }, { passive: true });
+  document.addEventListener('touchmove', function(e) {
+    if (!e.touches.length) return;
+    if (Math.abs(e.touches[0].clientX - startX) > 10 || Math.abs(e.touches[0].clientY - startY) > 10) clearTimeout(timer);
+  }, { passive: true });
+  ['touchend', 'touchcancel'].forEach(function(ev) {
+    document.addEventListener(ev, function() { clearTimeout(timer); }, { passive: true });
+  });
+  // the tap that ends a long press shouldn't also open the task
+  document.addEventListener('click', function(e) {
+    if (swallowClick) { swallowClick = false; e.stopPropagation(); e.preventDefault(); }
+  }, true);
+})();
+
+/* ---- Tomorrow without dragging (touch screens can't drag) ---- */
+
+function moveToTomorrow(id) {
+  const t = tasks.find(function(x) { return x.id === id; });
+  if (!t) return;
+  t.tomorrow = true;
+  delete t.manualOrder;
+  saveTasks();
+  render();
+}
+function bringBack(id) {
+  const t = tasks.find(function(x) { return x.id === id; });
+  if (!t) return;
+  t.tomorrow = false;
+  saveTasks();
+  render();
+}
+
+/* ============================================================================================
+   Account and sync.
+
+   Signing in with Google gives you an account. While you're signed in, your tasks, fixed events, labels,
+   quotes, settings, and nickname are saved online and kept the same on every device you sign in on.
+
+   How it avoids losing things:
+   - Every task, event, label and quote remembers WHEN it was last changed (updatedAt).
+   - Deleting something leaves a small note ("deleted at ...") so other devices delete it too.
+   - Before saving, a device first loads what's online and MERGES it: for each item the newest change wins,
+     so two devices that each added a task end up with both.
+   - Settings and your nickname are single things, so the most recent change wins.
+
+   Not synced on purpose: the layout (the order and sides of the blocks), which panels are open, and today's
+   running timers and breaks. Those belong to this device.
+   ============================================================================================ */
+
+var syncInitDone = false;   // (var on purpose) the save functions ask this before this file has finished loading
+var syncApplying = false;   // true while we write merged data from another device (so it isn't counted as a change)
+
+const SYNC_META_KEY = 'flowgrove_syncmeta';
+const SYNC_COLLECTIONS = {
+  tasks:  { get: function() { return tasks; },       set: function(v) { tasks = v; },       key: function(t) { return String(t.id); },  store: 'flowgrove_tasks' },
+  events: { get: function() { return localEvents; }, set: function(v) { localEvents = v; }, key: function(e) { return String(e.id); },  store: 'flowgrove_local_events' },
+  labels: { get: function() { return labels; },      set: function(v) { labels = v; },      key: function(l) { return String(l.name); }, store: 'flowgrove_labels' },
+  quotes: { get: function() { return quotes; },      set: function(v) { quotes = v; },      key: function(q) { return String(q.text); }, store: 'flowgrove_quotes' }
+};
+const SYNC_DEMO_TITLES = ['Study for science quiz', 'Finish reading chapter', 'Practice violin', 'Clean room'];
+const SYNC_TOMBSTONE_DAYS = 60;
+
+let lastUniqueId = 0;
+// Ids are numbers (so every place in the app keeps working) but unique across devices.
+function newUniqueId() {
+  let id = Date.now() * 1000 + Math.floor(Math.random() * 1000);
+  if (id <= lastUniqueId) id = lastUniqueId + 1;
+  lastUniqueId = id;
+  return id;
+}
+
+/* ---- remembered between visits, on this device only ---- */
+
+function loadSyncMeta() {
+  let m = null;
+  try { m = JSON.parse(localStorage.getItem(SYNC_META_KEY) || 'null'); } catch (e) { m = null; }
+  m = m || {};
+  m.rev = m.rev || 0;                       // the online version we last loaded
+  m.dirty = !!m.dirty;                      // are there changes the cloud hasn't seen yet?
+  m.baseline = m.baseline || null;          // what each item looked like when we last looked (to spot changes)
+  m.tombstones = m.tombstones || { tasks: {}, events: {}, labels: {}, quotes: {} };
+  ['tasks', 'events', 'labels', 'quotes'].forEach(function(n) { m.tombstones[n] = m.tombstones[n] || {}; });
+  m.settingsAt = m.settingsAt || 0;
+  m.profileAt = m.profileAt || 0;
+  m.settingsJson = m.settingsJson || null;
+  m.profileJson = m.profileJson || null;
+  m.idsMigrated = !!m.idsMigrated;
+  return m;
+}
+let syncMeta = loadSyncMeta();
+function saveSyncMeta() { try { localStorage.setItem(SYNC_META_KEY, JSON.stringify(syncMeta)); } catch (e) {} }
+
+let syncUser = null;            // { name, email } while signed in
+let syncServerReady = false;    // does the site have its database set up?
+let syncApiThere = null;        // null = not asked yet, true/false = whether the /api answered
+let syncStatus = 'idle';        // idle | syncing | offline | error | too-big
+let syncLastOk = 0;
+let syncBusy = false, syncAgain = false, syncSeq = 0, syncPushTimer = null;
+
+function itemJson(item) { const c = Object.assign({}, item); delete c.updatedAt; return JSON.stringify(c); }
+function profileNow() { try { return JSON.parse(localStorage.getItem('flowgrove_profile') || 'null'); } catch (e) { return null; } }
+
+// Remember what everything looks like right now, without counting any of it as a change.
+function syncRebuildBaselines() {
+  syncMeta.baseline = {};
+  Object.keys(SYNC_COLLECTIONS).forEach(function(name) {
+    const def = SYNC_COLLECTIONS[name];
+    const map = {};
+    def.get().forEach(function(item) { map[def.key(item)] = itemJson(item); });
+    syncMeta.baseline[name] = map;
+  });
+  syncMeta.settingsJson = JSON.stringify(settings);
+  const p = profileNow();
+  syncMeta.profileJson = p ? JSON.stringify(p) : null;
+}
+
+// Notice what changed in one list since last time: stamp changed items, and note deletions.
+function syncStamp(name) {
+  const def = SYNC_COLLECTIONS[name];
+  const base = syncMeta.baseline[name] || (syncMeta.baseline[name] = {});
+  const tomb = syncMeta.tombstones[name];
+  const now = Date.now();
+  const seen = {};
+  def.get().forEach(function(item) {
+    const k = def.key(item);
+    seen[k] = true;
+    const j = itemJson(item);
+    if (base[k] !== j) { item.updatedAt = now; base[k] = j; delete tomb[k]; }
+  });
+  Object.keys(base).forEach(function(k) {
+    if (!seen[k]) { tomb[k] = now; delete base[k]; }
+  });
+}
+
+// The save functions call this after anything changes.
+function syncMarkDirty(name) {
+  if (!syncInitDone || syncApplying) return;
+  syncStamp(name);
+  syncMeta.dirty = true;
+  syncSeq++;
+  saveSyncMeta();
+  syncSchedulePush();
+}
+function syncMarkSettings() {
+  if (!syncInitDone || syncApplying) return;
+  const j = JSON.stringify(settings);
+  if (j === syncMeta.settingsJson) return;
+  syncMeta.settingsJson = j;
+  syncMeta.settingsAt = Date.now();
+  syncMeta.dirty = true; syncSeq++;
+  saveSyncMeta(); syncSchedulePush();
+}
+function syncMarkProfile() {
+  if (!syncInitDone || syncApplying) return;
+  const p = profileNow();
+  const j = p ? JSON.stringify(p) : null;
+  if (j === syncMeta.profileJson) return;
+  syncMeta.profileJson = j;
+  syncMeta.profileAt = Date.now();
+  syncMeta.dirty = true; syncSeq++;
+  saveSyncMeta(); syncSchedulePush();
+}
+
+/* ---- what gets sent / merged ---- */
+
+function syncPruneTombstones() {
+  const cutoff = Date.now() - SYNC_TOMBSTONE_DAYS * 86400000;
+  Object.keys(syncMeta.tombstones).forEach(function(n) {
+    Object.keys(syncMeta.tombstones[n]).forEach(function(k) { if (syncMeta.tombstones[n][k] < cutoff) delete syncMeta.tombstones[n][k]; });
+  });
+}
+
+function syncSnapshot() {
+  syncPruneTombstones();
+  return {
+    v: 1,
+    tasks: tasks, events: localEvents, labels: labels, quotes: quotes,
+    settings: settings, settingsAt: syncMeta.settingsAt,
+    profile: profileNow(), profileAt: syncMeta.profileAt,
+    tomb: syncMeta.tombstones
+  };
+}
+
+// For each item the newest change wins; a deletion beats an older copy of the item.
+function mergeList(name, remoteItems, remoteTomb) {
+  const def = SYNC_COLLECTIONS[name];
+  const localTomb = syncMeta.tombstones[name];
+  const result = [];
+  const index = {};
+  def.get().forEach(function(item) { index[def.key(item)] = item; result.push(item); });
+  (Array.isArray(remoteItems) ? remoteItems : []).forEach(function(ri) {
+    if (!ri || typeof ri !== 'object') return;
+    const k = def.key(ri);
+    if (!k || k === 'undefined') return; // not a usable item
+    const li = index[k];
+    if (!li) {
+      const deletedHere = localTomb[k] || 0;
+      if (deletedHere && deletedHere >= (ri.updatedAt || 0)) return; // we deleted it after it was last changed there
+      index[k] = ri; result.push(ri);
+    } else if ((ri.updatedAt || 0) > (li.updatedAt || 0)) {
+      result[result.indexOf(li)] = ri; index[k] = ri;
+    }
+  });
+  const tomb = remoteTomb || {};
+  let out = result.filter(function(item) {
+    const k = def.key(item);
+    const t = tomb[k];
+    return !(t && t >= (item.updatedAt || 0)); // deleted on the other device after this copy was last changed
+  });
+  Object.keys(tomb).forEach(function(k) { if (!localTomb[k] || localTomb[k] < tomb[k]) localTomb[k] = tomb[k]; });
+  return out;
+}
+
+function syncMergeRemote(remote) {
+  if (!remote || typeof remote !== 'object') return;
+  const firstTime = (syncMeta.rev === 0);
+  const rtomb = remote.tomb || {};
+  if (firstTime && Array.isArray(remote.tasks)) {
+    // a brand-new device starts with sample tasks; they must not be added to a real account
+    tasks = tasks.filter(function(t) { return !(SYNC_DEMO_TITLES.indexOf(t.title) !== -1 && !t.updatedAt && !t.completed); });
+  }
+  Object.keys(SYNC_COLLECTIONS).forEach(function(name) {
+    const remoteItems = (name === 'events') ? remote.events : remote[name];
+    SYNC_COLLECTIONS[name].set(mergeList(name, remoteItems, rtomb[name]));
+  });
+  if (remote.settings && typeof remote.settings === 'object' && (remote.settingsAt || 0) > syncMeta.settingsAt) {
+    settings = remote.settings;
+    syncMeta.settingsAt = remote.settingsAt;
+  }
+  if (remote.profile && typeof remote.profile === 'object' && (remote.profileAt || 0) > syncMeta.profileAt) {
+    try { localStorage.setItem('flowgrove_profile', JSON.stringify(remote.profile)); } catch (e) {}
+    syncMeta.profileAt = remote.profileAt;
+  }
+}
+
+function syncCanonical(data) {
+  function sorted(arr, keyFn) { return (arr || []).slice().sort(function(a, b) { return keyFn(a) < keyFn(b) ? -1 : (keyFn(a) > keyFn(b) ? 1 : 0); }); }
+  const tomb = {};
+  Object.keys(data.tomb || {}).forEach(function(n) { tomb[n] = {}; Object.keys(data.tomb[n]).sort().forEach(function(k) { tomb[n][k] = data.tomb[n][k]; }); });
+  return JSON.stringify([
+    sorted(data.tasks, function(x) { return String(x.id); }), sorted(data.events, function(x) { return String(x.id); }),
+    sorted(data.labels, function(x) { return x.name; }), sorted(data.quotes, function(x) { return x.text; }),
+    data.settings, data.settingsAt || 0, data.profile, data.profileAt || 0, tomb
+  ]);
+}
+
+// Writes the merged data to this device and refreshes the screen.
+function syncApplyLocal() {
+  syncApplying = true;
+  try {
+    Object.keys(SYNC_COLLECTIONS).forEach(function(name) {
+      try { localStorage.setItem(SYNC_COLLECTIONS[name].store, JSON.stringify(SYNC_COLLECTIONS[name].get())); } catch (e) {}
+    });
+    try { localStorage.setItem('flowgrove_settings', JSON.stringify(settings)); } catch (e) {}
+  } finally { syncApplying = false; }
+  syncRebuildBaselines();
+  saveSyncMeta();
+  if (typeof applyColorsToPage === 'function') applyColorsToPage();
+  if (typeof refreshLabelUI === 'function') refreshLabelUI();
+  render();
+  renderSyncBox();
+}
+
+/* ---- talking to the server ---- */
+
+async function syncApi(method, path, body) {
+  const opts = { method: method, headers: { 'X-Flowgrove': '1' }, credentials: 'same-origin', cache: 'no-store' };
+  if (body !== undefined) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
+  const resp = await fetch(path, opts);
+  let json = null;
+  try { json = await resp.json(); } catch (e) { json = null; }
+  return { status: resp.status, json: json || {} };
+}
+
+function syncSetStatus(s) { syncStatus = s; renderSyncBox(); }
+
+async function syncPullStep() {
+  const r = await syncApi('GET', '/api/sync?since=' + syncMeta.rev);
+  if (r.status === 401) { syncUser = null; renderSyncBox(); throw new Error('signed-out'); }
+  if (!r.json.ok) throw new Error('pull-failed');
+  if (r.json.unchanged) return;
+  const before = syncCanonical(syncSnapshot());
+  if (r.json.data) {
+    const firstTime = (syncMeta.rev === 0);
+    syncMergeRemote(r.json.data);
+    syncApplyLocal();
+    const after = syncCanonical(syncSnapshot());
+    // anything this device has that the cloud doesn't means a save is needed
+    if (syncCanonical(r.json.data) !== after) { syncMeta.dirty = true; syncSeq++; }
+    if (!firstTime && before !== after) showToast('Updated from your other device');
+  } else {
+    // a brand-new account: this device's data becomes the account's starting point
+    if (!syncMeta.settingsAt) syncMeta.settingsAt = Date.now();
+    if (!syncMeta.profileAt && profileNow()) syncMeta.profileAt = Date.now();
+    syncMeta.dirty = true; syncSeq++;
+  }
+  syncMeta.rev = r.json.rev;
+  saveSyncMeta();
+}
+
+async function syncPushStep() {
+  for (let attempt = 0; attempt < 4; attempt++) {
+    const seqAtStart = syncSeq;
+    const r = await syncApi('PUT', '/api/sync', { baseRev: syncMeta.rev, data: syncSnapshot() });
+    if (r.status === 401) { syncUser = null; renderSyncBox(); throw new Error('signed-out'); }
+    if (r.status === 409) { // another device saved first: merge its changes into ours, then try again
+      syncMergeRemote(r.json.data);
+      syncApplyLocal();
+      syncMeta.rev = r.json.rev;
+      saveSyncMeta();
+      continue;
+    }
+    if (r.status === 413) { syncSetStatus('too-big'); throw new Error('too-big'); }
+    if (!r.json.ok) throw new Error('push-failed');
+    syncMeta.rev = r.json.rev;
+    if (syncSeq === seqAtStart) syncMeta.dirty = false; // (not if you changed something while it was saving)
+    saveSyncMeta();
+    return;
+  }
+  throw new Error('conflict-loop');
+}
+
+// Loads what's online, merges it, and saves our changes. Safe to call any time; it never runs twice at once.
+async function syncRun() {
+  if (!syncUser || !syncServerReady) return;
+  if (syncBusy) { syncAgain = true; return; }
+  syncBusy = true;
+  syncSetStatus('syncing');
+  let failed = null;
+  try {
+    do {
+      syncAgain = false;
+      await syncPullStep();
+      if (syncMeta.dirty) await syncPushStep();
+    } while (syncAgain);
+    syncLastOk = Date.now();
+  } catch (e) {
+    failed = e;
+  } finally {
+    syncBusy = false;
+  }
+  if (!failed) syncSetStatus('idle');
+  else if (failed.message === 'too-big') { /* status already set */ }
+  else if (failed.message === 'signed-out') syncSetStatus('idle');
+  else syncSetStatus(navigator.onLine === false ? 'offline' : 'error');
+}
+
+function syncSchedulePush() {
+  if (!syncUser) return;
+  clearTimeout(syncPushTimer);
+  syncPushTimer = setTimeout(syncRun, 1200);
+}
+
+/* ---- old small ids (1, 2, 3...) would clash between devices, so give them unique ones once ---- */
+
+function syncMigrateLegacyIds() {
+  if (syncMeta.idsMigrated) return;
+  const LEGACY_MAX = 1e11;
+  const taskMap = {}, eventMap = {};
+  tasks.forEach(function(t) { if (t.id < LEGACY_MAX) taskMap[t.id] = newUniqueId(); });
+  localEvents.forEach(function(e) { if (e.id < LEGACY_MAX) eventMap[e.id] = newUniqueId(); });
+  function remapKey(k) { // event keys look like "l|<eventId>|<date>"
+    const m = /^l\|(\d+)\|(.*)$/.exec(k);
+    return (m && eventMap[m[1]] !== undefined) ? ('l|' + eventMap[m[1]] + '|' + m[2]) : k;
+  }
+  tasks.forEach(function(t) {
+    if (taskMap[t.id] !== undefined) t.id = taskMap[t.id];
+    if (Array.isArray(t.cutKeys)) t.cutKeys = t.cutKeys.map(remapKey);
+  });
+  localEvents.forEach(function(e) { if (eventMap[e.id] !== undefined) e.id = eventMap[e.id]; });
+  // today's timers and notes point at tasks by id too
+  const oldClocks = workState.clocks || {};
+  const newClocks = {};
+  Object.keys(oldClocks).forEach(function(k) { newClocks[taskMap[k] !== undefined ? taskMap[k] : k] = oldClocks[k]; });
+  workState.clocks = newClocks;
+  (workState.log || []).forEach(function(s) { if (taskMap[s.taskId] !== undefined) s.taskId = taskMap[s.taskId]; });
+  if (workState.running && taskMap[workState.running.taskId] !== undefined) workState.running.taskId = taskMap[workState.running.taskId];
+  if (workState.panelTaskId !== null && taskMap[workState.panelTaskId] !== undefined) workState.panelTaskId = taskMap[workState.panelTaskId];
+  const oldCuts = workState.cuts || {};
+  const newCuts = {};
+  Object.keys(oldCuts).forEach(function(k) { newCuts[remapKey(k)] = oldCuts[k]; });
+  workState.cuts = newCuts;
+  syncApplying = true;
+  try {
+    localStorage.setItem('flowgrove_tasks', JSON.stringify(tasks));
+    localStorage.setItem('flowgrove_local_events', JSON.stringify(localEvents));
+    saveWork();
+  } finally { syncApplying = false; }
+  syncRebuildBaselines(); // (renumbering is not a "change" and leaves no deletion notes)
+  syncMeta.idsMigrated = true;
+  saveSyncMeta();
+}
+
+/* ---- who is signed in ---- */
+
+async function syncCheckSession() {
+  try {
+    const resp = await fetch('/api/me', { cache: 'no-store', credentials: 'same-origin' });
+    const j = await resp.json();
+    syncApiThere = true;
+    syncServerReady = !!j.syncReady;
+    syncUser = j.signedIn ? { name: j.name || '', email: j.email || '' } : null;
+  } catch (e) {
+    syncApiThere = false; syncServerReady = false; syncUser = null;
+  }
+  renderSyncBox();
+}
+
+// Called once the app is on screen.
+async function syncStart() {
+  await syncCheckSession();
+  if (syncUser && syncServerReady) {
+    syncMigrateLegacyIds();
+    syncRun();
+  }
+}
+
+async function syncSignOut() {
+  try { await syncApi('POST', '/api/auth/logout', {}); } catch (e) {}
+  syncUser = null;
+  clearTimeout(syncPushTimer);
+  renderSyncBox();
+  showToast('Signed out. Your tasks stay on this device.');
+}
+
+/* ---- the "Account & sync" box in Settings ---- */
+
+function renderSyncBox() {
+  const box = document.getElementById('syncBox');
+  if (!box) return;
+  let html = '';
+  if (syncApiThere === null) {
+    html = '<div class="sync-status">Checking&hellip;</div>';
+  } else if (!syncApiThere) {
+    html = '<div class="sync-status">Sign-in isn\'t available when the page is opened this way.</div>';
+  } else if (!syncServerReady) {
+    html = '<div class="sync-status">Syncing isn\'t set up on this site yet. Your tasks are saved on this device only.</div>';
+  } else if (!syncUser) {
+    html = '<div class="sync-status">Sign in with Google to keep your tasks, fixed events, labels, quotes, and settings the same on your phone and your computer. Each device keeps its own layout.</div>' +
+           '<div class="sync-actions"><a class="sync-signin" href="/api/auth/login">Sign in with Google</a></div>';
+  } else {
+    let status;
+    if (syncStatus === 'syncing') status = 'Syncing&hellip;';
+    else if (syncStatus === 'offline') status = 'You\'re offline. Your changes will sync when you\'re back online.';
+    else if (syncStatus === 'too-big') status = 'Your data is too big to sync. Try removing some old tasks or events.';
+    else if (syncStatus === 'error') status = 'Couldn\'t sync just now. It will try again.';
+    else status = syncLastOk ? ('Up to date. Last synced ' + escapeHtml(new Date(syncLastOk).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })) + '.') : 'Up to date.';
+    html = '<div class="sync-who">Signed in as <strong>' + escapeHtml(syncUser.name || 'you') + '</strong>' + (syncUser.email ? ' (' + escapeHtml(syncUser.email) + ')' : '') + '</div>' +
+           '<div class="sync-status' + ((syncStatus === 'error' || syncStatus === 'too-big') ? ' bad' : '') + '">' + status + '</div>' +
+           '<div class="sync-actions"><button type="button" class="icon-btn" onclick="syncRun()">Sync now</button><button type="button" class="icon-btn" onclick="syncSignOut()">Sign out</button></div>';
+  }
+  box.innerHTML = html;
+}
+
+/* ---- first visit on a device that has no profile yet ---- */
+
+async function bootWithoutProfile() {
+  await syncCheckSession();
+  if (syncUser && syncServerReady) {
+    // Already signed in (for example right after coming back from Google): load the account's data first.
+    syncMigrateLegacyIds();
+    await syncRun();
+    if (!localStorage.getItem('flowgrove_profile')) {
+      const first = String(syncUser.name || '').split(' ')[0] || 'Friend';
+      localStorage.setItem('flowgrove_profile', JSON.stringify({ nickname: first }));
+      syncMeta.profileAt = Date.now(); syncMeta.dirty = true; syncSeq++;
+      syncRebuildBaselines(); saveSyncMeta();
+    }
+    startApp();
+    syncRun();
+    return;
+  }
+  if (syncApiThere && syncServerReady) {
+    document.getElementById('welcomeOverlay').classList.add('show'); // offer sign-in, or continue without an account
+  } else {
+    window.location.href = 'account-setup.html'; // no sign-in on this site: the original way
+  }
+}
+
+/* ---- keep things in sync while the page is open ---- */
+
+setInterval(function() { if (syncUser && document.visibilityState === 'visible') syncRun(); }, 20000);
+document.addEventListener('visibilitychange', function() { if (document.visibilityState === 'visible' && syncUser) syncRun(); });
+window.addEventListener('online', function() { if (syncUser) syncRun(); });
+window.addEventListener('pagehide', function() { // leaving the page with an unsaved change: send it on the way out
+  if (!syncUser || !syncMeta.dirty || !syncServerReady) return;
+  try {
+    fetch('/api/sync', { method: 'PUT', keepalive: true, credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'X-Flowgrove': '1' }, body: JSON.stringify({ baseRev: syncMeta.rev, data: syncSnapshot() }) });
+  } catch (e) {}
+});
+
+// first run on this device: remember how things look now, so only real changes count as changes
+if (!syncMeta.baseline) { syncRebuildBaselines(); saveSyncMeta(); }
+syncInitDone = true;
+
 function personalizeQuote(text) {
   if (text.indexOf('{name}') === -1) return text;
   const profile = JSON.parse(localStorage.getItem('flowgrove_profile') || 'null');
@@ -3197,7 +4023,8 @@ function toggleBreak() {
       const totalSec = Math.floor((Date.now() - breakStart) / 1000);
       const mins = Math.floor(totalSec / 60);
       const secs = totalSec % 60;
-      btn.textContent = "I'm on break - " + mins + ":" + (secs < 10 ? '0' : '') + secs;
+      const clockText = mins + ':' + (secs < 10 ? '0' : '') + secs;
+      setBreakLabel("I'm on break - " + clockText, clockText);
     }, 1000);
   } else {
     endManualBreak();
@@ -3207,6 +4034,12 @@ function toggleBreak() {
 
 // Ends the break you started with the break button, and records it. Returns the break's key (or null if it was
 // shorter than a minute). Also used when you start a clock or tick a task while the break is still on.
+// On a computer the break button says the long text; on a phone it is just the cup and, during a break, the time.
+function setBreakLabel(longText, shortText) {
+  document.getElementById('breakLong').textContent = longText;
+  document.getElementById('breakShort').textContent = shortText;
+}
+
 function endManualBreak() {
   const btn = document.getElementById('breakBtn');
   breakActive = false;
@@ -3214,7 +4047,7 @@ function endManualBreak() {
   btn.classList.remove('on');
   btn.style.background = '';
   btn.style.color = '';
-  btn.textContent = 'Click me to have an auto break';
+  setBreakLabel('Click me to have an auto break', '');
   workState.markerAt = Date.now(); saveWork(); // break over: assume you're starting your next task now
   const endMin = nowMinutesSinceMidnight();
   if (endMin > breakStartMin) {
@@ -3933,7 +4766,11 @@ function renderTaskList(sched) {
     li.appendChild(span);
     const btn = document.createElement('button'); btn.className = 'remove'; btn.textContent = 'Remove';
     btn.onclick = function() { removeTask(t.id); };
-    li.appendChild(btn);
+    const mv = document.createElement('button'); mv.className = 'move-btn'; mv.textContent = 'Tomorrow';
+    mv.onclick = function() { moveToTomorrow(t.id); };
+    const actions = document.createElement('span'); actions.className = 'row-actions';
+    actions.appendChild(mv); actions.appendChild(btn);
+    li.appendChild(actions);
     ul.appendChild(li);
   });
 
@@ -3967,7 +4804,7 @@ function renderTomorrow() {
   const ul = document.getElementById('tomorrowListUI');
   const list = tasks.filter(function(t) { return t.tomorrow; });
   ul.innerHTML = list.map(function(t) {
-    return '<li draggable="true" data-task-id="' + t.id + '" style="padding:4px 0;border-bottom:1px solid var(--border);cursor:grab;">' + escapeHtml(t.title) + '</li>';
+    return '<li draggable="true" data-task-id="' + t.id + '" style="display:flex;justify-content:space-between;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid var(--border);cursor:grab;"><span>' + escapeHtml(t.title) + '</span><button type="button" class="move-btn" style="margin-right:0;" onclick="bringBack(' + t.id + ')">Today</button></li>';
   }).join('');
   document.getElementById('tomorrowEmpty').style.display = list.length ? 'none' : 'block';
 
@@ -3990,6 +4827,8 @@ function updateProgress() {
 
 function openSettings() {
   document.getElementById('settingsOverlay').classList.add('show');
+  renderLayoutSettings();
+  renderSyncBox();
   document.getElementById('themeSelect').value = settings.theme;
   document.getElementById('primaryColor').value = settings.primary;
   document.getElementById('secondaryColor').value = settings.secondary;
@@ -4184,8 +5023,9 @@ function saveSettings() {
 
   const nickname = document.getElementById('settingsNickname').value.trim();
   const profile = JSON.parse(localStorage.getItem('flowgrove_profile') || 'null');
-  if (profile) { profile.nickname = nickname; localStorage.setItem('flowgrove_profile', JSON.stringify(profile)); }
+  if (profile && profile.nickname !== nickname) { profile.nickname = nickname; localStorage.setItem('flowgrove_profile', JSON.stringify(profile)); syncMarkProfile(); }
 
+  syncMarkSettings();
   localStorage.setItem('flowgrove_settings', JSON.stringify(settings));
   closeSettings();
   render(); // working hours may have changed, so re-check what fits today
@@ -4200,8 +5040,15 @@ function exportData() {
   a.click();
 }
 
-function deleteAccount() {
+async function deleteAccount() {
   if (!confirm('This clears all local Flowgrove data on this device. Continue?')) return;
+  if (syncUser) {
+    // Signed in: the online copy would bring everything straight back, so ask about it.
+    if (confirm('You are signed in. Also delete your online copy?\n\nOK = delete it too (your tasks will be gone from your other devices as well).\nCancel = keep the online copy.')) {
+      try { await syncApi('DELETE', '/api/sync'); } catch (e) {}
+    }
+    try { await syncApi('POST', '/api/auth/logout', {}); } catch (e) {}
+  }
   localStorage.clear();
   window.location.href = 'account-setup.html';
 }
@@ -4217,7 +5064,7 @@ const TUTORIAL_STEPS = [
   { target: '#prioritySeg', title: "Go however feels fastest", text: "Up top, choose 1 for Task or 2 for Event. Events are for fixed things like Lunch or Pick up, not synced from Google Calendar, just yours. Click an event to edit it, or drag it to a new time anytime. For priority, click Top, Medium, or Low, or just type 1, 2, or 3, totally up to you! Time and motivation work the same way, type a number or tap the arrow keys. Checkboxes toggle with a click or a quick tap of the Space bar. Hit Enter to hop to the next field, or Tab to go back a step." },
   { target: '[data-tut="scheduleGrid"]', title: "How your day gets ordered", text: "Priority comes first, then time estimate, then motivation as the tiebreaker. If an event is in the way, a long task pauses for it and finishes afterward, and short breaks and longer breaks are tucked in automatically after stretches of work. The list on the right is always in the same order as your schedule." },
   { target: '#grid .block.task .task-checkbox-wrap', fallback: '[data-tut="scheduleGrid"]', title: "Completing a task", text: "Tick the little checkbox on a task when you're done. It turns into a finished block, confetti rains down, and the rest of your day adjusts automatically. (If you'd rather skip the confetti, you can turn it off in Settings.)" },
-  { target: '#grid .block.task .task-edit-btn', fallback: '[data-tut="scheduleGrid"]', title: "Editing a task", text: "Tap the pencil on the right side of a task to change its name, time, priority, label, or repeat." },
+  { target: '#grid .block.task .task-edit-btn', fallback: '[data-tut="scheduleGrid"]', title: "Editing a task", text: "Tap the pencil on the right side of a task to change its name, time, priority, label, or repeat, or to delete it." },
   { target: '#grid .block.task', fallback: '[data-tut="scheduleGrid"]', title: "Right-click for details", text: "Right-click a task to see how many minutes you've worked on it out of its total, its time slot, its priority and motivation, and whether it repeats." },
   { target: '#clockPanel', before: tutorialShowClockPanel, title: "Timer and Stopwatch", text: "Click a task (not its checkbox or pencil) and its clock opens here. The Timer counts down from the task's time, and you can change the length. The Stopwatch counts up, and you can mark Laps and rename them. Start turns into Pause, Reset starts over, and the timer rings when it reaches zero (pick the sound in Settings). Only one clock runs at a time. While a clock is open, Enter or Space starts and pauses it, and L marks a lap on the stopwatch." },
   { target: '[data-tut="breakBtn"]', title: "Need a breather?", text: "Tap this anytime for an instant break. It also pauses any running timer or stopwatch, so press Start on your clock when you're back. It keeps time for you, and you tap it again whenever you're ready to jump back in." },
@@ -4227,6 +5074,7 @@ const TUTORIAL_STEPS = [
   { target: null, title: "That's it, you're ready!", text: "Go ahead and start adding your day. You can always pull this tour back up with the Tutorial button whenever you want a refresher." }
 ];
 let tutStep = 0;
+let tutHiddenTries = 0;
 
 function startTutorial() {
   // Make sure both side panels are open so every tutorial step has something to point at.
@@ -4242,6 +5090,7 @@ function endTutorial() {
   localStorage.setItem('flowgrove_tutorial_seen', 'true');
 }
 function nextTutorialStep() {
+  tutHiddenTries = 0;
   tutStep++;
   if (tutStep >= TUTORIAL_STEPS.length) { endTutorial(); return; }
   showTutorialStep();
@@ -4257,6 +5106,8 @@ function showTutorialStep() {
     let el = document.querySelector(step.target);
     if (!el && step.fallback) el = document.querySelector(step.fallback);
     if (el && el.getBoundingClientRect().width === 0 && el.getBoundingClientRect().height === 0) {
+      tutHiddenTries++;
+      if (tutHiddenTries > 6) { tutHiddenTries = 0; nextTutorialStep(); return; } // not on screen here: skip this step
       // Not actually rendered/visible yet (e.g. layout hasn't settled). Retry
       // shortly rather than positioning the card at a broken (0,0) spot.
       setTimeout(showTutorialStep, 150);
@@ -4351,12 +5202,11 @@ function checkDayRollover() {
 // Require account setup before showing the schedule. If no profile exists yet
 // on this device, send the person to account-setup.html first. Once that's
 // done and they land back here, the tutorial (below) layers on top automatically.
-if (!localStorage.getItem('flowgrove_profile')) {
-  window.location.href = 'account-setup.html';
-} else {
+function startApp() {
   checkDayRollover();
   repairFinishedTasks();
   applyColorsToPage();
+  applyLayout();
   applySidebars();
   updateRail();
   refreshLabelUI();
@@ -4372,6 +5222,12 @@ if (!localStorage.getItem('flowgrove_profile')) {
   if (params.get('calendar_connected') === '1') {
     setTimeout(function() { alert('Google Calendar connected!'); }, 300);
     window.history.replaceState({}, '', 'index.html');
+  } else if (params.get('signed_in') === '1') {
+    setTimeout(function() { showToast('Signed in. Your tasks will sync.'); }, 400);
+    window.history.replaceState({}, '', 'index.html');
+  } else if (params.get('login_error')) {
+    setTimeout(function() { alert('Sign-in didn\'t work (' + params.get('login_error') + '). Please try again.'); }, 300);
+    window.history.replaceState({}, '', 'index.html');
   } else if (params.get('calendar_error')) {
     setTimeout(function() { alert('Google Calendar connection failed (' + params.get('calendar_error') + '). Please try again.'); }, 300);
     window.history.replaceState({}, '', 'index.html');
@@ -4380,6 +5236,13 @@ if (!localStorage.getItem('flowgrove_profile')) {
   if (!localStorage.getItem('flowgrove_tutorial_seen')) {
     setTimeout(startTutorial, 400);
   }
+}
+
+if (!localStorage.getItem('flowgrove_profile')) {
+  bootWithoutProfile(); // signed in already? load the account. Otherwise offer sign-in (or the old setup page)
+} else {
+  startApp();
+  syncStart();
 }
 </script>
 

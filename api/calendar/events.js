@@ -1,5 +1,7 @@
-// Returns the signed-in user's Google Calendar events, from ALL of the calendars they have
-// switched on in Google Calendar (their own, school, family, holidays, ...), for a time range.
+// Returns the signed-in user's Google Calendar events, from ALL of their calendars (their own, school, family,
+// holidays, shared ones, ...), for a time range. Calendars that are switched off in Google Calendar are included
+// too, flagged defaultOn: false, so the page can offer them as a switch. Every page of results is read (a busy
+// calendar has far more than one page), and invitations you declined are included, flagged declined: true.
 // Reads tokens from the HTTP-only cookies set by /api/auth/callback. If the access token has
 // expired, the refresh token is used to get a new one automatically.
 //
@@ -15,9 +17,10 @@
 //   GOOGLE_CLIENT_ID
 //   GOOGLE_CLIENT_SECRET
 
-const API_VERSION = 4;
-const MAX_RANGE_MS = 62 * 24 * 60 * 60 * 1000; // never more than ~2 months in one request
-const MAX_CALENDARS = 15;
+const API_VERSION = 5;
+const MAX_RANGE_MS = 70 * 24 * 60 * 60 * 1000; // never more than ~10 weeks in one request
+const MAX_CALENDARS = 25;
+const MAX_PAGES = 12;        // up to 12 pages of 2500 events, per calendar (far more than anyone has)
 
 function safeDecode(v) {
   try { return decodeURIComponent(v); } catch (e) { return v; }
@@ -120,62 +123,79 @@ export default async function handler(req, res) {
     if (listResp.ok) {
       const listData = await listResp.json();
       calendars = (listData.items || [])
-        .filter(function(c) { return c.selected || c.primary; })
+        .filter(function(c) { return !c.hidden; })
         .map(function(c) {
-          return { id: c.id, name: c.summaryOverride || c.summary || c.id, color: c.backgroundColor || '#347CFE', primary: !!c.primary };
-        });
+          return { id: c.id, name: c.summaryOverride || c.summary || c.id, color: c.backgroundColor || '#347CFE', primary: !!c.primary, defaultOn: !!(c.selected || c.primary) };
+        })
+        .sort(function(a, b) { return (b.defaultOn ? 1 : 0) - (a.defaultOn ? 1 : 0); }); // switched-on calendars first
     } else {
       // Older, narrower permission (can read events but not the list of calendars): main calendar only.
       limitedScope = true;
     }
-    if (!calendars.length) calendars = [{ id: 'primary', name: 'Primary calendar', color: '#347CFE', primary: true }];
+    if (!calendars.length) calendars = [{ id: 'primary', name: 'Primary calendar', color: '#347CFE', primary: true, defaultOn: true }];
     calendars = calendars.slice(0, MAX_CALENDARS);
 
-    // 2. Events from every one of those calendars, at the same time.
-    const params = new URLSearchParams({
+    // 2. Events from every one of those calendars, at the same time. A calendar answers in pages, so keep asking
+    //    until there are no more pages: otherwise a busy calendar loses everything after its first page.
+    const baseParams = {
       timeMin: new Date(minMs).toISOString(),
       timeMax: new Date(maxMs).toISOString(),
       singleEvents: 'true',
       orderBy: 'startTime',
-      maxResults: '250'
-    });
-    const results = await Promise.all(calendars.map(async function(cal) {
+      maxResults: '2500'
+    };
+    async function readCalendar(cal) {
+      const items = [];
+      let pageToken = null;
+      let truncated = false;
       try {
-        const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(cal.id)}/events?${params.toString()}`;
-        const resp = await googleGet(url, accessToken);
-        if (!resp.ok) return { cal: cal, error: resp.status };
-        const data = await resp.json();
-        return { cal: cal, items: data.items || [] };
+        for (let page = 0; page < MAX_PAGES; page++) {
+          const params = new URLSearchParams(baseParams);
+          if (pageToken) params.set('pageToken', pageToken);
+          const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(cal.id)}/events?${params.toString()}`;
+          const resp = await googleGet(url, accessToken);
+          if (!resp.ok) return { cal: cal, error: resp.status };
+          const data = await resp.json();
+          (data.items || []).forEach(function(it) { items.push(it); });
+          pageToken = data.nextPageToken || null;
+          if (!pageToken) break;
+          if (page === MAX_PAGES - 1) truncated = true;
+        }
       } catch (e) {
         return { cal: cal, error: 'network' };
       }
-    }));
+      return { cal: cal, items: items, truncated: truncated };
+    }
+    const results = await Promise.all(calendars.map(readCalendar));
 
     const events = [];
     const failedCalendars = [];
+    const truncatedCalendars = [];
+    const counts = {};
     results.forEach(function(r) {
       if (r.error) { failedCalendars.push(r.cal.name); return; }
+      if (r.truncated) truncatedCalendars.push(r.cal.name);
+      counts[r.cal.id] = 0;
       r.items
         .filter(function(ev) { return ev.start && (ev.start.dateTime || ev.start.date); })
         .filter(function(ev) { return ev.status !== 'cancelled' && ev.eventType !== 'workingLocation'; })
-        .filter(function(ev) {
-          // Skip invitations you've declined.
-          const me = (ev.attendees || []).find(function(a) { return a.self; });
-          return !(me && me.responseStatus === 'declined');
-        })
         .forEach(function(ev) {
+          const me = (ev.attendees || []).find(function(a) { return a.self; });
+          counts[r.cal.id]++;
           events.push({
+            id: ev.id || null,
             calId: r.cal.id,
             title: ev.summary || '(No title)',
             colorId: ev.colorId || null, // an event can have its own color, different from its calendar's
             allDay: !ev.start.dateTime,
+            declined: !!(me && me.responseStatus === 'declined'), // shown, but it doesn't block your time
             start: ev.start.dateTime || ev.start.date,
             end: (ev.end && (ev.end.dateTime || ev.end.date)) || ev.start.dateTime || ev.start.date
           });
         });
     });
 
-    send({ connected: true, limitedScope: limitedScope, calendars: calendars, failedCalendars: failedCalendars, events: events });
+    send({ connected: true, limitedScope: limitedScope, calendars: calendars, failedCalendars: failedCalendars, truncatedCalendars: truncatedCalendars, counts: counts, events: events });
   } catch (err) {
     send({ connected: false, events: [], calendars: [], error: 'server_error' });
   }

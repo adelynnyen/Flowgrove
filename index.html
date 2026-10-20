@@ -112,14 +112,13 @@
   .block.compact .title { line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .block.compact .meta { display: none; }
   .block.task.compact { padding-left: 26px; padding-right: 26px; }
-  .block.task.worked.compact { padding-left: 8px; padding-right: 8px; }
   .block.compact .task-edit-btn { top: 0; right: 5px; font-size: 13px; padding: 1px 4px; }
   .block.compact .task-checkbox-wrap { top: 2px; left: 6px; }
   .block.compact .task-checkbox-wrap input { margin: 0; width: 13px; height: 13px; }
   .block.break-block { background: #f0ebf8; border: 1px dashed #b7a5d9; color: #5d4e78; }
   .block.break-block .title { font-size: 11px; font-weight: 500; }
   .block.task { border-color: transparent; cursor: pointer; padding-left: 30px; padding-right: 30px; }
-  .block.task.worked { padding-left: 9px; padding-right: 9px; cursor: pointer; }
+  .worked-tag { font-weight: 400; font-size: 0.82em; opacity: 0.65; }
   .task-edit-btn { position: absolute; top: 4px; right: 8px; border: none; background: none; cursor: pointer; font-size: 15px; line-height: 1; color: inherit; opacity: 0.7; padding: 3px 5px; border-radius: 6px; z-index: 2; }
   .task-edit-btn:hover { opacity: 1; background: rgba(0,0,0,0.10); }
   .block.task.completed { opacity: 0.45; text-decoration: line-through; }
@@ -229,6 +228,9 @@
   .tick.hit { background: var(--tertiary); }
   .saying-toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 10px 16px; border-radius: 30px; font-size: 13px; box-shadow: 0 4px 14px rgba(0,0,0,0.2); z-index: 300; opacity: 0; pointer-events: none; transition: opacity 0.4s ease; max-width: 90vw; text-align: center; }
   .saying-toast.show { opacity: 1; }
+  .saying-toast.has-action { pointer-events: auto; display: flex; align-items: center; gap: 12px; }
+  .toast-undo { background: none; border: 1px solid rgba(255,255,255,0.7); color: #fff; border-radius: 14px; padding: 2px 12px; font-family: 'Lora', serif; font-size: 12.5px; font-weight: 700; cursor: pointer; }
+  .toast-undo:hover { background: rgba(255,255,255,0.18); }
   .modal-overlay { position: fixed; inset: 0; background: rgba(28,43,34,0.35); display: none; align-items: flex-start; justify-content: center; padding: 40px 16px; overflow-y: auto; z-index: 200; }
   .modal-overlay.show { display: flex; }
   .modal { background: #fff; border-radius: 12px; padding: 24px; width: 100%; max-width: 460px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
@@ -325,6 +327,7 @@
 
     .schedule-panel { padding: 10px 8px 14px; }
     .schedule-header { flex-wrap: wrap; gap: 4px 8px; }
+    .view-nav .icon-btn { padding: 3px 8px; font-size: 12px; }
     .schedule-header h2 { font-size: 13.5px; }
     .progress-pill { font-size: 10px; padding: 2px 7px; white-space: nowrap; }
     #nowLineLabel { font-size: 8.5px; white-space: nowrap; }
@@ -374,8 +377,20 @@
   .sync-status { font-size: 12px; color: var(--ink-soft); margin: 4px 0 2px; }
   .sync-status.bad { color: #a3372f; }
   .sync-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  .sync-actions a.icon-btn { text-decoration: none; display: inline-block; color: inherit; }
+  .sync-accounts-title { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; color: var(--ink-soft); margin: 12px 0 2px; }
+  .sync-acct { display: flex; align-items: center; gap: 6px; padding: 4px 0; font-size: 13px; flex-wrap: wrap; }
+  .sync-acct-email { flex: 1 1 auto; word-break: break-all; }
+  .sync-tag { font-size: 10.5px; background: var(--accent-light); color: var(--accent-dark); border-radius: 999px; padding: 1px 8px; }
   .sync-signin, .welcome-primary { display: inline-block; background: var(--tertiary); color: #fff; border-radius: 8px; padding: 8px 14px; font-family: 'Lora', serif; font-size: 13px; font-weight: 600; text-decoration: none; text-align: center; }
   .welcome-primary { display: block; padding: 11px 14px; font-size: 14px; }
+
+  /* ---- moving between weeks and months; declined invitations; calendar counts ---- */
+  .view-nav { display: inline-flex; gap: 6px; align-items: center; }
+  .view-nav .icon-btn { padding: 4px 10px; font-size: 13px; }
+  .schedule-header h2 { min-width: 0; }
+  .declined-ev { opacity: 0.55; text-decoration: line-through; }
+  .cal-count { font-size: 11px; color: var(--ink-soft); margin-left: 4px; }
 </style>
 </head>
 <body>
@@ -446,17 +461,17 @@
     </div>
 
     <div class="panel schedule-panel" id="weekdaysView" style="display:none;">
-      <div class="schedule-header"><h2>This Week's Weekdays</h2></div>
+      <div class="schedule-header"><h2 id="weekdaysTitle">This Week's Weekdays</h2><span class="view-nav"><button type="button" class="icon-btn" onclick="shiftWeek(-1)" aria-label="Previous week">&lsaquo;</button><button type="button" class="icon-btn" onclick="shiftWeek(0)">This week</button><button type="button" class="icon-btn" onclick="shiftWeek(1)" aria-label="Next week">&rsaquo;</button></span></div>
       <div class="week-grid" id="weekdaysGrid"></div>
     </div>
 
     <div class="panel schedule-panel" id="weekView" style="display:none;">
-      <div class="schedule-header"><h2>This Week</h2></div>
+      <div class="schedule-header"><h2 id="weekTitle">This Week</h2><span class="view-nav"><button type="button" class="icon-btn" onclick="shiftWeek(-1)" aria-label="Previous week">&lsaquo;</button><button type="button" class="icon-btn" onclick="shiftWeek(0)">This week</button><button type="button" class="icon-btn" onclick="shiftWeek(1)" aria-label="Next week">&rsaquo;</button></span></div>
       <div class="week-grid" id="weekGrid"></div>
     </div>
 
     <div class="panel schedule-panel" id="monthView" style="display:none;">
-      <div class="schedule-header"><h2 id="monthTitle">This Month</h2></div>
+      <div class="schedule-header"><h2 id="monthTitle">This Month</h2><span class="view-nav"><button type="button" class="icon-btn" onclick="shiftMonth(-1)" aria-label="Previous month">&lsaquo;</button><button type="button" class="icon-btn" onclick="shiftMonth(0)">This month</button><button type="button" class="icon-btn" onclick="shiftMonth(1)" aria-label="Next month">&rsaquo;</button></span></div>
       <div class="month-grid month-header-row">
         <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
       </div>
@@ -790,6 +805,7 @@
 
 <script>
 let events = []; // populated by loadGoogleCalendarEvents() below; empty until connected
+let eventsDeclined = []; // today's invitations you declined: shown dimmed, but they don't block your time
 
 // Local date as YYYY-MM-DD. IMPORTANT: this uses the device's own clock/timezone.
 // (toISOString() gives the UTC date, which flips to "tomorrow" every evening in Houston.)
@@ -821,8 +837,28 @@ function localEventOnDate(ev, dayKey, abbrev) {
   return ev.createdDate === dayKey;
 }
 
-function showToast(msg) {
+// A message with an Undo button (used when you delete something). It stays a little longer than a plain message.
+let undoToastActive = false; // while an Undo message is showing, other messages wait their turn (they can't push it away)
+function showUndoToast(msg, undoFn) {
   const t = document.getElementById('infoToast');
+  undoToastActive = true;
+  t.innerHTML = '<span class="toast-msg"></span><button type="button" class="toast-undo">Undo</button>';
+  t.querySelector('.toast-msg').textContent = msg;
+  t.querySelector('.toast-undo').onclick = function() {
+    clearTimeout(window._toastTimer);
+    t.classList.remove('show', 'has-action');
+    undoToastActive = false;
+    undoFn();
+  };
+  t.classList.add('show', 'has-action');
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(function() { t.classList.remove('show', 'has-action'); undoToastActive = false; }, 8000);
+}
+
+function showToast(msg) {
+  if (undoToastActive) return; // an Undo message is on screen: don't replace it
+  const t = document.getElementById('infoToast');
+  t.classList.remove('has-action');
   t.textContent = msg;
   t.classList.add('show');
   clearTimeout(window._toastTimer);
@@ -841,7 +877,7 @@ let googleCalendars = [];   // [{ id, name, color, primary }]
 let googleAll = [];         // every event in the loaded range: { calId, title, allDay, start, end, color, calName }
 let hiddenCalendars = JSON.parse(localStorage.getItem('flowgrove_hidden_calendars') || 'null') || [];
 let calendarStatus = { message: '', needsReconnect: false };
-const CALENDAR_API_VERSION = 4;
+const CALENDAR_API_VERSION = 5;
 const GOOGLE_BLUE = '#347CFE'; // every Google event on the Day, Weekdays and Week views (52, 124, 254)
 // Google Calendar's own colors for an event that has a color of its own (colorId 1 to 11). Used on the Month view.
 const GOOGLE_EVENT_COLORS = { '1': '#7986cb', '2': '#33b679', '3': '#8e24aa', '4': '#e67c73', '5': '#f6bf26', '6': '#f4511e', '7': '#039be5', '8': '#616161', '9': '#3f51b5', '10': '#0b8043', '11': '#d50000' };
@@ -860,7 +896,15 @@ function shortTime(mins) {
   return h + (m ? ':' + (m < 10 ? '0' : '') + m : '') + ap;
 }
 
-function calendarVisible(calId) { return hiddenCalendars.indexOf(calId) === -1; }
+// A calendar shows unless you switched it off here. Calendars that are off in Google Calendar itself start off
+// here too, but they are listed in Settings so you can turn them on.
+let shownCalendars = JSON.parse(localStorage.getItem('flowgrove_shown_calendars') || 'null') || [];
+function calendarVisible(calId) {
+  if (hiddenCalendars.indexOf(calId) !== -1) return false;
+  if (shownCalendars.indexOf(calId) !== -1) return true;
+  const c = googleCalendars.find(function(x) { return x.id === calId; });
+  return !c || c.defaultOn !== false;
+}
 
 // The span of days loaded: the whole current month plus the current week (they can overlap two months).
 function calendarRange() {
@@ -874,19 +918,23 @@ function calendarRange() {
 }
 
 // Today's timed Google events, as minutes since midnight (the day planner schedules around these).
+// Invitations you declined go in their own list: they are shown, but they don't take up your time.
 function rebuildTodayEvents() {
   const dayStart = new Date(); dayStart.setHours(0, 0, 0, 0);
   const dayEnd = new Date(dayStart); dayEnd.setDate(dayEnd.getDate() + 1);
   events = [];
+  eventsDeclined = [];
   googleAll.forEach(function(e) {
     if (e.allDay || !calendarVisible(e.calId)) return;
     const s = new Date(e.start), en = new Date(e.end);
-    if (en <= dayStart || s >= dayEnd) return;
+    if (en < dayStart || s >= dayEnd) return;
     const startMin = Math.max(0, Math.round((s - dayStart) / 60000));
-    const endMin = Math.min(1440, Math.round((en - dayStart) / 60000));
-    if (endMin > startMin) events.push({ title: e.title, color: e.color, calName: e.calName, calId: e.calId, startMin: startMin, endMin: endMin });
+    let endMin = Math.min(1440, Math.round((en - dayStart) / 60000));
+    if (endMin <= startMin) endMin = Math.min(1440, startMin + 15); // an event with no length still gets a visible block
+    if (endMin > startMin) (e.declined ? eventsDeclined : events).push({ title: e.title, color: e.color, calName: e.calName, calId: e.calId, startMin: startMin, endMin: endMin, declined: !!e.declined });
   });
   events.sort(function(a, b) { return a.startMin - b.startMin; });
+  eventsDeclined.sort(function(a, b) { return a.startMin - b.startMin; });
 }
 
 // All Google events on one calendar day: all-day ones (shown first everywhere) and timed ones.
@@ -903,10 +951,11 @@ function googleOnDay(dateObj) {
       if (e.start <= dayKey && (lastExclusive ? dayKey < lastExclusive : dayKey === e.start)) allDay.push(e);
     } else {
       const s = new Date(e.start), en = new Date(e.end);
-      if (en <= dayStart || s >= dayEnd) return;
+      if (en < dayStart || s >= dayEnd) return;
       const startMin = Math.max(0, Math.round((s - dayStart) / 60000));
-      const endMin = Math.min(1440, Math.round((en - dayStart) / 60000));
-      if (endMin > startMin) timed.push({ title: e.title, color: e.color, monthColor: e.monthColor, calName: e.calName, calId: e.calId, startMin: startMin, endMin: endMin });
+      let endMin = Math.min(1440, Math.round((en - dayStart) / 60000));
+      if (endMin <= startMin) endMin = Math.min(1440, startMin + 15); // an event with no length still gets a visible block
+      if (endMin > startMin) timed.push({ title: e.title, color: e.color, monthColor: e.monthColor, calName: e.calName, calId: e.calId, startMin: startMin, endMin: endMin, declined: !!e.declined });
     }
   });
   timed.sort(function(a, b) { return a.startMin - b.startMin; });
@@ -920,11 +969,19 @@ function refreshVisibleViews() {
   if (document.getElementById('monthView').style.display === 'block') renderMonth();
 }
 
-function loadGoogleCalendarEvents() {
+let googleLoading = 0; // how many calendar loads are in progress
+function googleEventStartMs(e) { return e.allDay ? new Date(e.start + 'T00:00:00').getTime() : Date.parse(e.start); }
+
+// Loads Google events for a span of dates (default: the current month plus the current week) and merges them into
+// what is already loaded, so moving between weeks and months keeps everything you've seen. Asking Google for the
+// dates you are LOOKING at is what makes every event show up on every view.
+function loadGoogleCalendarEvents(range) {
   // Ask Google for this device's own days (midnight to midnight in YOUR timezone). The server runs
   // on UTC, so it can't be trusted to work out where your day starts.
-  const range = calendarRange();
+  range = range || calendarRange();
+  const rangeStart = range.start.getTime(), rangeEnd = range.end.getTime();
   const url = '/api/calendar/events?timeMin=' + encodeURIComponent(range.start.toISOString()) + '&timeMax=' + encodeURIComponent(range.end.toISOString());
+  googleLoading++;
   fetch(url)
     .then(function(r) { return r.json(); })
     .then(function(data) {
@@ -934,18 +991,24 @@ function loadGoogleCalendarEvents() {
         googleCalendars = data.calendars || [];
         const byId = {};
         googleCalendars.forEach(function(c) { byId[c.id] = c; });
-        googleAll = (data.events || []).map(function(e) {
+        const fresh = (data.events || []).map(function(e) {
           const c = byId[e.calId] || {};
           // color = what Day/Weekdays/Week show. monthColor = the exact color Google Calendar shows (the event's own color, else its calendar's).
-          return { calId: e.calId, title: e.title, allDay: !!e.allDay, start: e.start, end: e.end, color: GOOGLE_BLUE, monthColor: GOOGLE_EVENT_COLORS[e.colorId] || c.color || GOOGLE_BLUE, calName: c.name || 'Google Calendar' };
+          return { key: e.calId + '|' + (e.id || e.title) + '|' + e.start, calId: e.calId, title: e.title, allDay: !!e.allDay, declined: !!e.declined, start: e.start, end: e.end, color: GOOGLE_BLUE, monthColor: GOOGLE_EVENT_COLORS[e.colorId] || c.color || GOOGLE_BLUE, calName: c.name || 'Google Calendar' };
         });
+        // what was loaded before for these dates is replaced (so changes and deletions show up); everything else stays
+        const kept = googleAll.filter(function(e) { const t = googleEventStartMs(e); return !(t >= rangeStart && t < rangeEnd); });
+        const seen = {};
+        googleAll = kept.concat(fresh).filter(function(e) { if (seen[e.key]) return false; seen[e.key] = true; return true; });
         if (data.apiVersion !== CALENDAR_API_VERSION) {
-          calendarStatus.message = "The calendar files on your website are out of date, so some events may be missing. Upload the newest files from the api folder to GitHub (events.js and google.js), then disconnect and connect again.";
+          calendarStatus.message = "The calendar files on your website are out of date, so some events may be missing. Upload the newest api/calendar/events.js to GitHub, wait a minute, and refresh.";
         } else if (data.limitedScope) {
           calendarStatus.message = 'Only your main calendar is showing. Disconnect, then connect again and allow access to see your school, family and other calendars.';
           calendarStatus.needsReconnect = true;
         } else if (data.failedCalendars && data.failedCalendars.length) {
           calendarStatus.message = "Couldn't load: " + data.failedCalendars.join(', ') + '.';
+        } else if (data.truncatedCalendars && data.truncatedCalendars.length) {
+          calendarStatus.message = 'Some events may be missing: ' + data.truncatedCalendars.join(', ') + ' has more events than could be loaded.';
         }
       } else {
         googleCalendars = []; googleAll = [];
@@ -963,15 +1026,42 @@ function loadGoogleCalendarEvents() {
       // Server unreachable (or not set up here): keep whatever was loaded before.
       calendarStatus.message = calendarConnected ? "Couldn't reach Google Calendar just now. Showing what was loaded earlier." : '';
       updateCalendarConnectionUI();
-    });
+    })
+    .then(function() { googleLoading--; });
 }
+
+// Moving to another week or month: show it right away from what's loaded, and load those dates from Google.
+let weekOffset = 0, monthOffset = 0;
+function viewedMonthStart() { const n = new Date(); return new Date(n.getFullYear(), n.getMonth() + monthOffset, 1); }
+function viewedWeekMonday() {
+  const t = new Date();
+  return new Date(t.getFullYear(), t.getMonth(), t.getDate() - ((t.getDay() + 6) % 7) + weekOffset * 7);
+}
+function loadViewedDates() {
+  if (!calendarConnected) return;
+  let start, end;
+  if (document.getElementById('monthView').style.display === 'block') {
+    const m = viewedMonthStart();
+    start = new Date(m.getFullYear(), m.getMonth(), -6);                 // a week before, to catch events that run into the month
+    end = new Date(m.getFullYear(), m.getMonth() + 1, 8);               // and a week after
+  } else {
+    const mon = viewedWeekMonday();
+    start = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() - 1);
+    end = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() + 8);
+  }
+  loadGoogleCalendarEvents({ start: start, end: end });
+}
+function shiftWeek(delta) { weekOffset = delta === 0 ? 0 : weekOffset + delta; refreshVisibleViews(); loadViewedDates(); }
+function shiftMonth(delta) { monthOffset = delta === 0 ? 0 : monthOffset + delta; refreshVisibleViews(); loadViewedDates(); }
 
 function toggleCalendarVisible(index, on) {
   const cal = googleCalendars[index];
   if (!cal) return;
   hiddenCalendars = hiddenCalendars.filter(function(id) { return id !== cal.id; });
-  if (!on) hiddenCalendars.push(cal.id);
+  shownCalendars = shownCalendars.filter(function(id) { return id !== cal.id; });
+  if (on) shownCalendars.push(cal.id); else hiddenCalendars.push(cal.id);
   localStorage.setItem('flowgrove_hidden_calendars', JSON.stringify(hiddenCalendars));
+  localStorage.setItem('flowgrove_shown_calendars', JSON.stringify(shownCalendars));
   rebuildTodayEvents();
   render();
 }
@@ -981,7 +1071,7 @@ function disconnectGoogleCalendar() {
     calendarConnected = false;
     googleCalendars = []; googleAll = [];
     calendarStatus = { message: '', needsReconnect: false };
-    events = [];
+    events = []; eventsDeclined = [];
     updateCalendarConnectionUI();
     render();
   });
@@ -997,9 +1087,10 @@ function updateCalendarConnectionUI() {
   }
   let html = '<span style="color:var(--tertiary);font-weight:600;">Connected</span> &middot; <button type="button" class="icon-btn" onclick="disconnectGoogleCalendar()">Disconnect</button>' + note;
   if (googleCalendars.length) {
-    html += '<div style="margin:10px 0 4px;font-size:12px;color:var(--ink-soft);">Calendars shown on your schedule:</div>';
+    html += '<div style="margin:10px 0 4px;font-size:12px;color:var(--ink-soft);">Calendars shown on your schedule (and how many events are loaded from each):</div>';
     html += googleCalendars.map(function(c, i) {
-      return '<div class="toggle-row"><span><span class="label-swatch" style="background:' + escapeHtml(c.color) + ';"></span> ' + escapeHtml(c.name) + '</span>' +
+      const n = googleAll.filter(function(e) { return e.calId === c.id; }).length;
+      return '<div class="toggle-row"><span><span class="label-swatch" style="background:' + escapeHtml(c.color) + ';"></span> ' + escapeHtml(c.name) + ' <span class="cal-count">' + n + (n === 1 ? ' event' : ' events') + (c.defaultOn === false ? ' &middot; off in Google Calendar' : '') + '</span></span>' +
         '<input type="checkbox" onchange="toggleCalendarVisible(' + i + ', this.checked)" ' + (calendarVisible(c.id) ? 'checked' : '') + '></div>';
     }).join('');
   }
@@ -1200,14 +1291,15 @@ function switchView(v) {
 }
 
 function renderMonth() {
-  const now = new Date();
-  const year = now.getFullYear(), month = now.getMonth();
-  document.getElementById('monthTitle').textContent = now.toLocaleString('default', { month: 'long', year: 'numeric' });
+  const shown = viewedMonthStart(); // this month, unless you moved with the arrows
+  const year = shown.getFullYear(), month = shown.getMonth();
+  document.getElementById('monthTitle').textContent = shown.toLocaleString('default', { month: 'long', year: 'numeric' });
   buildMonthGrid(year, month);
   const note = document.getElementById('monthNote');
   if (note) {
     let msg = '';
     if (!calendarConnected) msg = 'Connect Google Calendar in Settings to see your calendar events here.' + (calendarStatus.message ? ' ' + calendarStatus.message : '');
+    else if (googleLoading > 0 && !calendarStatus.message) msg = 'Loading your calendar...';
     else if (calendarStatus.message) msg = calendarStatus.message;
     note.textContent = msg;
     note.style.display = msg ? 'block' : 'none';
@@ -1220,7 +1312,7 @@ function itemsForDate(dateObj) {
   const dayKey = localDateStr(dateObj);
   const abbrev = DAY_NAMES[dateObj.getDay()];
   const g = googleOnDay(dateObj);
-  const timed = g.timed.map(function(e) { return { title: e.title, color: e.monthColor, start: e.startMin, startMin: e.startMin, endMin: e.endMin, solid: true, showLength: false }; });
+  const timed = g.timed.map(function(e) { return { title: e.title, color: e.monthColor, start: e.startMin, startMin: e.startMin, endMin: e.endMin, solid: true, showLength: false, declined: e.declined }; });
   localEvents.forEach(function(ev) {
     if (localEventOnDate(ev, dayKey, abbrev)) timed.push({ title: ev.title, color: labelColor(ev.label || 'Fixed Events'), start: ev.startMin, startMin: ev.startMin, endMin: ev.endMin, solid: false, showLength: true });
   });
@@ -1279,13 +1371,13 @@ function buildMonthGrid(year, month) {
       const extra = items.length - shown.length;
       const itemHtml = shown.map(function(it) {
         const style = it.solid ? 'background:' + it.color + ';color:' + readableText(it.color) + ';' : 'background:' + it.color + '33;';
-        return '<div class="month-event-label" style="' + style + '"' + tip({ kind: 'event', title: it.title, startMin: it.startMin, endMin: it.endMin, showLength: it.showLength }) + '>' + escapeHtml(it.title) + '</div>';
+        return '<div class="month-event-label' + (it.declined ? ' declined-ev' : '') + '" style="' + style + '"' + tip({ kind: 'event', title: it.title, startMin: it.startMin, endMin: it.endMin, showLength: it.showLength }) + '>' + escapeHtml(it.title) + '</div>';
       }).join('') + (extra > 0 ? '<div class="month-more">+' + extra + ' more</div>' : '');
       return '<div class="month-cell' + (isToday ? ' today' : '') + '"><div>' + d + '</div>' + spacer + itemHtml + '</div>';
     }).join('') + (bars.length ? '<div class="month-lane">' + bars.map(function(b) {
       const cl = b.e.start < firstKey ? ' cont-left' : '';
       const cr = b.e.end > afterLastKey ? ' cont-right' : '';
-      return '<div class="month-bar' + cl + cr + '" style="grid-column:' + (b.from + 1) + ' / ' + (b.to + 2) + ';grid-row:' + (b.lane + 1) + ';background:' + b.e.monthColor + ';color:' + readableText(b.e.monthColor) + ';"' + tip({ kind: 'allday', ev: b.e }) + '>' + escapeHtml(b.e.title) + '</div>';
+      return '<div class="month-bar' + (b.e.declined ? ' declined-ev' : '') + cl + cr + '" style="grid-column:' + (b.from + 1) + ' / ' + (b.to + 2) + ';grid-row:' + (b.lane + 1) + ';background:' + b.e.monthColor + ';color:' + readableText(b.e.monthColor) + ';"' + tip({ kind: 'allday', ev: b.e }) + '>' + escapeHtml(b.e.title) + '</div>';
     }).join('') + '</div>' : '') + '</div>';
   }
   container.innerHTML = html;
@@ -1305,9 +1397,8 @@ function taskRepeatsOnDay(task, dayAbbrev) {
 // Weeks run Monday to Sunday here, so the "Sun" column is the Sunday at the END of this week.
 function dateObjForDay(dayAbbrev) {
   const targetIdx = (DAY_NAMES.indexOf(dayAbbrev) + 6) % 7; // Mon=0 ... Sun=6
-  const today = new Date();
-  const todayIdx = (today.getDay() + 6) % 7;
-  return new Date(today.getFullYear(), today.getMonth(), today.getDate() + (targetIdx - todayIdx));
+  const mon = viewedWeekMonday(); // the week you are looking at (this week, unless you moved with the arrows)
+  return new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() + targetIdx);
 }
 
 // Weekdays / Week. Top to bottom: the day names, then all-day events as ONE continuous bar across every
@@ -1324,6 +1415,12 @@ function renderWeekGrid(gridId, dayNames) {
   viewTipItems = [];
   function tip(item) { viewTipItems.push(item); return ' oncontextmenu="viewTip(event,' + (viewTipItems.length - 1) + ')"'; }
   const n = dayNames.length;
+  const firstDay = dateObjForDay(dayNames[0]), lastDay = dateObjForDay(dayNames[n - 1]);
+  const titleEl = document.getElementById(gridId === 'weekGrid' ? 'weekTitle' : 'weekdaysTitle');
+  if (titleEl) {
+    const fmt = function(d, withYear) { return d.toLocaleDateString('default', withYear ? { month: 'short', day: 'numeric', year: 'numeric' } : { month: 'short', day: 'numeric' }); };
+    titleEl.textContent = (weekOffset === 0 ? (gridId === 'weekGrid' ? 'This Week' : "This Week's Weekdays") : (gridId === 'weekGrid' ? 'Week' : 'Weekdays')) + ' \u00b7 ' + fmt(firstDay, false) + ' \u2013 ' + fmt(lastDay, true);
+  }
   const todayKey = localDateStr();
   const colsStyle = 'grid-template-columns:repeat(' + n + ',minmax(0,1fr));';
   const days = dayNames.map(function(d) {
@@ -1359,14 +1456,14 @@ function renderWeekGrid(gridId, dayNames) {
     html += '<div class="week-cols week-lane" style="' + colsStyle + '">' + bars.map(function(b) {
       const continuesLeft = b.e.start < days[0].key;
       const continuesRight = b.e.end > afterLastKey;
-      return '<div class="week-bar' + (continuesLeft ? ' cont-left' : '') + (continuesRight ? ' cont-right' : '') + '" style="grid-column:' + (b.from + 1) + ' / ' + (b.to + 2) + ';grid-row:' + (b.lane + 1) + ';background:' + b.e.color + ';color:' + readableText(b.e.color) + ';"' + tip({ kind: 'allday', ev: b.e }) + '>' + escapeHtml(b.e.title) + '</div>';
+      return '<div class="week-bar' + (b.e.declined ? ' declined-ev' : '') + (continuesLeft ? ' cont-left' : '') + (continuesRight ? ' cont-right' : '') + '" style="grid-column:' + (b.from + 1) + ' / ' + (b.to + 2) + ';grid-row:' + (b.lane + 1) + ';background:' + b.e.color + ';color:' + readableText(b.e.color) + ';"' + tip({ kind: 'allday', ev: b.e }) + '>' + escapeHtml(b.e.title) + '</div>';
     }).join('') + '</div>';
   }
 
   html += '<div class="week-cols" style="' + colsStyle + '">' + days.map(function(x) {
     const itemHtml = x.agenda.items.map(function(it) {
       if (it.kind === 'event') {
-        return '<div class="week-task-row" style="background:' + it.color + ';color:' + readableText(it.color) + ';"' + tip({ kind: 'event', title: it.title, startMin: it.start, endMin: it.end, showLength: !it.google }) + '><span class="week-time">' + shortTime(it.start) + '</span> ' + escapeHtml(it.title) + '</div>';
+        return '<div class="week-task-row' + (it.declined ? ' declined-ev' : '') + '" style="background:' + it.color + ';color:' + readableText(it.color) + ';"' + tip({ kind: 'event', title: it.title, startMin: it.start, endMin: it.end, showLength: !it.google }) + '><span class="week-time">' + shortTime(it.start) + '</span> ' + escapeHtml(it.title) + '</div>';
       }
       const t = it.t;
       const style = t.label ? ' style="background:' + labelColor(t.label) + ';color:' + readableText(labelColor(t.label)) + ';"' : '';
@@ -2173,30 +2270,58 @@ function cancelEditTask() {
 // deleted along with all of its repeats.
 function deleteEditing() {
   if (editingTaskId !== null) {
-    const t = tasks.find(function(x) { return x.id === editingTaskId; });
-    if (t) showToast('Deleting "' + t.title + '"...');
     removeTask(editingTaskId);
   } else if (editingEventId !== null) {
     const idx = localEvents.findIndex(function(x) { return x.id === editingEventId; });
-    if (idx !== -1) {
-      showToast('Deleted "' + localEvents[idx].title + '".');
-      deleteLocalEvent(idx); // also clears the form
-    }
+    if (idx !== -1) deleteLocalEvent(idx); // also clears the form
   }
+}
+
+// Everything needed to put a deleted task back exactly as it was: the task, where it sat in the list, and its
+// timer / stopwatch / worked stretches.
+function snapshotTaskForUndo(t, skipDate) {
+  const id = t.id;
+  return {
+    task: JSON.parse(JSON.stringify(t)),
+    index: tasks.indexOf(t),
+    skipDate: skipDate || null,
+    clock: workState.clocks[id] ? JSON.parse(JSON.stringify(workState.clocks[id])) : null,
+    log: workState.log.filter(function(s) { return s.taskId === id; }).map(function(s) { return JSON.parse(JSON.stringify(s)); })
+  };
+}
+function restoreTaskFromSnapshot(snap) {
+  if (snap.skipDate) { // "just today" was removed from a repeating task: bring today back
+    const t = tasks.find(function(x) { return x.id === snap.task.id; });
+    if (t && t.skipDates) t.skipDates = t.skipDates.filter(function(d) { return d !== snap.skipDate; });
+  } else if (!tasks.some(function(x) { return x.id === snap.task.id; })) {
+    tasks.splice(Math.min(snap.index, tasks.length), 0, snap.task);
+  }
+  if (snap.clock) workState.clocks[snap.task.id] = snap.clock;
+  snap.log.forEach(function(s) { workState.log.push(s); });
+  workState.log.sort(function(a, b) { return a.start - b.start; });
+  saveWork();
+  saveTasks();
+  render();
+  showToast('Restored "' + snap.task.title + '".');
+}
+
+// Deletes a task for good (with its timer and stopwatch), and offers Undo.
+function deleteTaskNow(t) {
+  pauseClockIfTask(t.id); // so the stretch being worked is saved before the snapshot
+  const snap = snapshotTaskForUndo(t);
+  forgetTaskClock(t.id);
+  tasks = tasks.filter(function(x) { return x.id !== t.id; });
+  saveTasks();
+  if (editingTaskId === t.id) resetTaskForm();
+  render();
+  showUndoToast('Deleted "' + t.title + '"', function() { restoreTaskFromSnapshot(snap); });
 }
 
 function removeTask(id) {
   const t = tasks.find(function(x) { return x.id === id; });
   if (!t) return;
   const isRepeating = t.repeatPattern && t.repeatPattern !== 'none';
-  if (!isRepeating) {
-    forgetTaskClock(id);
-    tasks = tasks.filter(function(x) { return x.id !== id; });
-    saveTasks();
-    if (editingTaskId === id) resetTaskForm();
-    render();
-    return;
-  }
+  if (!isRepeating) { deleteTaskNow(t); return; }
   pendingDeleteId = id;
   document.getElementById('deleteChoiceOverlay').classList.add('show');
 }
@@ -2231,22 +2356,26 @@ function deleteChoice(option) {
   const t = tasks.find(function(x) { return x.id === pendingDeleteId; });
   document.getElementById('deleteChoiceOverlay').classList.remove('show');
   if (!t) { pendingDeleteId = null; return; }
+  pendingDeleteId = null;
 
   if (option === 1) {
-    // Just today's occurrence: skip today, keep the recurring definition for other days.
+    // Just today's occurrence: skip today, keep the recurring definition for other days. Today's timer,
+    // stopwatch and worked time for it go away.
+    const today = localDateStr();
+    pauseClockIfTask(t.id);
+    const snap = snapshotTaskForUndo(t, today);
+    forgetTaskClock(t.id);
     if (!t.skipDates) t.skipDates = [];
-    t.skipDates.push(localDateStr());
+    t.skipDates.push(today);
     saveTasks();
-  } else {
-    // "This and following" and "All" both remove the recurring definition entirely —
-    // this build doesn't keep separate historical instances to distinguish them further.
-    forgetTaskClock(pendingDeleteId);
-    tasks = tasks.filter(function(x) { return x.id !== pendingDeleteId; });
-    saveTasks();
+    if (editingTaskId === t.id) resetTaskForm();
+    render();
+    showUndoToast('Deleted today\'s "' + t.title + '"', function() { restoreTaskFromSnapshot(snap); });
+    return;
   }
-  pendingDeleteId = null;
-  if (editingTaskId === t.id) resetTaskForm();
-  render();
+  // "This and following" and "All" both remove the recurring definition entirely: this build doesn't keep
+  // separate historical instances to tell them apart.
+  deleteTaskNow(t);
 }
 
 function formatDuration(startMin, endMin) {
@@ -2284,7 +2413,8 @@ function toggleComplete(id) {
   const t = tasks.find(x => x.id === id);
   if (!t) return;
   if (!t.completed) {
-    pauseClockIfTask(id); // finishing a task stops its clock
+    pauseClockIfTask(id); // finishing a task stops its clock...
+    if (workState.panelTaskId === id) closeClockPanel(); // ...and its timer/stopwatch goes away (the time worked is kept)
     recordCompletionTime(t); // minutes worked since the break ended / the last task was ticked
     // Ticking a task means you've moved on: a fixed event or break that is still going ends early now.
     // The finished task remembers what it ended, because its block is allowed to overlap them.
@@ -2354,6 +2484,20 @@ function taskById(id) {
 
 /* ---- the work log ---- */
 
+// The task you are on right now: the one whose timer or stopwatch is running. With no clock running, you are
+// assumed to still be on the task you worked on most recently, as long as it isn't checked off yet.
+function currentTaskId() {
+  if (workState.running) return workState.running.taskId;
+  let best = null, bestEnd = -1;
+  workState.log.forEach(function(s) {
+    const t = taskById(s.taskId);
+    if (!t || t.completed || !isTaskActiveToday(t)) return;
+    const end = (s.end === null) ? Date.now() : s.end;
+    if (end >= bestEnd) { bestEnd = end; best = s.taskId; }
+  });
+  return best;
+}
+
 // Today's stretches of real work (every time you pressed Start on a timer or stopwatch until it stopped), as
 // minutes since midnight. The day view draws these, so switching between tasks shows up as A, then B, then A.
 function sessionBlocksToday() {
@@ -2412,7 +2556,7 @@ function ensureWorkToday() {
 
 function getClock(taskId) {
   let c = workState.clocks[taskId];
-  if (!c) c = workState.clocks[taskId] = { mode: 'timer', lenMs: null, timerElapsedMs: 0, swElapsedMs: 0, laps: [] };
+  if (!c) c = workState.clocks[taskId] = { mode: 'timer', lenMs: null, timerElapsedMs: 0, swElapsedMs: 0, bankedMs: 0, laps: [] };
   return c;
 }
 
@@ -2445,7 +2589,9 @@ function stopwatchElapsedMs(taskId) {
 // not counting any minute twice.
 function workedMsFor(taskId) {
   const t = taskById(taskId);
-  return timerElapsedMs(taskId) + stopwatchElapsedMs(taskId) + ((t && t.completed) ? (t.inferredNetMs || 0) : 0);
+  const c = workState.clocks[taskId];
+  // bankedMs = time worked before the clock was reset or its length shortened. It still counts as work done.
+  return timerElapsedMs(taskId) + stopwatchElapsedMs(taskId) + (c ? (c.bankedMs || 0) : 0) + ((t && t.completed) ? (t.inferredNetMs || 0) : 0);
 }
 
 // Called when a task is ticked done. The assumption: you started this task when your last break ended or
@@ -2468,31 +2614,17 @@ function recordCompletionTime(task) {
   saveWork();
 }
 
-// Starting a timer or stopwatch, or ticking a task done, means you've moved on to the next thing.
-// So any fixed event (yours or Google's) that is still going, and a break that is still on, ends early
-// right now. The part of an event that wasn't used becomes free time again, and right-clicking the
-// event shows how much of it was used. (Google Calendar itself is never changed.)
+// Starting a timer or stopwatch, or ticking a task done, means you've moved on to the next thing, so a break
+// you were on ends right now. Calendar events (Google and your fixed events) are NOT cut short: a task you
+// finish during an event simply sits beside it on the schedule.
 // Returns the keys of what was ended, so a finished task can remember them.
 function endInProgressEarly() {
-  const nowMin = nowMinutesSinceMidnight();
   const keys = [];
-  const names = [];
-  const fixed = getFixedBlocks();
-  fixed.google.concat(fixed.locals).forEach(function(b) {
-    if (b.startMin < nowMin && nowMin < b.endMin) { // started earlier and not over yet
-      workState.cuts[b.key] = nowMin;
-      keys.push(b.key);
-      names.push(b.title);
-    }
-  });
   if (breakActive) {
     const breakKey = endManualBreak();
-    names.push('your break');
     if (breakKey) keys.push(breakKey);
-  }
-  if (names.length) {
     saveWork();
-    showToast('Ended early: ' + names.join(', ') + '.');
+    showToast('Ended early: your break.');
   }
   return keys;
 }
@@ -2558,9 +2690,12 @@ function pauseRunningClock() {
 function resetClock(taskId) {
   const c = getClock(taskId);
   if (runningOn(taskId, c.mode)) pauseRunningClock();
+  // Reset starts the clock over, but the time you already worked is kept (it still counts toward the task).
   if (c.mode === 'timer') {
+    c.bankedMs = (c.bankedMs || 0) + c.timerElapsedMs;
     c.timerElapsedMs = 0;
   } else {
+    c.bankedMs = (c.bankedMs || 0) + c.swElapsedMs;
     c.swElapsedMs = 0;
     c.laps = [];
   }
@@ -2615,7 +2750,9 @@ function setTimerLength() {
   if (total < 1) total = task.time * 60; // nothing usable typed: back to the task's own time
   total = Math.min(total, 600 * 60);
   c.lenMs = total * 1000;
-  c.timerElapsedMs = Math.min(c.timerElapsedMs, c.lenMs);
+  // A shorter length can't erase work: whatever no longer fits on the timer is kept as worked time.
+  const extra = Math.max(0, c.timerElapsedMs - c.lenMs);
+  if (extra > 0) { c.bankedMs = (c.bankedMs || 0) + extra; c.timerElapsedMs -= extra; }
   saveWork();
   renderClockPanel();
 }
@@ -2652,9 +2789,13 @@ function pauseClockIfTask(taskId) {
 function forgetTaskClock(taskId) {
   pauseClockIfTask(taskId);
   delete workState.clocks[taskId];
-  if (workState.panelTaskId === taskId) workState.panelTaskId = null;
+  workState.log = workState.log.filter(function(s) { return s.taskId !== taskId; }); // its worked stretches go too
+  const wasOpen = (workState.panelTaskId === taskId);
+  if (wasOpen) workState.panelTaskId = null;
   saveWork();
   renderClockPanel();
+  if (wasOpen && popped.indexOf('clock') !== -1) popIn('clock'); // collapsed side: back to its icon
+  updateRailClock();
 }
 
 /* ---- timer ring sounds ---- */
@@ -3434,6 +3575,7 @@ let syncMeta = loadSyncMeta();
 function saveSyncMeta() { try { localStorage.setItem(SYNC_META_KEY, JSON.stringify(syncMeta)); } catch (e) {} }
 
 let syncUser = null;            // { name, email } while signed in
+let syncAccounts = [];          // the Google accounts connected to this account: [{ id, email, name, owner, current }]
 let syncServerReady = false;    // does the site have its database set up?
 let syncApiThere = null;        // null = not asked yet, true/false = whether the /api answered
 let syncStatus = 'idle';        // idle | syncing | offline | error | too-big
@@ -3743,8 +3885,9 @@ async function syncCheckSession() {
     syncApiThere = true;
     syncServerReady = !!j.syncReady;
     syncUser = j.signedIn ? { name: j.name || '', email: j.email || '' } : null;
+    syncAccounts = (j.signedIn && Array.isArray(j.accounts)) ? j.accounts : [];
   } catch (e) {
-    syncApiThere = false; syncServerReady = false; syncUser = null;
+    syncApiThere = false; syncServerReady = false; syncUser = null; syncAccounts = [];
   }
   renderSyncBox();
 }
@@ -3761,9 +3904,20 @@ async function syncStart() {
 async function syncSignOut() {
   try { await syncApi('POST', '/api/auth/logout', {}); } catch (e) {}
   syncUser = null;
+  syncAccounts = [];
   clearTimeout(syncPushTimer);
   renderSyncBox();
   showToast('Signed out. Your tasks stay on this device.');
+}
+
+/* ---- removing an added Google account ---- */
+
+async function syncUnlink(id) {
+  if (!confirm('Remove this Google account? You can add it again later. Your tasks stay with your other account.')) return;
+  let ok = false;
+  try { const r = await syncApi('POST', '/api/auth/unlink', { id: id }); ok = (r.status === 200 && r.json.ok); } catch (e) { ok = false; }
+  showToast(ok ? 'Google account removed.' : 'Couldn\'t remove that account.');
+  await syncCheckSession();
 }
 
 /* ---- the "Account & sync" box in Settings ---- */
@@ -3779,7 +3933,7 @@ function renderSyncBox() {
   } else if (!syncServerReady) {
     html = '<div class="sync-status">Syncing isn\'t set up on this site yet. Your tasks are saved on this device only.</div>';
   } else if (!syncUser) {
-    html = '<div class="sync-status">Sign in with Google to keep your tasks, fixed events, labels, quotes, and settings the same on your phone and your computer. Each device keeps its own layout.</div>' +
+    html = '<div class="sync-status">Sign in with Google to keep your tasks, fixed events, labels, quotes, and settings the same on your phone and your computer. Each device keeps its own layout. After signing in you can add a second Google account (like home and school) that opens the same tasks.</div>' +
            '<div class="sync-actions"><a class="sync-signin" href="/api/auth/login">Sign in with Google</a></div>';
   } else {
     let status;
@@ -3788,9 +3942,20 @@ function renderSyncBox() {
     else if (syncStatus === 'too-big') status = 'Your data is too big to sync. Try removing some old tasks or events.';
     else if (syncStatus === 'error') status = 'Couldn\'t sync just now. It will try again.';
     else status = syncLastOk ? ('Up to date. Last synced ' + escapeHtml(new Date(syncLastOk).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })) + '.') : 'Up to date.';
+    let accountsHtml = '';
+    if (syncAccounts.length) {
+      accountsHtml = '<div class="sync-accounts-title">Your Google accounts</div>' +
+        '<div class="sync-status" style="margin-top:0;">Sign in with any of these and you\'ll see the same tasks.</div>' +
+        syncAccounts.map(function(a) {
+          const tags = (a.current ? '<span class="sync-tag">This one</span>' : '') + (a.owner ? '<span class="sync-tag">Main</span>' : '');
+          const remove = (!a.owner && !a.current) ? '<button type="button" class="layout-btn" data-id="' + escapeHtml(String(a.id)) + '" onclick="syncUnlink(this.dataset.id)">Remove</button>' : '';
+          return '<div class="sync-acct"><span class="sync-acct-email">' + escapeHtml(a.email || a.name || 'Google account') + '</span>' + tags + remove + '</div>';
+        }).join('');
+    }
     html = '<div class="sync-who">Signed in as <strong>' + escapeHtml(syncUser.name || 'you') + '</strong>' + (syncUser.email ? ' (' + escapeHtml(syncUser.email) + ')' : '') + '</div>' +
            '<div class="sync-status' + ((syncStatus === 'error' || syncStatus === 'too-big') ? ' bad' : '') + '">' + status + '</div>' +
-           '<div class="sync-actions"><button type="button" class="icon-btn" onclick="syncRun()">Sync now</button><button type="button" class="icon-btn" onclick="syncSignOut()">Sign out</button></div>';
+           accountsHtml +
+           '<div class="sync-actions"><a class="icon-btn" href="/api/auth/link">Add another Google account</a><button type="button" class="icon-btn" onclick="syncRun()">Sync now</button><button type="button" class="icon-btn" onclick="syncSignOut()">Sign out</button></div>';
   }
   box.innerHTML = html;
 }
@@ -3822,7 +3987,7 @@ async function bootWithoutProfile() {
 
 /* ---- keep things in sync while the page is open ---- */
 
-setInterval(function() { if (syncUser && document.visibilityState === 'visible') syncRun(); }, 20000);
+setInterval(function() { if (syncUser && document.visibilityState === 'visible') syncRun(); }, 60000);
 document.addEventListener('visibilitychange', function() { if (document.visibilityState === 'visible' && syncUser) syncRun(); });
 window.addEventListener('online', function() { if (syncUser) syncRun(); });
 window.addEventListener('pagehide', function() { // leaving the page with an unsaved change: send it on the way out
@@ -4060,6 +4225,8 @@ function endManualBreak() {
 }
 
 function taskSortFn(a, b) {
+  // The task you're on right now (clock running, or the one you worked on last that isn't checked off) comes first.
+  if (!!a.isRunning !== !!b.isRunning) return a.isRunning ? -1 : 1;
   // A manual drag (today only) takes precedence over the automatic sort.
   if (typeof a.manualOrder === 'number' && typeof b.manualOrder === 'number') return a.manualOrder - b.manualOrder;
   if (b.priority !== a.priority) return b.priority - a.priority;
@@ -4130,7 +4297,9 @@ function getFixedBlocks() {
     if (c) manual.push({ startMin: c.s, endMin: c.e, orig: b, key: 'brk|' + b.id });
   });
 
-  const blockers = authoritative.concat(manual);
+  // A finished task may sit beside a calendar event (it doesn't end the event). Only breaks and other finished
+  // tasks are kept clear of it.
+  const blockers = manual.slice();
   const completed = [];
   const sessions = sessionBlocksToday().map(function(s) { return { startMin: s.startMin, endMin: s.endMin, taskId: s.taskId }; });
   tasks.filter(function(t) { return isTaskActiveToday(t) && t.completed && typeof t.fixedStartMin === 'number'; })
@@ -4158,7 +4327,7 @@ function getFixedBlocks() {
 function findCompletedSlot(task, nowMin) {
   const fixed = getFixedBlocks();
   const skip = task.cutKeys || []; // events/breaks this very tick ended early
-  const busy = fixed.google.concat(fixed.locals, fixed.manual, fixed.completed).filter(function(b) { return !b.key || skip.indexOf(b.key) === -1; });
+  const busy = fixed.manual.concat(fixed.completed).filter(function(b) { return !b.key || skip.indexOf(b.key) === -1; }); // (calendar events don't push it aside)
   let end = nowMin;
   for (let guard = 0; guard < 25; guard++) {
     let moved = false;
@@ -4197,10 +4366,11 @@ const MIN_PIECE = 10;
 //   completedPlaced already-finished blocks to include in the result (today only)
 function planDay(pending, busyBlocks, bounds, nowMin, completedPlaced) {
   function isQuick(t) { return t.time < 5 && t.motivation >= 7; }
-  const reqNormal = pending.filter(function(t) { return !t.optional && !isQuick(t); }).sort(taskSortFn);
-  const reqQuick = pending.filter(function(t) { return !t.optional && isQuick(t); }).sort(taskSortFn);
-  const optNormal = pending.filter(function(t) { return t.optional && !isQuick(t); }).sort(taskSortFn);
-  const optQuick = pending.filter(function(t) { return t.optional && isQuick(t); }).sort(taskSortFn);
+  // (a task you're working on right now is planned first, whatever its priority, size, or "optional" setting)
+  const reqNormal = pending.filter(function(t) { return t.isRunning || (!t.optional && !isQuick(t)); }).sort(taskSortFn);
+  const reqQuick = pending.filter(function(t) { return !t.isRunning && !t.optional && isQuick(t); }).sort(taskSortFn);
+  const optNormal = pending.filter(function(t) { return !t.isRunning && t.optional && !isQuick(t); }).sort(taskSortFn);
+  const optQuick = pending.filter(function(t) { return !t.isRunning && t.optional && isQuick(t); }).sort(taskSortFn);
 
   const busy = busyBlocks.slice().sort(function(a, b) { return a.startMin - b.startMin; });
   let windows = [];
@@ -4317,9 +4487,12 @@ function planDay(pending, busyBlocks, bounds, nowMin, completedPlaced) {
 function computeSchedule() {
   const fixed = getFixedBlocks();
   // A task you already worked on only needs the rest of its time planned (the worked part is on the schedule already).
+  const runningId = currentTaskId(); // running now, or else the one you worked on most recently and haven't checked off
   const pending = tasks.filter(function(t) { return isTaskActiveToday(t) && !t.completed; }).map(function(t) {
     const workedMin = workedMsFor(t.id) / 60000;
-    return workedMin > 0 ? Object.assign({}, t, { planMin: Math.max(1, Math.round(t.time - workedMin)) }) : t;
+    let copy = workedMin > 0 ? Object.assign({}, t, { planMin: Math.max(1, Math.round(t.time - workedMin)) }) : t;
+    if (t.id === runningId) copy = Object.assign({}, copy, { isRunning: true });
+    return copy;
   });
   function span(x) { return { startMin: x.startMin, endMin: x.endMin }; }
   const busy = fixed.google.map(span).concat(fixed.locals.map(span), fixed.manual.map(span), fixed.completed.map(span), sessionBlocksToday().map(span));
@@ -4375,7 +4548,7 @@ function getDayAgenda(dateObj) {
     items.push({ kind: 'task', t: x, start: x.startMin });
   });
   (sched.unplaced || []).forEach(function(t) { items.push({ kind: 'task', t: t, start: 100000 }); });
-  g.timed.forEach(function(e) { items.push({ kind: 'event', title: e.title, color: e.color, start: e.startMin, end: e.endMin, google: true }); });
+  g.timed.forEach(function(e) { items.push({ kind: 'event', title: e.title, color: e.color, start: e.startMin, end: e.endMin, google: true, declined: e.declined }); });
   localEvents.forEach(function(ev) {
     if (localEventOnDate(ev, dayKey, abbrev)) items.push({ kind: 'event', title: ev.title, color: labelColor(ev.label || 'Fixed Events'), start: ev.startMin, end: ev.endMin, google: false });
   });
@@ -4400,7 +4573,7 @@ function renderAllDayStrip() {
   if (!g.allDay.length) { box.style.display = 'none'; box.innerHTML = ''; return; }
   box.style.display = 'flex';
   box.innerHTML = '<span class="allday-label">All day</span>' + g.allDay.map(function(e, i) {
-    return '<span class="allday-pill" style="background:' + e.color + ';color:' + readableText(e.color) + ';" oncontextmenu="showAllDayTooltip(event,' + i + ')">' + escapeHtml(e.title) + '</span>';
+    return '<span class="allday-pill' + (e.declined ? ' declined-ev' : '') + '" style="background:' + e.color + ';color:' + readableText(e.color) + ';" oncontextmenu="showAllDayTooltip(event,' + i + ')">' + escapeHtml(e.title) + '</span>';
   }).join('');
 }
 
@@ -4469,11 +4642,21 @@ function renderEventsSidebar() {
 }
 
 function deleteLocalEvent(index) {
-  if (!localEvents[index]) return;
-  if (editingEventId === localEvents[index].id) resetTaskForm();
+  const ev = localEvents[index];
+  if (!ev) return;
+  if (editingEventId === ev.id) resetTaskForm();
+  const copy = JSON.parse(JSON.stringify(ev));
   localEvents.splice(index, 1);
   saveLocalEvents();
   render();
+  showUndoToast('Deleted "' + ev.title + '"', function() {
+    if (!localEvents.some(function(x) { return x.id === copy.id; })) {
+      localEvents.splice(Math.min(index, localEvents.length), 0, copy);
+      saveLocalEvents();
+      render();
+      showToast('Restored "' + copy.title + '".');
+    }
+  });
 }
 
 function labelColor(name) {
@@ -4545,6 +4728,16 @@ function renderGrid(sched) {
     el.oncontextmenu = function(e) { showEventTooltip(e, ev.title, ev.startMin, ev.endMin, false, ev); };
     addItem(ev.startMin, ev.endMin, el);
   });
+  // Invitations you declined: still on the schedule (dimmed, crossed out), but they don't take your time.
+  eventsDeclined.forEach(function(ev) {
+    if (!calendarVisible(ev.calId)) return;
+    const el = document.createElement('div'); el.className = 'block event declined-ev';
+    el.style.background = ev.color || labelColor('Google Calendar');
+    el.style.color = readableText(ev.color || '#347CFE');
+    el.innerHTML = '<span class="title">' + escapeHtml(ev.title) + '</span><span class="meta">Declined</span>';
+    el.oncontextmenu = function(e) { showEventTooltip(e, ev.title + ' (declined)', ev.startMin, ev.endMin, false); };
+    addItem(ev.startMin, ev.endMin, el);
+  });
   fixed.manual.forEach(function(b) {
     const el = document.createElement('div'); el.className = 'block break-block';
     el.style.background = labelColor('Break');
@@ -4566,22 +4759,63 @@ function renderGrid(sched) {
     el.ondragstart = function(e) { draggedLocalEventId = ev.id; e.dataTransfer.effectAllowed = 'move'; };
     addItem(item.startMin, item.endMin, el);
   });
-  // The stretches you really worked on a task with the timer or stopwatch. Switching tasks shows as task A,
-  // then task B, then task A again. Click one to open that task's clock; right-click for its details.
+  // While a task's timer or stopwatch is running, the worked part and the part still to do are ONE block
+  // (the now-line passes through it) instead of the same task showing twice.
+  let schedList = (sched || computeSchedule()).slice();
+  const mergedSessions = {};
   sessionBlocksToday().forEach(function(s) {
-    const t = s.task;
-    const bg = t.label ? labelColor(t.label) : (settings.secondary === '#ffffff' ? '#f4f6f5' : settings.secondary);
-    const el = document.createElement('div');
-    el.className = 'block task worked' + (t.completed ? ' completed' : '');
-    el.style.background = bg;
-    el.style.color = readableText(bg);
-    const mins = s.endMin - s.startMin;
-    el.innerHTML = '<span class="title">' + escapeHtml(t.title) + '</span>' + (mins >= 30 ? '<span class="meta">' + escapeHtml('worked ' + mins + ' min' + (s.running ? ' (now)' : '')) + '</span>' : '');
-    el.onclick = function() { openClockPanel(t.id); };
-    el.oncontextmenu = function(e) { showTaskTooltip(e, Object.assign({}, t, { startMin: s.startMin, endMin: s.endMin })); };
-    addItem(s.startMin, s.endMin, el);
+    if (!s.running) return;
+    let best = -1;
+    schedList.forEach(function(p, i) {
+      if (p.type || p.id !== s.taskId || p.completed) return;
+      if (p.startMin <= s.endMin + 1 && p.endMin > s.startMin && (best === -1 || p.startMin < schedList[best].startMin)) best = i;
+    });
+    if (best === -1) return;
+    schedList[best] = Object.assign({}, schedList[best], { startMin: Math.min(s.startMin, schedList[best].startMin) });
+    mergedSessions[s.id] = true;
   });
-  (sched || computeSchedule()).forEach(function(t) {
+  // A finished task whose worked stretches and finished pieces touch each other is ONE block, not several.
+  const finishedSessions = sessionBlocksToday().filter(function(s) { return s.task.completed && !mergedSessions[s.id]; });
+  const finishedIds = {};
+  finishedSessions.forEach(function(s) { finishedIds[s.taskId] = true; });
+  schedList.forEach(function(p) { if (!p.type && p.completed) finishedIds[p.id] = true; });
+  Object.keys(finishedIds).forEach(function(key) {
+    const id = Number(key);
+    const segs = [];
+    schedList.forEach(function(p, i) { if (p && !p.type && p.completed && p.id === id) segs.push({ s: p.startMin, e: p.endMin, piece: i }); });
+    finishedSessions.forEach(function(s) { if (s.taskId === id) segs.push({ s: s.startMin, e: s.endMin, session: s }); });
+    segs.sort(function(a, b) { return a.s - b.s; });
+    const groups = [];
+    segs.forEach(function(sg) {
+      const g = groups[groups.length - 1];
+      if (g && sg.s <= g.e + 1) { g.e = Math.max(g.e, sg.e); g.items.push(sg); } else groups.push({ s: sg.s, e: sg.e, items: [sg] });
+    });
+    groups.forEach(function(g) {
+      const pieces = g.items.filter(function(x) { return x.piece !== undefined; });
+      const stretches = g.items.filter(function(x) { return x.session; });
+      if (!stretches.length) return; // only finished pieces: nothing to combine
+      if (!pieces.length) {
+        // only worked stretches: show them as the finished task's own block (so it has its checkbox, and can be un-ticked)
+        const task = taskById(id);
+        if (!task) return;
+        schedList.push(Object.assign({}, task, { startMin: g.s, endMin: g.e }));
+      } else {
+        const keep = pieces.reduce(function(a, b) { return (b.e - b.s) > (a.e - a.s) ? b : a; });
+        schedList[keep.piece] = Object.assign({}, schedList[keep.piece], { startMin: g.s, endMin: g.e });
+        pieces.forEach(function(x) { if (x !== keep) schedList[x.piece] = null; });
+      }
+      stretches.forEach(function(x) { mergedSessions[x.session.id] = true; });
+    });
+  });
+  schedList = schedList.filter(Boolean);
+  // The stretches you really worked on a task with the timer or stopwatch. Switching tasks shows as task A,
+  // then task B, then task A again. Each one is a normal block with its checkbox and pencil, so you can check the
+  // task off from any piece of it.
+  sessionBlocksToday().forEach(function(s) {
+    if (mergedSessions[s.id]) return; // drawn as part of the task's own block
+    schedList.push(Object.assign({}, s.task, { startMin: s.startMin, endMin: s.endMin, worked: true, workedRunning: s.running }));
+  });
+  schedList.forEach(function(t) {
     const el = document.createElement('div');
 
     if (t.type === 'break') {
@@ -4595,7 +4829,7 @@ function renderGrid(sched) {
 
     let filterClass = '';
     if (activeLabelFilter) filterClass = (t.label === activeLabelFilter) ? ' label-match' : ' label-dimmed';
-    el.className = 'block task' + (t.optional ? ' optional' : '') + (t.completed ? ' completed' : '') + filterClass;
+    el.className = 'block task' + (t.worked ? ' worked' : '') + (t.optional ? ' optional' : '') + (t.completed ? ' completed' : '') + filterClass;
     // The label's EXACT color (no lighter tint). Text switches to white on dark colors so it stays readable.
     const taskBg = t.label ? labelColor(t.label) : (settings.secondary === '#ffffff' ? '#f4f6f5' : settings.secondary);
     el.style.background = taskBg;
@@ -4607,12 +4841,14 @@ function renderGrid(sched) {
     let metaText;
     if (t.completed) {
       metaText = 'Done: ' + formatClockTime(t.startMin) + ' - ' + formatClockTime(t.endMin);
+    } else if (t.worked) {
+      metaText = 'Worked ' + duration + ' min' + (t.workedRunning ? ' (now)' : '') + ' - ' + pLabel;
     } else {
       metaText = pLabel + ' - ' + (t.partCount > 1 ? (duration + ' of ' + t.time + 'm') : (t.planMin && t.planMin < t.time ? (t.planMin + 'm left') : (t.time + 'm'))) + ' - Motivation ' + t.motivation + (t.label ? ' - ' + t.label : '');
     }
     // Short blocks only show the title: there isn't room for a second line without cutting something off.
     const showMeta = duration >= 30;
-    el.innerHTML = '<label class="task-checkbox-wrap" onclick="event.stopPropagation()"><input type="checkbox" ' + (t.completed ? 'checked' : '') + ' onchange="toggleComplete(' + t.id + ')"></label><span class="title">' + escapeHtml(t.title + partSuffix) + (t.optional ? '<span class="badge">Optional</span>' : '') + '</span>' + (showMeta ? '<span class="meta">' + escapeHtml(metaText) + '</span>' : '') + '<button type="button" class="task-edit-btn" title="Edit this task" aria-label="Edit this task" onclick="event.stopPropagation(); startEditTask(' + t.id + ')">&#9998;</button>';
+    el.innerHTML = '<label class="task-checkbox-wrap" onclick="event.stopPropagation()"><input type="checkbox" ' + (t.completed ? 'checked' : '') + ' onchange="toggleComplete(' + t.id + ')"></label><span class="title">' + escapeHtml(t.title + partSuffix) + (t.worked ? ' <span class="worked-tag">worked</span>' : '') + (t.optional ? '<span class="badge">Optional</span>' : '') + '</span>' + (showMeta ? '<span class="meta">' + escapeHtml(metaText) + '</span>' : '') + '<button type="button" class="task-edit-btn" title="Edit this task" aria-label="Edit this task" onclick="event.stopPropagation(); startEditTask(' + t.id + ')">&#9998;</button>';
     el.onclick = function() { openClockPanel(t.id); };
     el.oncontextmenu = function(e) { showTaskTooltip(e, t); };
     el.draggable = true;
@@ -5224,6 +5460,19 @@ function startApp() {
     window.history.replaceState({}, '', 'index.html');
   } else if (params.get('signed_in') === '1') {
     setTimeout(function() { showToast('Signed in. Your tasks will sync.'); }, 400);
+    window.history.replaceState({}, '', 'index.html');
+  } else if (params.get('linked')) {
+    setTimeout(function() { showToast(params.get('linked') === 'already' ? 'That Google account was already added.' : 'Google account added. Your tasks are now shared between your accounts.'); }, 400);
+    window.history.replaceState({}, '', 'index.html');
+  } else if (params.get('link_error')) {
+    const linkMsgs = {
+      other_account: 'That Google account is already connected to a different Flowgrove account, so it can\'t be added here.',
+      too_many: 'You can connect up to 3 Google accounts.',
+      not_signed_in: 'Sign in first, then add another Google account.',
+      access_denied: 'No problem. Nothing was changed.'
+    };
+    const code = params.get('link_error');
+    setTimeout(function() { alert(linkMsgs[code] || ('Adding that account didn\'t work (' + code + '). Please try again.')); }, 300);
     window.history.replaceState({}, '', 'index.html');
   } else if (params.get('login_error')) {
     setTimeout(function() { alert('Sign-in didn\'t work (' + params.get('login_error') + '). Please try again.'); }, 300);

@@ -3,6 +3,8 @@
 //      tokens and keep them in secure, HTTP-only cookies.
 //   2) They signed in to Flowgrove (state starts with "login."). We ask Google who they are and remember them
 //      with a signed session cookie. No calendar access is involved.
+//   3) They added a second Google account (state starts with "link."), e.g. home + school, so both open the
+//      same tasks.
 //
 // Requires these Environment Variables set in Vercel:
 //   GOOGLE_CLIENT_ID
@@ -12,10 +14,15 @@
 // registered in Google Cloud Console.
 const APP_DOMAIN = 'https://flowgrove.vercel.app';
 
-import { makeSessionCookie } from '../_lib/session.js';
+import { makeSessionCookie, getSession } from '../_lib/session.js';
+import { storeConfigured, resolveOwner, getUserRecord, setUserRecord, deleteUserRecord, getIdentities, setIdentities, deleteIdentities, setLink } from '../_lib/store.js';
+import { mergeData } from '../_lib/merge.js';
+
+const MAX_LINKED_ACCOUNTS = 3;
 
 const CLEAR_STATE_COOKIE = 'fg_oauth_state=; HttpOnly; Secure; Path=/; Max-Age=0; SameSite=Lax';
 const CLEAR_LOGIN_COOKIE = 'fg_login_state=; HttpOnly; Secure; Path=/; Max-Age=0; SameSite=Lax';
+const CLEAR_LINK_COOKIE = 'fg_link_state=; HttpOnly; Secure; Path=/; Max-Age=0; SameSite=Lax';
 
 function safeDecode(v) {
   try { return decodeURIComponent(v); } catch (e) { return v; }
@@ -38,6 +45,32 @@ function redirect(res, location, cookies) {
   res.end();
 }
 
+// Swaps Google's one-time code for the person's identity (id, name, email). Used by both sign-in and
+// "add another Google account". The id_token comes straight from Google over a secure connection, so its
+// contents can be trusted; we still check that it is for our app and not expired.
+async function exchangeForClaims(code) {
+  const tokenResp = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      code: code,
+      client_id: process.env.GOOGLE_CLIENT_ID,
+      client_secret: process.env.GOOGLE_CLIENT_SECRET,
+      redirect_uri: `${APP_DOMAIN}/api/auth/callback`,
+      grant_type: 'authorization_code'
+    })
+  });
+  const tokenData = await tokenResp.json();
+  if (!tokenResp.ok || !tokenData.id_token) return { error: 'token_exchange_failed' };
+  const parts = String(tokenData.id_token).split('.');
+  const claims = JSON.parse(Buffer.from(parts[1].replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8'));
+  const issuerOk = claims.iss === 'https://accounts.google.com' || claims.iss === 'accounts.google.com';
+  if (!issuerOk || claims.aud !== process.env.GOOGLE_CLIENT_ID || !claims.sub || (claims.exp && claims.exp * 1000 < Date.now())) {
+    return { error: 'bad_token' };
+  }
+  return { claims: claims };
+}
+
 // ----- Signing in (identity only) -----
 async function handleLogin(req, res) {
   const clearLogin = [CLEAR_LOGIN_COOKIE];
@@ -50,40 +83,68 @@ async function handleLogin(req, res) {
     return redirect(res, '/index.html?login_error=bad_state', clearLogin);
   }
   try {
-    const tokenResp = await fetch('https://oauth2.googleapis.com/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        code: code,
-        client_id: process.env.GOOGLE_CLIENT_ID,
-        client_secret: process.env.GOOGLE_CLIENT_SECRET,
-        redirect_uri: `${APP_DOMAIN}/api/auth/callback`,
-        grant_type: 'authorization_code'
-      })
-    });
-    const tokenData = await tokenResp.json();
-    if (!tokenResp.ok || !tokenData.id_token) {
-      return redirect(res, '/index.html?login_error=token_exchange_failed', clearLogin);
-    }
-    // The id_token came straight from Google over a secure connection, so its contents can be trusted.
-    // We still check that it is for our app and not expired.
-    const parts = String(tokenData.id_token).split('.');
-    const claims = JSON.parse(Buffer.from(parts[1].replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8'));
-    const issuerOk = claims.iss === 'https://accounts.google.com' || claims.iss === 'accounts.google.com';
-    if (!issuerOk || claims.aud !== process.env.GOOGLE_CLIENT_ID || !claims.sub || (claims.exp && claims.exp * 1000 < Date.now())) {
-      return redirect(res, '/index.html?login_error=bad_token', clearLogin);
-    }
-    const cookies = [CLEAR_LOGIN_COOKIE, makeSessionCookie({ sub: claims.sub, email: claims.email, name: claims.name || claims.given_name || '' })];
+    const result = await exchangeForClaims(code);
+    if (result.error) return redirect(res, '/index.html?login_error=' + result.error, clearLogin);
+    const claims = result.claims;
+    // If this Google account was added to another one (home + school), the data belongs to the first one.
+    let owner = claims.sub;
+    if (storeConfigured()) owner = await resolveOwner(claims.sub);
+    const cookies = [CLEAR_LOGIN_COOKIE, makeSessionCookie({ sub: owner, gsub: claims.sub, email: claims.email, name: claims.name || claims.given_name || '' })];
     return redirect(res, '/index.html?signed_in=1', cookies);
   } catch (err) {
     return redirect(res, '/index.html?login_error=server_error', clearLogin);
   }
 }
 
-export default async function handler(req, res) {
-  if (String(req.query.state || '').startsWith('login.')) {
-    return handleLogin(req, res);
+// ----- Adding another Google account to the one you're signed in with -----
+async function handleLink(req, res) {
+  const back = function(query) { return redirect(res, '/index.html?' + query, [CLEAR_LINK_COOKIE]); };
+  if (req.query.error) return back('link_error=' + encodeURIComponent(String(req.query.error)));
+  const session = getSession(req);
+  if (!session) return back('link_error=not_signed_in');
+  const savedState = readCookie(req.headers.cookie, 'fg_link_state');
+  if (!req.query.code || !savedState || savedState !== req.query.state) return back('link_error=bad_state');
+  if (!storeConfigured()) return back('link_error=db_not_configured');
+  try {
+    const result = await exchangeForClaims(req.query.code);
+    if (result.error) return back('link_error=' + result.error);
+    const claims = result.claims;
+    const A = await resolveOwner(session.sub);   // the account you are signed in to
+    const B = claims.sub;                        // the Google account you just proved is yours
+    const bOwner = await resolveOwner(B);
+    if (B === A || bOwner === A) return back('linked=already');
+    if (bOwner !== B) return back('link_error=other_account'); // it already belongs to a different account
+
+    let idsA = await getIdentities(A);
+    if (!idsA || !idsA.length) idsA = [{ sub: A, email: session.email, name: session.name, addedAt: Date.now() }];
+    if (idsA.length >= MAX_LINKED_ACCOUNTS) return back('link_error=too_many');
+    const idsB = (await getIdentities(B)) || [];
+
+    // If that Google account already had its own tasks, combine them with these (nothing is thrown away).
+    const recB = await getUserRecord(B);
+    if (recB) {
+      const recA = await getUserRecord(A);
+      const merged = mergeData(recA ? recA.data : null, recB.data);
+      await setUserRecord(A, { rev: (recA ? recA.rev : 0) + 1, updatedAt: Date.now(), data: merged });
+    }
+    idsA.push({ sub: B, email: claims.email || '', name: claims.name || claims.given_name || '', addedAt: Date.now() });
+    for (let i = 0; i < idsB.length; i++) {
+      if (idsB[i].sub !== B && idsA.length < MAX_LINKED_ACCOUNTS) { await setLink(idsB[i].sub, A); idsA.push(idsB[i]); }
+    }
+    await setLink(B, A);
+    await setIdentities(A, idsA);
+    if (recB) await deleteUserRecord(B);
+    await deleteIdentities(B);
+    return back('linked=1');
+  } catch (err) {
+    return back('link_error=server_error');
   }
+}
+
+export default async function handler(req, res) {
+  const stateStart = String(req.query.state || '');
+  if (stateStart.startsWith('login.')) return handleLogin(req, res);
+  if (stateStart.startsWith('link.')) return handleLink(req, res);
 
   // ----- Connecting Google Calendar -----
   // The person clicked "Cancel"/"Deny" on Google's screen.

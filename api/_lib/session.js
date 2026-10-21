@@ -44,7 +44,7 @@ export function readCookie(header, name) {
 
 export function makeSessionCookie(user) {
   const payload = toBase64Url(JSON.stringify({
-    sub: user.sub, email: user.email || '', name: user.name || '', exp: Date.now() + MAX_AGE_SECONDS * 1000
+    sub: user.sub, gsub: user.gsub || user.sub, email: user.email || '', name: user.name || '', exp: Date.now() + MAX_AGE_SECONDS * 1000
   }));
   const signature = toBase64Url(createHmac('sha256', secretKey()).update(payload).digest());
   return `${COOKIE}=${payload}.${signature}; HttpOnly; Secure; Path=/; Max-Age=${MAX_AGE_SECONDS}; SameSite=Lax`;
@@ -54,7 +54,7 @@ export function clearSessionCookie() {
   return `${COOKIE}=; HttpOnly; Secure; Path=/; Max-Age=0; SameSite=Lax`;
 }
 
-// Returns { sub, email, name } for a valid, unexpired session, otherwise null.
+// Returns { sub, gsub, email, name } for a valid, unexpired session, otherwise null.
 export function getSession(req) {
   const raw = readCookie(req.headers.cookie, COOKIE);
   if (!raw) return null;
@@ -69,5 +69,6 @@ export function getSession(req) {
   let data;
   try { data = JSON.parse(fromBase64Url(payload).toString('utf8')); } catch (e) { return null; }
   if (!data || !data.sub || !data.exp || data.exp < Date.now()) return null;
-  return { sub: String(data.sub), email: data.email || '', name: data.name || '' };
+  // sub = the account that owns the data; gsub = the Google account that was used to sign in
+  return { sub: String(data.sub), gsub: String(data.gsub || data.sub), email: data.email || '', name: data.name || '' };
 }

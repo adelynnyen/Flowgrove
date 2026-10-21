@@ -499,16 +499,17 @@
         </div>
         <div class="clock-display" id="clockDisplay">30:00</div>
         <div class="clock-len-row" id="clockLenRow">
-          <label style="margin:0;">Length</label>
-          <input type="number" id="clockLenMin" min="0" max="600" aria-label="Timer minutes" onchange="setTimerLength()" onkeydown="if(event.key==='Enter'){this.blur();}">
+          <label style="margin:0;">Set time</label>
+          <input type="number" id="clockLenMin" min="0" max="600" aria-label="Timer minutes" onchange="setTimerLength('min')" onkeydown="if(event.key==='Enter'){this.blur();}">
           <span>min</span>
-          <input type="number" id="clockLenSec" min="0" max="59" aria-label="Timer seconds" onchange="setTimerLength()" onkeydown="if(event.key==='Enter'){this.blur();}">
+          <input type="number" id="clockLenSec" min="0" max="59" aria-label="Timer seconds" onchange="setTimerLength('sec')" onkeydown="if(event.key==='Enter'){this.blur();}">
           <span>sec</span>
         </div>
         <div class="clock-buttons">
           <button type="button" class="primary-btn" id="clockStartBtn" onclick="toggleClock()">Start</button>
           <button type="button" id="clockLapBtn" onclick="lapPanelClock()" style="display:none;">Lap</button>
           <button type="button" id="clockResetBtn" onclick="resetPanelClock()">Reset</button>
+          <button type="button" id="clockStopRingBtn" onclick="silenceTimerRing()" style="display:none;">Stop sound</button>
         </div>
         <ul class="lap-list" id="lapList" style="display:none;"></ul>
         <p class="clock-note" id="clockRunningNote" style="display:none;"></p>
@@ -2412,7 +2413,10 @@ function nowMinutesSinceMidnight() {
 function toggleComplete(id) {
   const t = tasks.find(x => x.id === id);
   if (!t) return;
+  let justFinished = false;
   if (!t.completed) {
+    justFinished = true;
+    silenceTimerRing();
     pauseClockIfTask(id); // finishing a task stops its clock...
     if (workState.panelTaskId === id) closeClockPanel(); // ...and its timer/stopwatch goes away (the time worked is kept)
     recordCompletionTime(t); // minutes worked since the break ended / the last task was ticked
@@ -2441,6 +2445,25 @@ function toggleComplete(id) {
   }
   saveTasks();
   render();
+  if (justFinished) openNextClockAfterTick();
+}
+
+// After you finish a task: if the next thing on your schedule is simply another task (no break, and no calendar or
+// fixed event happening now or coming up before it), that task's clock opens, ready for you to press Start.
+// (If you finish a task in the middle of an event, nothing opens: the schedule assumes you aren't working then.)
+function openNextClockAfterTick() {
+  if (breakActive) return;
+  const nowMin = nowMinutesSinceMidnight();
+  let next = null;
+  computeSchedule().forEach(function(x) {
+    if (x.completed || x.startMin < nowMin - 1) return;
+    if (!next || x.startMin < next.startMin) next = x;
+  });
+  if (!next || next.type === 'break') return;
+  const fixed = getFixedBlocks();
+  const eventFirst = fixed.google.concat(fixed.locals).some(function(e) { return e.endMin > nowMin && e.startMin <= next.startMin; });
+  if (eventFirst) return;
+  openClockPanel(next.id);
 }
 
 const REPEAT_FREQUENCY_ITEMS = ['Every weekday', 'Every day', 'Every week', 'Every biweekly', 'Weekends', 'Monthly'];
@@ -2513,6 +2536,44 @@ function sessionBlocksToday() {
     if (endMin <= startMin) endMin = startMin + 1; // even a very short stretch gets a minute so it can be seen
     out.push({ id: s.id, taskId: s.taskId, task: task, startMin: startMin, endMin: endMin, running: s.end === null });
   });
+  return out;
+}
+
+// A task's worked time as blocks on the schedule. Starting and pausing a clock on the same task over and over is
+// still ONE block: the time between is you still being on that task. A second block for the same task only appears
+// when you really went off to something else in between (another task, or a break).
+function workStretches() {
+  const sessions = sessionBlocksToday().slice().sort(function(a, b) { return a.startMin - b.startMin; });
+  const nowMin = nowMinutesSinceMidnight();
+  const byTask = {};
+  sessions.forEach(function(x) { (byTask[x.taskId] = byTask[x.taskId] || []).push(x); });
+  const out = [];
+  Object.keys(byTask).forEach(function(key) {
+    let cur = null;
+    byTask[key].forEach(function(x) {
+      if (cur) {
+        const gapStart = cur.endMin, gapEnd = x.startMin;
+        const interrupted = sessions.some(function(o) { return o.taskId !== x.taskId && o.endMin > gapStart && o.startMin < gapEnd; }) ||
+          manualBreaks.some(function(b) { return b.endMin > gapStart && b.startMin < gapEnd; });
+        if (!interrupted) { cur.endMin = Math.max(cur.endMin, x.endMin); cur.running = cur.running || x.running; cur.ids.push(x.id); return; }
+        out.push(cur);
+      }
+      cur = { taskId: x.taskId, task: x.task, startMin: x.startMin, endMin: x.endMin, running: x.running, ids: [x.id], current: false, merged: false };
+    });
+    if (cur) out.push(cur);
+  });
+  // The task you are on keeps going until you do something else: its latest stretch runs up to now.
+  const curId = currentTaskId();
+  if (curId !== null) {
+    let last = null;
+    out.forEach(function(st) { if (st.taskId === curId && (!last || st.endMin > last.endMin)) last = st; });
+    if (last) {
+      const otherLater = sessions.some(function(o) { return o.taskId !== curId && o.endMin > last.endMin; });
+      const breakLater = manualBreaks.some(function(b) { return b.endMin > last.endMin; });
+      last.current = true;
+      if (!otherLater && !breakLater && nowMin > last.endMin) last.endMin = nowMin;
+    }
+  }
   return out;
 }
 
@@ -2652,6 +2713,7 @@ function repairFinishedTasks() {
 }
 
 function startClock(taskId) {
+  silenceTimerRing();
   const task = taskById(taskId);
   if (!task) return;
   const c = getClock(taskId);
@@ -2688,6 +2750,7 @@ function pauseRunningClock() {
 }
 
 function resetClock(taskId) {
+  silenceTimerRing();
   const c = getClock(taskId);
   if (runningOn(taskId, c.mode)) pauseRunningClock();
   // Reset starts the clock over, but the time you already worked is kept (it still counts toward the task).
@@ -2734,27 +2797,28 @@ function setClockMode(mode) {
   render();
 }
 
-// Editing the timer length (minutes and seconds) keeps the time already counted, so extending a timer
-// you've started works.
-function setTimerLength() {
+// The minute and second boxes always show the timer's time right now, and typing in them sets the timer to exactly
+// that time. The work done so far is kept (it still counts toward the task). You can do it while it is running too:
+// it carries on counting down from the time you typed.
+function setTimerLength(source) {
   const id = workState.panelTaskId;
   const task = taskById(id);
   if (!task) return;
-  if (runningOn(id, 'timer')) { renderClockPanel(); return; } // pause first
   const c = getClock(id);
   let m = parseInt(document.getElementById('clockLenMin').value, 10);
-  let s = parseInt(document.getElementById('clockLenSec').value, 10);
+  let sec = parseInt(document.getElementById('clockLenSec').value, 10);
   if (isNaN(m) || m < 0) m = 0;
-  if (isNaN(s) || s < 0) s = 0;
-  let total = m * 60 + s;
-  if (total < 1) total = task.time * 60; // nothing usable typed: back to the task's own time
-  total = Math.min(total, 600 * 60);
-  c.lenMs = total * 1000;
-  // A shorter length can't erase work: whatever no longer fits on the timer is kept as worked time.
-  const extra = Math.max(0, c.timerElapsedMs - c.lenMs);
-  if (extra > 0) { c.bankedMs = (c.bankedMs || 0) + extra; c.timerElapsedMs -= extra; }
+  if (isNaN(sec) || sec < 0) sec = 0;
+  if (source === 'min') sec = 0; // typing new minutes means that many minutes (the seconds left over from the countdown don't stick)
+  let total = Math.min(m * 60 + sec, 600 * 60);
+  if (total < 1) { renderClockPanel(); return; } // nothing usable typed: put the real time back
+  const wasRunning = !!runningOn(id, 'timer');
+  if (wasRunning) pauseRunningClock();
+  c.bankedMs = (c.bankedMs || 0) + c.timerElapsedMs; // what was already counted stays as work done
+  c.timerElapsedMs = 0;
+  c.lenMs = total * 1000;                             // so the timer now reads exactly what you typed
   saveWork();
-  renderClockPanel();
+  if (wasRunning) startClock(id); else { renderClockPanel(); render(); }
 }
 
 function finishTimer(taskId) {
@@ -2770,15 +2834,16 @@ function finishTimer(taskId) {
   const ctx = timerRingCtx;
   timerRingCtx = null;
   if (settings.timerSoundOn !== false) {
-    if (ctx) setTimeout(function() { try { ctx.close(); } catch (e) {} }, 9000); // already ringing, close it afterwards
-    else previewTimerSound(settings.timerSound || 'bell');
+    silenceTimerRing();
+    if (ctx) { ringingCtx = ctx; setTimeout(function() { if (ringingCtx === ctx) silenceTimerRing(); }, 11000); } // already ringing: let it finish, then close it
+    else { try { const AC = window.AudioContext || window.webkitAudioContext; const c2 = new AC(); scheduleRing(c2, settings.timerSound || 'bell', 0, makeRingDest(c2)); ringingCtx = c2; setTimeout(function() { if (ringingCtx === c2) silenceTimerRing(); }, 11000); } catch (e) {} }
   } else if (ctx) {
     try { ctx.close(); } catch (e) {}
   }
   saveWork();
   renderClockPanel();
   render();
-  showToast('Timer finished' + (task ? ': ' + task.title : '') + '.');
+  showToast((task ? task.title + ' timer finished' : 'Timer finished') + '.');
 }
 
 // Called when the break button is pressed, a task is ticked done, or a task is removed.
@@ -2787,6 +2852,7 @@ function pauseClockIfTask(taskId) {
 }
 
 function forgetTaskClock(taskId) {
+  silenceTimerRing();
   pauseClockIfTask(taskId);
   delete workState.clocks[taskId];
   workState.log = workState.log.filter(function(s) { return s.taskId !== taskId; }); // its worked stretches go too
@@ -2811,32 +2877,42 @@ function makeRingDest(ctx) {
   return comp;
 }
 
-// Schedules a ring (about 6 seconds, repeating a few times so you notice it) to start `delay` seconds from now.
-function scheduleRing(ctx, name, delay, dest) {
+// Schedules a ring to start `delay` seconds from now. It rings 3 times over about 8 seconds, so you can't miss it;
+// press Stop sound, Start, Reset, or tick the task to silence it early. `times` limits the repeats (the preview in Settings plays 2).
+function scheduleRing(ctx, name, delay, dest, times) {
   function tone(freq, at, dur, type, vol) { playTone(ctx, freq, delay + at, dur, type, vol, dest); }
+  function starts(count, step) { const n = times ? Math.min(times, count) : count; const a = []; for (let i = 0; i < n; i++) a.push(i * step); return a; }
   if (name === 'marimba') {
-    [0, 1.7, 3.4].forEach(function(t) {
+    starts(3, 3.7).forEach(function(t) {
       [523.25, 659.25, 783.99, 1046.5].forEach(function(f, i) { tone(f, t + i * 0.13, 0.6, 'sine', 0.28); });
     });
   } else if (name === 'harp') {
-    [0, 2.6].forEach(function(t) {
+    starts(3, 3.1).forEach(function(t) {
       [523.25, 587.33, 659.25, 783.99, 880, 1046.5, 1318.5].forEach(function(f, i) { tone(f, t + i * 0.11, 1.4, 'triangle', 0.17); });
     });
   } else if (name === 'dingdong') {
-    [0, 1.9, 3.8].forEach(function(t) {
+    starts(3, 3.3).forEach(function(t) {
       tone(659.25, t, 0.9, 'sine', 0.32); tone(1318.5, t, 0.5, 'sine', 0.10);
       tone(523.25, t + 0.55, 1.2, 'sine', 0.32); tone(1046.5, t + 0.55, 0.6, 'sine', 0.10);
     });
   } else if (name === 'windchimes') {
     const notes = [1046.5, 1318.5, 1568, 1760, 2093, 1568, 1318.5, 1760, 2093, 1046.5];
-    [0, 2.4].forEach(function(t) {
+    starts(3, 2.6).forEach(function(t) {
       notes.forEach(function(f, i) { tone(f, t + i * 0.17 + (i % 3) * 0.04, 1.5, 'sine', 0.11); });
     });
   } else { // bell
-    [0, 1.9, 3.8].forEach(function(t) {
+    starts(3, 3.3).forEach(function(t) {
       tone(523.25, t, 1.7, 'sine', 0.30); tone(1046.5, t, 1.1, 'sine', 0.14); tone(784, t, 1.3, 'sine', 0.10);
     });
   }
+}
+
+// The ring that is sounding right now (after a timer ran out), so it can be silenced.
+let ringingCtx = null;
+function silenceTimerRing() {
+  if (ringingCtx) { try { ringingCtx.close(); } catch (e) {} ringingCtx = null; }
+  const b = document.getElementById('clockStopRingBtn');
+  if (b) b.style.display = 'none';
 }
 
 // The ring is scheduled in the audio system the moment you press Start, so it still goes off on time
@@ -2866,7 +2942,7 @@ function previewTimerSound(name) {
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return;
     const ctx = new AC();
-    scheduleRing(ctx, name, 0, makeRingDest(ctx));
+    scheduleRing(ctx, name, 0, makeRingDest(ctx), 2); // just a taste of it
     setTimeout(function() { try { ctx.close(); } catch (e) {} }, 9000);
   } catch (e) {}
 }
@@ -2947,12 +3023,12 @@ function renderClockPanel() {
 
   const lenRow = document.getElementById('clockLenRow');
   lenRow.style.display = (mode === 'timer') ? 'flex' : 'none';
-  const lenSec = demo ? 25 * 60 : Math.round(timerLenMs(c, task) / 1000);
+  const lenSec = demo ? 25 * 60 : Math.max(0, Math.ceil((timerLenMs(c, task) - timerElapsedMs(id)) / 1000)); // the time on the timer right now
   const lenMinInput = document.getElementById('clockLenMin');
   const lenSecInput = document.getElementById('clockLenSec');
-  lenMinInput.value = Math.floor(lenSec / 60);
-  lenSecInput.value = lenSec % 60;
-  lenMinInput.disabled = lenSecInput.disabled = demo || !!runningOn(id, 'timer');
+  if (document.activeElement !== lenMinInput) lenMinInput.value = Math.floor(lenSec / 60);
+  if (document.activeElement !== lenSecInput) lenSecInput.value = lenSec % 60;
+  lenMinInput.disabled = lenSecInput.disabled = demo;
 
   const startBtn = document.getElementById('clockStartBtn');
   startBtn.textContent = running ? 'Pause' : 'Start';
@@ -2980,6 +3056,8 @@ function renderClockPanel() {
 }
 
 function updateClockDisplay() {
+  const stopBtn = document.getElementById('clockStopRingBtn');
+  if (stopBtn) stopBtn.style.display = ringingCtx ? '' : 'none'; // "Stop sound" shows only while the timer is ringing
   const el = document.getElementById('clockDisplay');
   const panel = document.getElementById('clockPanel');
   if (!el || !panel || panel.style.display === 'none') return;
@@ -2987,8 +3065,14 @@ function updateClockDisplay() {
   const task = (id !== null && id !== undefined) ? taskById(id) : null;
   if (!task) { el.textContent = '25:00'; return; }
   const c = getClock(id);
-  if (c.mode === 'timer') el.textContent = formatClock(timerLenMs(c, task) - timerElapsedMs(id), false);
-  else el.textContent = formatClock(stopwatchElapsedMs(id), true);
+  if (c.mode === 'timer') {
+    el.textContent = formatClock(timerLenMs(c, task) - timerElapsedMs(id), false);
+    // keep the minute/second boxes showing the same time (but never while you are typing in one)
+    const left = Math.max(0, Math.ceil((timerLenMs(c, task) - timerElapsedMs(id)) / 1000));
+    const mi = document.getElementById('clockLenMin'), si = document.getElementById('clockLenSec');
+    if (document.activeElement !== mi && String(mi.value) !== String(Math.floor(left / 60))) mi.value = Math.floor(left / 60);
+    if (document.activeElement !== si && String(si.value) !== String(left % 60)) si.value = left % 60;
+  } else el.textContent = formatClock(stopwatchElapsedMs(id), true);
 }
 
 function clockTick() {
@@ -4364,7 +4448,7 @@ const MIN_PIECE = 10;
 //   bounds          {start,end} the working hours
 //   nowMin          minutes since midnight when planning TODAY (nothing is placed in the past), or null
 //   completedPlaced already-finished blocks to include in the result (today only)
-function planDay(pending, busyBlocks, bounds, nowMin, completedPlaced) {
+function planDay(pending, busyBlocks, bounds, nowMin, completedPlaced, workInfo) {
   function isQuick(t) { return t.time < 5 && t.motivation >= 7; }
   // (a task you're working on right now is planned first, whatever its priority, size, or "optional" setting)
   const reqNormal = pending.filter(function(t) { return t.isRunning || (!t.optional && !isQuick(t)); }).sort(taskSortFn);
@@ -4440,8 +4524,24 @@ function planDay(pending, busyBlocks, bounds, nowMin, completedPlaced) {
   // long, and only go between tasks, never in the middle of one. No trailing break after the
   // last task, since nothing important follows it.
   let breakIdCounter = 1;
-  let workSinceBreak = 0, shortBreakCount = 0;
+  // Time you have already worked since your last break counts toward the next one (spend 25 minutes on a 10-minute
+  // task and a break is due).
+  let workSinceBreak = (workInfo && workInfo.priorWorkMin) || 0;
+  let shortBreakCount = 0;
   const workThreshold = settings.shortWorkMin || 25;
+  // Already worked a break's worth and not in the middle of a running clock: the break comes first.
+  if (workSinceBreak >= workThreshold && reqNormal.length && !reqNormal.some(function(t) { return t.isRunning; })) {
+    const firstBreakLen = settings.shortBreakMin || 5;
+    const wi = windows.findIndex(function(w) { return w.end - w.start >= firstBreakLen; });
+    if (wi !== -1) {
+      const br0 = { id: 'break-' + (breakIdCounter++), type: 'break', breakType: 'short', title: 'Short Break', startMin: windows[wi].start, endMin: windows[wi].start + firstBreakLen, used: 0 };
+      placed.push(br0);
+      breaks.push(br0);
+      windows[wi].start += firstBreakLen;
+      workSinceBreak = 0;
+      shortBreakCount++;
+    }
+  }
   reqNormal.forEach(function(task, idx) {
     const w = placeTask(task);
     if (!w) { unplaced.push(task); return; }
@@ -4488,7 +4588,13 @@ function computeSchedule() {
   const fixed = getFixedBlocks();
   // A task you already worked on only needs the rest of its time planned (the worked part is on the schedule already).
   const runningId = currentTaskId(); // running now, or else the one you worked on most recently and haven't checked off
-  const pending = tasks.filter(function(t) { return isTaskActiveToday(t) && !t.completed; }).map(function(t) {
+  const hasWorkToday = {};
+  sessionBlocksToday().forEach(function(x) { hasWorkToday[x.taskId] = true; });
+  const pending = tasks.filter(function(t) {
+    if (!isTaskActiveToday(t) || t.completed) return false;
+    // worked as long as it was planned (or longer): nothing is left to plan, its worked block is the task
+    return !(hasWorkToday[t.id] && workedMsFor(t.id) / 60000 >= t.time);
+  }).map(function(t) {
     const workedMin = workedMsFor(t.id) / 60000;
     let copy = workedMin > 0 ? Object.assign({}, t, { planMin: Math.max(1, Math.round(t.time - workedMin)) }) : t;
     if (t.id === runningId) copy = Object.assign({}, copy, { isRunning: true });
@@ -4499,7 +4605,18 @@ function computeSchedule() {
   const completedPlaced = fixed.completed.map(function(c) {
     return Object.assign({}, c.task, { startMin: c.startMin, endMin: c.endMin });
   });
-  return planDay(pending, busy, getDayBounds(), nowMinutesSinceMidnight(), completedPlaced);
+  const workInfo = { priorWorkMin: workedSinceBreakMin(fixed.completed), clockRunning: !!workState.running };
+  return planDay(pending, busy, getDayBounds(), nowMinutesSinceMidnight(), completedPlaced, workInfo);
+}
+
+// Minutes you actually worked (timer, stopwatch, and finished tasks) since your last break today.
+function workedSinceBreakMin(finishedPieces) {
+  let lastBreakEnd = 0;
+  manualBreaks.forEach(function(b) { if (b.endMin > lastBreakEnd) lastBreakEnd = b.endMin; });
+  let total = 0;
+  sessionBlocksToday().forEach(function(x) { if (x.startMin >= lastBreakEnd) total += x.endMin - x.startMin; });
+  finishedPieces.forEach(function(c) { if (c.startMin >= lastBreakEnd) total += c.endMin - c.startMin; });
+  return total;
 }
 
 // Working hours for any weekday ("Mon", "Tue", ...).
@@ -4759,20 +4876,21 @@ function renderGrid(sched) {
     el.ondragstart = function(e) { draggedLocalEventId = ev.id; e.dataTransfer.effectAllowed = 'move'; };
     addItem(item.startMin, item.endMin, el);
   });
-  // While a task's timer or stopwatch is running, the worked part and the part still to do are ONE block
-  // (the now-line passes through it) instead of the same task showing twice.
+  // The task you are on (clock running, or paused with nothing else started) and the part of it still to do are ONE
+  // block, with the now-line passing through it, instead of the same task showing twice.
   let schedList = (sched || computeSchedule()).slice();
   const mergedSessions = {};
-  sessionBlocksToday().forEach(function(s) {
-    if (!s.running) return;
+  const stretches = workStretches().filter(function(st) { return !st.task.completed; });
+  stretches.forEach(function(st) {
+    if (!st.current) return;
     let best = -1;
     schedList.forEach(function(p, i) {
-      if (p.type || p.id !== s.taskId || p.completed) return;
-      if (p.startMin <= s.endMin + 1 && p.endMin > s.startMin && (best === -1 || p.startMin < schedList[best].startMin)) best = i;
+      if (p.type || p.id !== st.taskId || p.completed) return;
+      if (p.startMin <= st.endMin && p.endMin > st.startMin && (best === -1 || p.startMin < schedList[best].startMin)) best = i;
     });
     if (best === -1) return;
-    schedList[best] = Object.assign({}, schedList[best], { startMin: Math.min(s.startMin, schedList[best].startMin) });
-    mergedSessions[s.id] = true;
+    schedList[best] = Object.assign({}, schedList[best], { startMin: Math.min(st.startMin, schedList[best].startMin) });
+    st.merged = true;
   });
   // A finished task whose worked stretches and finished pieces touch each other is ONE block, not several.
   const finishedSessions = sessionBlocksToday().filter(function(s) { return s.task.completed && !mergedSessions[s.id]; });
@@ -4808,12 +4926,12 @@ function renderGrid(sched) {
     });
   });
   schedList = schedList.filter(Boolean);
-  // The stretches you really worked on a task with the timer or stopwatch. Switching tasks shows as task A,
-  // then task B, then task A again. Each one is a normal block with its checkbox and pencil, so you can check the
-  // task off from any piece of it.
-  sessionBlocksToday().forEach(function(s) {
-    if (mergedSessions[s.id]) return; // drawn as part of the task's own block
-    schedList.push(Object.assign({}, s.task, { startMin: s.startMin, endMin: s.endMin, worked: true, workedRunning: s.running }));
+  // What you worked on earlier, before moving on to something else. Switching tasks shows as task A, then task B,
+  // then task A again. Each piece is a normal block with its checkbox and pencil, so you can check the task off from
+  // any of them.
+  stretches.forEach(function(st) {
+    if (st.merged) return;
+    schedList.push(Object.assign({}, st.task, { startMin: st.startMin, endMin: st.endMin, worked: true, workedRunning: st.running, workedCurrent: st.current }));
   });
   schedList.forEach(function(t) {
     const el = document.createElement('div');
@@ -4848,7 +4966,7 @@ function renderGrid(sched) {
     }
     // Short blocks only show the title: there isn't room for a second line without cutting something off.
     const showMeta = duration >= 30;
-    el.innerHTML = '<label class="task-checkbox-wrap" onclick="event.stopPropagation()"><input type="checkbox" ' + (t.completed ? 'checked' : '') + ' onchange="toggleComplete(' + t.id + ')"></label><span class="title">' + escapeHtml(t.title + partSuffix) + (t.worked ? ' <span class="worked-tag">worked</span>' : '') + (t.optional ? '<span class="badge">Optional</span>' : '') + '</span>' + (showMeta ? '<span class="meta">' + escapeHtml(metaText) + '</span>' : '') + '<button type="button" class="task-edit-btn" title="Edit this task" aria-label="Edit this task" onclick="event.stopPropagation(); startEditTask(' + t.id + ')">&#9998;</button>';
+    el.innerHTML = '<label class="task-checkbox-wrap" onclick="event.stopPropagation()"><input type="checkbox" ' + (t.completed ? 'checked' : '') + ' onchange="toggleComplete(' + t.id + ')"></label><span class="title">' + escapeHtml(t.title + partSuffix) + (t.worked && !t.workedCurrent ? ' <span class="worked-tag">worked</span>' : '') + (t.optional ? '<span class="badge">Optional</span>' : '') + '</span>' + (showMeta ? '<span class="meta">' + escapeHtml(metaText) + '</span>' : '') + '<button type="button" class="task-edit-btn" title="Edit this task" aria-label="Edit this task" onclick="event.stopPropagation(); startEditTask(' + t.id + ')">&#9998;</button>';
     el.onclick = function() { openClockPanel(t.id); };
     el.oncontextmenu = function(e) { showTaskTooltip(e, t); };
     el.draggable = true;

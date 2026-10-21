@@ -10,7 +10,7 @@
 // Only a signed-in person can use it, and only for their own data (it is stored under their Google id).
 
 import { getSession } from './_lib/session.js';
-import { getUserRecord, setUserRecord, deleteUserRecord, storeConfigured } from './_lib/store.js';
+import { getUserRecord, setUserRecord, deleteUserRecord, storeConfigured, resolveOwner, getIdentities, setIdentities, deleteIdentities, deleteLink } from './_lib/store.js';
 
 const MAX_BYTES = 900 * 1024; // one person's data must stay under about 900 KB
 
@@ -28,8 +28,11 @@ export default async function handler(req, res) {
   }
 
   try {
+    // If this Google account was added to another one (home + school), the data belongs to the first.
+    const owner = await resolveOwner(session.sub);
+
     if (req.method === 'GET') {
-      const record = await getUserRecord(session.sub);
+      const record = await getUserRecord(owner);
       const since = parseInt(String(req.query.since || ''), 10);
       if (record && !isNaN(since) && since === record.rev) {
         res.status(200).json({ ok: true, rev: record.rev, unchanged: true });
@@ -57,20 +60,24 @@ export default async function handler(req, res) {
         res.status(413).json({ ok: false, error: 'too_big' });
         return;
       }
-      const record = await getUserRecord(session.sub);
+      const record = await getUserRecord(owner);
       const currentRev = record ? record.rev : 0;
       if (Number(body.baseRev) !== currentRev) {
         res.status(409).json({ ok: false, conflict: true, rev: currentRev, data: record ? record.data : null });
         return;
       }
       const next = { rev: currentRev + 1, updatedAt: Date.now(), data: body.data };
-      await setUserRecord(session.sub, next);
+      await setUserRecord(owner, next);
       res.status(200).json({ ok: true, rev: next.rev });
       return;
     }
 
     if (req.method === 'DELETE') {
-      await deleteUserRecord(session.sub);
+      // deleting the online copy also forgets the connected Google accounts
+      const list = (await getIdentities(owner)) || [];
+      for (let i = 0; i < list.length; i++) { if (list[i].sub !== owner) await deleteLink(list[i].sub); }
+      await deleteIdentities(owner);
+      await deleteUserRecord(owner);
       res.status(200).json({ ok: true });
       return;
     }

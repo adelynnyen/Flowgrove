@@ -42,3 +42,24 @@ export async function setUserRecord(sub, record) {
 export async function deleteUserRecord(sub) {
   await run(['DEL', keyFor(sub)]);
 }
+
+// ----- Several Google accounts, one set of data -----
+// A person can add a second Google account (say home and school). The first account owns the data. Each added
+// account gets a "link" that points to the owner, so signing in with either one opens the same data.
+//   fg:link:<google id>   -> the owner's id          (only for added accounts)
+//   fg:ids:<owner id>     -> the list of Google accounts that open this data (id, email, name)
+
+export async function resolveOwner(sub) {
+  const owner = await run(['GET', 'fg:link:' + sub]);
+  return owner || sub;
+}
+export async function setLink(sub, owner) { await run(['SET', 'fg:link:' + sub, owner]); }
+export async function deleteLink(sub) { await run(['DEL', 'fg:link:' + sub]); }
+
+export async function getIdentities(owner) {
+  const raw = await run(['GET', 'fg:ids:' + owner]);
+  if (!raw) return null;
+  try { const list = JSON.parse(raw); return Array.isArray(list) ? list : null; } catch (e) { return null; }
+}
+export async function setIdentities(owner, list) { await run(['SET', 'fg:ids:' + owner, JSON.stringify(list)]); }
+export async function deleteIdentities(owner) { await run(['DEL', 'fg:ids:' + owner]); }

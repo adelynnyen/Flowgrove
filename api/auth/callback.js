@@ -1,7 +1,7 @@
 // Handles Google's redirect back. There are two reasons someone can arrive here:
 //   1) They connected Google Calendar (state starts with a plain id). We swap the code for calendar access
 //      tokens and keep them in secure, HTTP-only cookies.
-//   2) They signed in to Flowgrove (state starts with "login."). We ask Google who they are and remember them
+//   2) They signed in to Flowfill (state starts with "login."). We ask Google who they are and remember them
 //      with a signed session cookie. No calendar access is involved.
 //   3) They added a second Google account (state starts with "link."), e.g. home + school, so both open the
 //      same tasks.
@@ -12,11 +12,11 @@
 
 // Must exactly match the constant in api/auth/google.js and the URI
 // registered in Google Cloud Console.
-const APP_DOMAIN = 'https://flowgrove.vercel.app';
 
 import { makeSessionCookie, getSession } from '../_lib/session.js';
 import { storeConfigured, resolveOwner, getUserRecord, setUserRecord, deleteUserRecord, getIdentities, setIdentities, deleteIdentities, setLink } from '../_lib/store.js';
 import { mergeData } from '../_lib/merge.js';
+import { appDomain } from '../_lib/app.js';
 
 const MAX_LINKED_ACCOUNTS = 3;
 
@@ -48,7 +48,7 @@ function redirect(res, location, cookies) {
 // Swaps Google's one-time code for the person's identity (id, name, email). Used by both sign-in and
 // "add another Google account". The id_token comes straight from Google over a secure connection, so its
 // contents can be trusted; we still check that it is for our app and not expired.
-async function exchangeForClaims(code) {
+async function exchangeForClaims(code, domain) {
   const tokenResp = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -56,7 +56,7 @@ async function exchangeForClaims(code) {
       code: code,
       client_id: process.env.GOOGLE_CLIENT_ID,
       client_secret: process.env.GOOGLE_CLIENT_SECRET,
-      redirect_uri: `${APP_DOMAIN}/api/auth/callback`,
+      redirect_uri: `${domain}/api/auth/callback`,
       grant_type: 'authorization_code'
     })
   });
@@ -83,7 +83,7 @@ async function handleLogin(req, res) {
     return redirect(res, '/index.html?login_error=bad_state', clearLogin);
   }
   try {
-    const result = await exchangeForClaims(code);
+    const result = await exchangeForClaims(code, appDomain(req));
     if (result.error) return redirect(res, '/index.html?login_error=' + result.error, clearLogin);
     const claims = result.claims;
     // If this Google account was added to another one (home + school), the data belongs to the first one.
@@ -106,7 +106,7 @@ async function handleLink(req, res) {
   if (!req.query.code || !savedState || savedState !== req.query.state) return back('link_error=bad_state');
   if (!storeConfigured()) return back('link_error=db_not_configured');
   try {
-    const result = await exchangeForClaims(req.query.code);
+    const result = await exchangeForClaims(req.query.code, appDomain(req));
     if (result.error) return back('link_error=' + result.error);
     const claims = result.claims;
     const A = await resolveOwner(session.sub);   // the account you are signed in to
@@ -163,7 +163,7 @@ export default async function handler(req, res) {
     return redirect(res, '/index.html?calendar_error=bad_state');
   }
 
-  const redirectUri = `${APP_DOMAIN}/api/auth/callback`;
+  const redirectUri = `${appDomain(req)}/api/auth/callback`;
 
   try {
     const tokenResp = await fetch('https://oauth2.googleapis.com/token', {

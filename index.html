@@ -8,9 +8,9 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Flowgrove">
+<meta name="apple-mobile-web-app-title" content="Flowfill">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<title>Flowgrove</title>
+<title>Flowfill</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
@@ -90,7 +90,10 @@
   .allday-strip { display: none; align-items: center; flex-wrap: wrap; gap: 6px; margin: 0 0 8px; }
   .allday-label { width: 50px; font-size: 11px; color: var(--ink-soft); text-align: right; padding-right: 6px; }
   .allday-pill { font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 6px; }
-  .progress-pill { font-size: 12px; color: var(--ink-soft); background: #f4f6f5; border-radius: 20px; padding: 4px 10px; }
+  .progress-pill { font-size: 12px; color: var(--ink-soft); background: #f4f6f5; border-radius: 20px; padding: 4px 10px; transition: background 0.3s ease, color 0.3s ease; }
+  .progress-pill.all-done { background: #2e8b57; color: #fff; font-weight: 600; }
+  #allDonePopup { position: fixed; top: 40%; left: 50%; transform: translate(-50%,-50%) scale(0.85); background: #1e8a4c; color: #fff; padding: 28px 44px; border-radius: 20px; font-size: 30px; font-weight: 700; text-align: center; max-width: 86vw; box-shadow: 0 16px 50px rgba(0,0,0,0.3); z-index: 700; opacity: 0; pointer-events: none; transition: opacity 0.3s ease, transform 0.3s ease; }
+  #allDonePopup.show { opacity: 1; transform: translate(-50%,-50%) scale(1); }
   .grid { position: relative; border-top: 1px solid var(--border); }
   #nowLine { position: absolute; left: var(--hour-w, 56px); right: 0; height: 2px; background: #1e5631; z-index: 5; pointer-events: none; }
   #nowLineLabel { position: absolute; left: 2px; width: calc(var(--hour-w, 56px) - 4px); text-align: right; font-size: 10px; font-weight: 700; color: #1e5631; z-index: 6; pointer-events: none; }
@@ -330,6 +333,7 @@
     .view-nav .icon-btn { padding: 3px 8px; font-size: 12px; }
     .schedule-header h2 { font-size: 13.5px; }
     .progress-pill { font-size: 10px; padding: 2px 7px; white-space: nowrap; }
+    #allDonePopup { font-size: 21px; padding: 20px 24px; }
     #nowLineLabel { font-size: 8.5px; white-space: nowrap; }
     .hour-label { font-size: 9.5px; padding-right: 4px; }
     .block { font-size: 10.5px; padding: 3px 6px; }
@@ -397,7 +401,7 @@
 
 <div class="topbar">
   <div class="topbar-title">
-    <div class="brand">Flowgrove</div>
+    <div class="brand">Flowfill</div>
     <div id="liveClock" class="live-clock"></div>
   </div>
   <div class="view-switch">
@@ -415,7 +419,7 @@
 
 <div class="modal-overlay" id="welcomeOverlay">
   <div class="modal" style="text-align:center;max-width:360px;">
-    <div class="brand" style="font-size:24px;margin-bottom:6px;">Flowgrove</div>
+    <div class="brand" style="font-size:24px;margin-bottom:6px;">Flowfill</div>
     <p style="margin:0 0 16px;color:var(--ink-soft);font-size:14px;">Sign in with Google to bring your tasks and settings to this device.</p>
     <a class="welcome-primary" href="/api/auth/login">Sign in with Google</a>
     <button type="button" class="icon-btn" style="width:100%;margin-top:10px;" onclick="window.location.href='account-setup.html'">Continue without an account</button>
@@ -722,7 +726,7 @@
     <div class="settings-section">
       <h4>Google Calendar</h4>
       <div id="calendarConnectionStatus"></div>
-      <p style="font-size:11px;color:var(--ink-soft);margin-top:6px;">Events from every calendar you have switched on in Google Calendar (yours, school, family, holidays...) show up as fixed blocks on your schedule, with all-day events at the top. They can't be moved or edited from within Flowgrove, only from Google Calendar itself. Flowgrove only reads your calendar, it never changes it.</p>
+      <p style="font-size:11px;color:var(--ink-soft);margin-top:6px;">Events from every calendar you have switched on in Google Calendar (yours, school, family, holidays...) show up as fixed blocks on your schedule, with all-day events at the top. They can't be moved or edited from within Flowfill, only from Google Calendar itself. Flowfill only reads your calendar, it never changes it.</p>
     </div>
 
     <div class="settings-section">
@@ -738,6 +742,7 @@
 </div>
 
 <div id="completionPopup"></div>
+<div id="allDonePopup"></div>
 <div id="infoToast" class="saying-toast"></div>
 
 <div class="modal-overlay" id="breakLengthOverlay">
@@ -2414,8 +2419,10 @@ function toggleComplete(id) {
   const t = tasks.find(x => x.id === id);
   if (!t) return;
   let justFinished = false;
+  let progressBefore = null;
   if (!t.completed) {
     justFinished = true;
+    progressBefore = taskProgress();
     silenceTimerRing();
     pauseClockIfTask(id); // finishing a task stops its clock...
     if (workState.panelTaskId === id) closeClockPanel(); // ...and its timer/stopwatch goes away (the time worked is kept)
@@ -2431,8 +2438,15 @@ function toggleComplete(id) {
     t.fixedEndMin = slot.end;
     t.completed = true;
     if (settings.sound) playCompletionSound();
-    maybeShowSaying();
-    if (settings.confetti !== false) launchConfetti();
+    const progressAfter = taskProgress();
+    if (progressAfter.optional > 0 && !progressBefore.everything && progressAfter.everything) {
+      celebrateAllDone(true);  // every task AND every optional one is done
+    } else if (!progressBefore.requiredAll && progressAfter.requiredAll) {
+      celebrateAllDone(false); // every task you needed to do is done (optional ones may remain, or there are none)
+    } else {
+      maybeShowSaying();
+      if (settings.confetti !== false) launchConfetti();
+    }
   } else {
     // Un-completing: release it back into normal auto-scheduling.
     t.completed = false;
@@ -2571,7 +2585,9 @@ function workStretches() {
       const otherLater = sessions.some(function(o) { return o.taskId !== curId && o.endMin > last.endMin; });
       const breakLater = manualBreaks.some(function(b) { return b.endMin > last.endMin; });
       last.current = true;
-      if (!otherLater && !breakLater && nowMin > last.endMin) last.endMin = nowMin;
+      let limit = nowMin;
+      getFixedBlocks().completed.forEach(function(c) { if (c.startMin >= last.endMin && c.startMin < limit) limit = c.startMin; }); // not over a finished task's block
+      if (!otherLater && !breakLater && limit > last.endMin) last.endMin = limit;
     }
   }
   return out;
@@ -4194,7 +4210,9 @@ function previewSound(name) {
 // Confetti rains across the whole screen for a few seconds (can be turned off in Settings).
 let confettiPieces = [];
 let confettiAnimating = false;
-function launchConfetti() {
+function launchConfetti(opts) {
+  const count = (opts && opts.count) || 170;      // how many pieces
+  const spread = (opts && opts.spread) || 1.2;    // over how many seconds they start raining
   let cv = document.getElementById('confettiCanvas');
   if (!cv) {
     cv = document.createElement('canvas');
@@ -4206,7 +4224,7 @@ function launchConfetti() {
   cv.height = window.innerHeight;
   const colors = ['#f94144', '#f3722c', '#f9c74f', '#90be6d', '#43aa8b', '#4d96ff', '#c77dff', '#ff70a6'];
   const startedAt = performance.now();
-  for (let i = 0; i < 170; i++) {
+  for (let i = 0; i < count; i++) {
     confettiPieces.push({
       x: Math.random() * cv.width,
       y: -20 - Math.random() * cv.height * 0.35,                 // start above the top edge, at different heights
@@ -4215,7 +4233,7 @@ function launchConfetti() {
       w: 6 + Math.random() * 7, h: 9 + Math.random() * 8,
       rot: Math.random() * Math.PI * 2, vr: (Math.random() - 0.5) * 9,
       color: colors[Math.floor(Math.random() * colors.length)],
-      delay: Math.random() * 1.2                                  // so it rains instead of dropping all at once
+      delay: Math.random() * spread                               // so it rains instead of dropping all at once
     });
   }
   if (confettiAnimating) return;
@@ -4396,7 +4414,16 @@ function getFixedBlocks() {
       const mine = blockers.filter(function(b) { return !b.key || skip.indexOf(b.key) === -1; }).concat(sessions);
       let pieces = clipPieces(t.fixedStartMin, t.fixedEndMin, mine);
       const hasOwnWork = sessions.some(function(s) { return s.taskId === t.id; });
-      if (!pieces.length && !hasOwnWork) pieces = [{ s: t.fixedStartMin, e: Math.max(t.fixedEndMin, t.fixedStartMin + 1) }]; // a finished task is never hidden
+      if (!pieces.length && !hasOwnWork) {
+        // a finished task is never hidden: it gets a one-minute block in the first free minute at or after where it ended
+        let m1 = Math.max(t.fixedEndMin, t.fixedStartMin + 1) - 1;
+        for (let guard = 0; guard < 30; guard++) {
+          const hit = mine.find(function(x) { return x.startMin < m1 + 1 && x.endMin > m1; });
+          if (!hit) break;
+          m1 = hit.endMin;
+        }
+        pieces = [{ s: m1, e: m1 + 1 }];
+      }
       pieces.forEach(function(c) {
         completed.push({ task: t, startMin: c.s, endMin: c.e });
         blockers.push({ startMin: c.s, endMin: c.e });
@@ -4427,16 +4454,23 @@ function findCompletedSlot(task, nowMin) {
   }
   busy.forEach(function(b) { if (b.endMin <= end && b.endMin > start) start = b.endMin; });
   start = Math.max(0, start);
-  // Always at least one minute long, so a finished task never disappears from the schedule.
+  // Always at least one minute long, so a finished task never disappears from the schedule, and that minute
+  // is a free one (just before, or else just after, whatever is already there).
   if (end - start < 1) {
+    const clear = function(a, b) { return !busy.some(function(x) { return x.startMin < b && x.endMin > a; }); };
     start = Math.max(0, end - 1);
     if (end - start < 1) end = start + 1;
+    if (!clear(start, end)) {
+      let s2 = end;
+      for (let guard = 0; guard < 25 && !clear(s2, s2 + 1); guard++) busy.forEach(function(x) { if (x.startMin <= s2 && s2 < x.endMin) s2 = x.endMin; });
+      start = s2; end = s2 + 1;
+    }
   }
   return { start: start, end: end };
 }
 
 // The smallest piece a task may be split into when an event is in the way (in minutes).
-const MIN_PIECE = 10;
+const MIN_PIECE = 3; // the smallest piece of a split task worth drawing; a smaller gap than this can stay empty
 
 // The planner. It builds one day's schedule, strictly in priority order. Nothing is ever placed ahead
 // of a task that outranks it: if an event is in the way, a task is split (start, pause for the event,
@@ -4449,12 +4483,9 @@ const MIN_PIECE = 10;
 //   nowMin          minutes since midnight when planning TODAY (nothing is placed in the past), or null
 //   completedPlaced already-finished blocks to include in the result (today only)
 function planDay(pending, busyBlocks, bounds, nowMin, completedPlaced, workInfo) {
-  function isQuick(t) { return t.time < 5 && t.motivation >= 7; }
   // (a task you're working on right now is planned first, whatever its priority, size, or "optional" setting)
-  const reqNormal = pending.filter(function(t) { return t.isRunning || (!t.optional && !isQuick(t)); }).sort(taskSortFn);
-  const reqQuick = pending.filter(function(t) { return !t.isRunning && !t.optional && isQuick(t); }).sort(taskSortFn);
-  const optNormal = pending.filter(function(t) { return !t.isRunning && t.optional && !isQuick(t); }).sort(taskSortFn);
-  const optQuick = pending.filter(function(t) { return !t.isRunning && t.optional && isQuick(t); }).sort(taskSortFn);
+  const reqNormal = pending.filter(function(t) { return t.isRunning || !t.optional; }).sort(taskSortFn);
+  const optNormal = pending.filter(function(t) { return !t.isRunning && t.optional; }).sort(taskSortFn);
 
   const busy = busyBlocks.slice().sort(function(a, b) { return a.startMin - b.startMin; });
   let windows = [];
@@ -4483,8 +4514,8 @@ function planDay(pending, busyBlocks, bounds, nowMin, completedPlaced, workInfo)
   let frontier = 0;
 
   // Places a task. If it doesn't fit before the next event it is split: a piece before the event
-  // and the rest afterward. Every piece is at least MIN_PIECE minutes (a task shorter than that
-  // is never split). Returns the open stretch where the LAST piece ended (so a break can go
+  // and the rest afterward. Every piece fills the free time it is in (at least MIN_PIECE minutes; a task shorter
+  // than that is never split). Returns the open stretch where the LAST piece ended (so a break can go
   // right after it), or null if the whole task doesn't fit today.
   function placeTask(task) {
     let remaining = task.planMin || task.time; // minutes still to plan (less if you already worked on it)
@@ -4499,8 +4530,10 @@ function planDay(pending, busyBlocks, bounds, nowMin, completedPlaced, workInfo)
       if (room >= remaining) {
         len = remaining;
       } else {
-        len = Math.min(room, remaining - MIN_PIECE);
-        if (len < MIN_PIECE) continue; // this gap is too small to work in, leave it empty
+        // The task doesn't fit before the next event: this piece takes ALL of the free time, and the rest of the
+        // task carries on after the event (the pieces don't have to be equal).
+        if (room < MIN_PIECE) continue; // too small a gap to be worth a block
+        len = room;
       }
       undo.push([w, w.start]);
       pieces.push({ s: w.start, e: w.start + len });
@@ -4561,23 +4594,7 @@ function planDay(pending, busyBlocks, bounds, nowMin, completedPlaced, workInfo)
     }
   });
 
-  // Quick tasks go inside the first break that still has room for them (one after another, never
-  // on top of each other). With no break available they just take normal free time.
-  function placeQuick(task) {
-    const need = task.planMin || task.time;
-    for (let i = 0; i < breaks.length; i++) {
-      const b = breaks[i];
-      if (b.startMin + b.used + need <= b.endMin) {
-        placed.push(Object.assign({}, task, { startMin: b.startMin + b.used, endMin: b.startMin + b.used + need }));
-        b.used += need;
-        return true;
-      }
-    }
-    return !!placeTask(task);
-  }
-  reqQuick.forEach(function(t) { if (!placeQuick(t)) unplaced.push(t); });
   optNormal.forEach(function(t) { if (!placeTask(t)) unplaced.push(t); });
-  optQuick.forEach(function(t) { if (!placeQuick(t)) unplaced.push(t); });
 
   placed.unplaced = unplaced;
   return placed;
@@ -4821,6 +4838,32 @@ function findFixedConflict(startMin, endMin, ignoreLocalId) {
   return hit;
 }
 
+function resolveOverlaps(list, walls) {
+  const items = list.map(function(x) { return { x: x, s: x.startMin, e: x.endMin, rank: x.completed ? 3 : (x.worked ? 2 : 1) }; });
+  walls.forEach(function(w) { items.push({ x: null, s: w.startMin, e: w.endMin, rank: 4 }); });
+  items.sort(function(a, b) { return (b.rank - a.rank) || (a.s - b.s); }); // the most certain first
+  const kept = [];
+  items.forEach(function(it) {
+    if (it.x) {
+      for (let pass = 0; pass < 2; pass++) {
+        kept.forEach(function(k) {
+          if (k.e <= it.s || k.s >= it.e) return;      // not at the same time
+          if (k.s <= it.s) it.s = Math.max(it.s, k.e); // the stronger one covers the start: begin after it
+          else it.e = Math.min(it.e, k.s);             // otherwise stop where it begins
+        });
+      }
+      if (it.e - it.s < 1) {
+        if (!it.x.completed) return;                    // nothing left of it (a finished task always keeps a block)
+        it.e = it.s + 1;
+      }
+    }
+    kept.push(it);
+  });
+  return items.filter(function(i) { return i.x && kept.indexOf(i) !== -1; }).map(function(i) {
+    return (i.s === i.x.startMin && i.e === i.x.endMin) ? i.x : Object.assign({}, i.x, { startMin: i.s, endMin: i.e });
+  });
+}
+
 function renderGrid(sched) {
   const grid = document.getElementById('grid');
   grid.innerHTML = '';
@@ -4933,6 +4976,10 @@ function renderGrid(sched) {
     if (st.merged) return;
     schedList.push(Object.assign({}, st.task, { startMin: st.startMin, endMin: st.endMin, worked: true, workedRunning: st.running, workedCurrent: st.current }));
   });
+  // Safety net: blocks never share minutes. (A finished or worked block may sit beside a calendar event, and
+  // that's the only overlap there is.) Where two collide, the more certain one stays: breaks you took, then
+  // finished tasks, then time you worked, then what is planned.
+  schedList = resolveOverlaps(schedList, fixed.manual);
   schedList.forEach(function(t) {
     const el = document.createElement('div');
 
@@ -5173,10 +5220,41 @@ function renderTomorrow() {
   };
 }
 
-function updateProgress() {
+// Today's progress: the tasks you need to do, and the optional ones. (A day with ONLY optional tasks counts them all as
+// the tasks you need to do.)
+function taskProgress() {
   const todays = tasks.filter(isTaskActiveToday);
-  const done = todays.filter(function(t) { return t.completed; }).length;
-  document.getElementById('progressPill').textContent = done + ' of ' + todays.length + ' tasks done';
+  let required = todays.filter(function(t) { return !t.optional; });
+  let optional = todays.filter(function(t) { return t.optional; });
+  if (!required.length) { required = todays; optional = []; }
+  const doneIn = function(list) { return list.filter(function(t) { return t.completed; }).length; };
+  return {
+    required: required.length, requiredDone: doneIn(required),
+    optional: optional.length, optionalDone: doneIn(optional),
+    requiredAll: required.length > 0 && doneIn(required) === required.length,      // every task you need to do is done
+    everything: todays.length > 0 && doneIn(todays) === todays.length              // ...and every optional one too
+  };
+}
+
+function updateProgress() {
+  const pr = taskProgress();
+  const pill = document.getElementById('progressPill');
+  pill.textContent = pr.requiredDone + ' of ' + pr.required + ' tasks done' + (pr.optional ? ' \u00b7 ' + pr.optionalDone + ' of ' + pr.optional + ' optional' : '');
+  pill.classList.toggle('all-done', pr.requiredAll); // green once every task you need to do is done
+}
+
+// The last task of the day: lots and lots of confetti, and a big message. (The message only mentions the optional
+// tasks when there were some and you finished them all too.)
+function celebrateAllDone(evenOptional) {
+  if (settings.confetti !== false) {
+    launchConfetti({ count: 900, spread: 4 });
+    setTimeout(function() { launchConfetti({ count: 500, spread: 3 }); }, 2500);
+  }
+  const popup = document.getElementById('allDonePopup');
+  popup.textContent = evenOptional ? 'You completed all your tasks, even the optional ones!' : 'You completed all your tasks for today!';
+  popup.classList.add('show');
+  clearTimeout(window._allDoneTimer);
+  window._allDoneTimer = setTimeout(function() { popup.classList.remove('show'); }, 6000);
 }
 
 function openSettings() {
@@ -5390,12 +5468,12 @@ function exportData() {
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'flowgrove-data.json';
+  a.download = 'flowfill-data.json';
   a.click();
 }
 
 async function deleteAccount() {
-  if (!confirm('This clears all local Flowgrove data on this device. Continue?')) return;
+  if (!confirm('This clears all local Flowfill data on this device. Continue?')) return;
   if (syncUser) {
     // Signed in: the online copy would bring everything straight back, so ask about it.
     if (confirm('You are signed in. Also delete your online copy?\n\nOK = delete it too (your tasks will be gone from your other devices as well).\nCancel = keep the online copy.')) {
@@ -5584,7 +5662,7 @@ function startApp() {
     window.history.replaceState({}, '', 'index.html');
   } else if (params.get('link_error')) {
     const linkMsgs = {
-      other_account: 'That Google account is already connected to a different Flowgrove account, so it can\'t be added here.',
+      other_account: 'That Google account is already connected to a different Flowfill account, so it can\'t be added here.',
       too_many: 'You can connect up to 3 Google accounts.',
       not_signed_in: 'Sign in first, then add another Google account.',
       access_denied: 'No problem. Nothing was changed.'

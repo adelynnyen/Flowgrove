@@ -1,6 +1,6 @@
 {
-  "name": "Flowgrove",
-  "short_name": "Flowgrove",
+  "name": "Flowfill",
+  "short_name": "Flowfill",
   "description": "A daily schedule that plans your day around your tasks and your calendar.",
   "start_url": "/index.html",
   "scope": "/",

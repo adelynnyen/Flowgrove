@@ -3,10 +3,11 @@
 
 import { randomUUID } from 'crypto';
 import { getSession } from '../_lib/session.js';
+import { appDomain } from '../_lib/app.js';
 
-const APP_DOMAIN = 'https://flowgrove.vercel.app';
 
 export default function handler(req, res) {
+  const APP_DOMAIN = appDomain(req);
   if (!getSession(req)) {
     res.writeHead(302, { Location: '/index.html?link_error=not_signed_in' });
     res.end();

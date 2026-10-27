@@ -5,10 +5,11 @@
 // so nothing new has to be added in Google Cloud Console.
 
 import { randomUUID } from 'crypto';
+import { appDomain } from '../_lib/app.js';
 
-const APP_DOMAIN = 'https://flowgrove.vercel.app';
 
 export default function handler(req, res) {
+  const APP_DOMAIN = appDomain(req); // the address you are on
   // The "login." start tells the callback this is a sign-in, not a Calendar connection.
   const state = 'login.' + randomUUID();
   res.setHeader('Set-Cookie', `fg_login_state=${state}; HttpOnly; Secure; Path=/; Max-Age=600; SameSite=Lax`);

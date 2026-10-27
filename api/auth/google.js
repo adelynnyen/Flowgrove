@@ -5,15 +5,11 @@
 // under the OAuth Client's "Authorized redirect URIs".
 
 import { randomUUID } from 'crypto';
-
-// Hardcoded rather than derived from the request, since Vercel preview
-// deployments each get their own unique subdomain, and only the main
-// domain's callback URL is registered in Google Cloud Console.
-const APP_DOMAIN = 'https://flowgrove.vercel.app';
+import { appDomain } from '../_lib/app.js';
 
 export default function handler(req, res) {
   const clientId = process.env.GOOGLE_CLIENT_ID;
-  const redirectUri = `${APP_DOMAIN}/api/auth/callback`;
+  const redirectUri = `${appDomain(req)}/api/auth/callback`; // only addresses registered in Google Cloud are ever used
 
   // A random one-time "state" value. It is saved in a cookie here and must come back from
   // Google unchanged, which proves the sign-in was really started from this browser
@@ -25,7 +21,7 @@ export default function handler(req, res) {
     client_id: clientId,
     redirect_uri: redirectUri,
     response_type: 'code',
-    // Read-only access to the person's calendars and events. (Flowgrove never changes your calendar.)
+    // Read-only access to the person's calendars and events. (Flowfill never changes your calendar.)
     // Reading ALL of someone's calendars (school, family, ...) needs this one; the older
     // calendar.events permission only allows the main calendar.
     scope: 'https://www.googleapis.com/auth/calendar.readonly',

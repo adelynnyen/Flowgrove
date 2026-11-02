@@ -3,6 +3,7 @@
 
 import { getSession, sessionSecretConfigured } from './_lib/session.js';
 import { storeConfigured, resolveOwner, getIdentities } from './_lib/store.js';
+import { isAdminEmail } from './_lib/admin.js';
 
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
@@ -26,6 +27,7 @@ export default async function handler(req, res) {
     name: session ? session.name : '',
     email: session ? session.email : '',
     accounts: accounts,
+    isAdmin: !!(session && isAdminEmail(session.email)), // may read the feedback inbox
     syncReady: ready
   });
 }

@@ -395,6 +395,142 @@
   .schedule-header h2 { min-width: 0; }
   .declined-ev { opacity: 0.55; text-decoration: line-through; }
   .cal-count { font-size: 11px; color: var(--ink-soft); margin-left: 4px; }
+
+  /* ---- feedback button, window, and inbox ---- */
+  .fb-btn .tb-ico { display: inline; }
+  .feedback-modal h2 { margin: 0 0 4px; }
+  .fb-intro { margin: 0 0 14px; color: var(--ink-soft); font-size: 13px; }
+  .fb-field { margin-bottom: 12px; }
+  .fb-field label { display: block; font-size: 12.5px; font-weight: 600; margin-bottom: 4px; color: var(--ink); }
+  .fb-field select, .fb-field textarea, .fb-field input[type=text] { width: 100%; box-sizing: border-box; border: 1px solid var(--border); border-radius: 10px; padding: 9px 11px; font-family: 'Lora', serif; font-size: 14px; background: #fff; color: var(--ink); }
+  .fb-field textarea { min-height: 96px; resize: vertical; }
+  .fb-field select:focus, .fb-field textarea:focus, .fb-field input[type=text]:focus { outline: 2px solid var(--accent-light-border); border-color: var(--tertiary); }
+  .fb-picture { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--accent-light); }
+  .fb-picture:empty { display: none; }
+  .fb-picture img { display: block; width: 100%; height: auto; }
+  .fb-picture-wait { padding: 26px 12px; text-align: center; font-size: 12.5px; color: var(--ink-soft); }
+  .fb-picture-note { font-size: 12.5px; color: var(--ink-soft); margin: 6px 0 14px; }
+  .fb-link { background: none; border: none; padding: 0; font: inherit; color: var(--ink); text-decoration: underline; cursor: pointer; }
+  .fb-send { width: 100%; border: none; border-radius: 12px; padding: 12px; font-family: 'Lora', serif; font-size: 15px; font-weight: 700; background: var(--tertiary); color: #fff; cursor: pointer; transition: opacity 0.15s ease; }
+  .fb-send:disabled { opacity: 0.4; cursor: default; }
+  .fb-error { background: #fbeceb; color: #8a2f2a; border-radius: 8px; padding: 8px 10px; font-size: 12.5px; margin-bottom: 10px; }
+  .fb-error a { color: inherit; }
+  .fb-alt a { color: var(--accent-dark); font-weight: 600; }
+  .fb-alt { font-size: 12px; color: var(--ink-soft); text-align: center; margin: 10px 0 0; }
+  .fbi { border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; overflow: hidden; }
+  .fbi-head { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; padding: 8px 10px; cursor: pointer; font-size: 12px; }
+  .fbi-head:hover { background: var(--accent-light); }
+  .fbi-kind { font-weight: 700; border-radius: 999px; padding: 1px 9px; background: var(--accent-light); color: var(--accent-dark); }
+  .fbi-kind.Bug { background: #fbeceb; color: #8a2f2a; }
+  .fbi-kind.Suggestion { background: #e8f2ea; color: #2c6a45; }
+  .fbi-date { margin-left: auto; color: var(--ink-soft); }
+  .fbi-snippet { padding: 0 10px 8px; font-size: 12.5px; color: var(--ink-soft); }
+  .fbi-body { padding: 8px 10px 10px; border-top: 1px solid var(--border); font-size: 13px; }
+  .fbi-msg { white-space: pre-wrap; word-break: break-word; margin: 0 0 8px; }
+  .fbi-meta { font-size: 11px; color: var(--ink-soft); margin: 6px 0 0; }
+  .fbi-body img { width: 100%; height: auto; border: 1px solid var(--border); border-radius: 8px; display: block; }
+
+  /* ============ the tutorial: forest story + hands-on tour ============ */
+  #tutWelcome { z-index: 600; align-items: center; }
+  #tutWelcome .modal { text-align: center; max-width: 440px; }
+  #tutWelcome h2 { font-size: 21px; margin: 6px 0 8px; }
+  #tutWelcome p { color: var(--ink-soft); font-size: 14px; margin: 0 0 16px; line-height: 1.5; }
+  #tutWelcome .tw-buttons { display: flex; gap: 10px; }
+  #tutWelcome .tw-buttons button { flex: 1; }
+  #tutWelcome .tw-small { font-size: 11.5px; margin: 12px 0 0; }
+
+  #forestTut { position: fixed; inset: 0; z-index: 650; display: none; background: #12261a; color: #fff; overflow: hidden; font-family: 'Lora', serif; user-select: none; -webkit-user-select: none; }
+  #forestTut.show { display: block; }
+  #ftCanvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  #ftStage { position: absolute; inset: 0; pointer-events: none; }
+  #ftStage > * { pointer-events: auto; }
+  #ftCaption { position: absolute; top: 0; left: 0; right: 0; padding: 20px 150px 40px 24px; font-size: clamp(18px, 2.6vw, 30px); line-height: 1.35; font-weight: 600; text-shadow: 0 2px 10px rgba(0,0,0,0.65); background: linear-gradient(rgba(8,22,14,0.78), rgba(8,22,14,0)); pointer-events: none; min-height: 40px; }
+  #ftCaption.off { visibility: hidden; }
+  #ftEndBox { position: fixed; top: 12px; right: 12px; display: flex; gap: 8px; z-index: 9; }
+  .ft-btn { background: rgba(10,28,18,0.72); color: #fff; border: 1px solid rgba(255,255,255,0.35); border-radius: 999px; padding: 7px 14px; font-family: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; backdrop-filter: blur(4px); }
+  .ft-btn:hover { background: rgba(40,80,55,0.85); }
+  .ft-btn.on { background: #6fa287; border-color: #6fa287; }
+  #ftBar { position: absolute; left: 0; right: 0; bottom: 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; padding: 12px 12px calc(12px + env(safe-area-inset-bottom)); background: linear-gradient(rgba(8,22,14,0), rgba(8,22,14,0.82)); z-index: 5; }
+  #ftTime { font-variant-numeric: tabular-nums; font-size: 14px; min-width: 96px; text-align: center; color: #e8f3ea; text-shadow: 0 1px 4px rgba(0,0,0,0.6); }
+  #ftVoiceMenu { position: absolute; bottom: 64px; right: 12px; width: min(330px, calc(100vw - 24px)); background: rgba(10,28,18,0.95); border: 1px solid rgba(255,255,255,0.3); border-radius: 12px; padding: 12px; z-index: 8; display: none; font-size: 13px; }
+  #ftVoiceMenu.show { display: block; }
+  #ftVoiceMenu select { width: 100%; margin: 6px 0 8px; padding: 7px; border-radius: 8px; font-family: inherit; background: #fff; color: #1c2b22; }
+
+  .ft-dot { position: absolute; width: 34px; height: 34px; margin: -17px 0 0 -17px; border-radius: 50%; border: none; cursor: pointer; display: none; background: radial-gradient(circle, #fff7c8 0%, #ffe27a 45%, rgba(255,226,122,0) 72%); box-shadow: 0 0 22px 10px rgba(255,226,122,0.55); animation: ftPulse 1.6s ease-in-out infinite; z-index: 4; padding: 0; }
+  .ft-dot.show { display: block; }
+  .ft-dot::after { content: ''; position: absolute; inset: 9px; border-radius: 50%; background: #fff; opacity: 0.9; }
+  @keyframes ftPulse { 0%,100% { transform: scale(0.85); box-shadow: 0 0 16px 6px rgba(255,226,122,0.45); } 50% { transform: scale(1.15); box-shadow: 0 0 30px 14px rgba(255,226,122,0.75); } }
+  #ftPrompt { position: absolute; transform: translate(-50%, 28px); background: rgba(10,28,18,0.8); border-radius: 999px; padding: 4px 12px; font-size: 12.5px; white-space: nowrap; display: none; z-index: 4; pointer-events: none; }
+  #ftPrompt.show { display: block; }
+
+  .ft-rock { position: absolute; border: none; cursor: pointer; padding: 0; color: #fff; font-family: inherit; font-weight: 700; font-size: 12px; text-shadow: 0 1px 3px rgba(0,0,0,0.6); border-radius: 46% 54% 50% 50% / 58% 56% 44% 42%; background: radial-gradient(ellipse at 32% 24%, rgba(255,255,255,0.42), rgba(255,255,255,0) 52%), var(--c, #888); box-shadow: inset -7px -9px 14px rgba(0,0,0,0.32), inset 5px 5px 9px rgba(255,255,255,0.18), 0 6px 10px rgba(0,0,0,0.28); display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1.1; overflow: hidden; }
+  .ft-rock span { padding: 0 6px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .ft-rock.pickable { animation: ftBob 2.2s ease-in-out infinite; outline: 3px solid rgba(255,226,122,0.9); outline-offset: 3px; }
+  .ft-rock.gone { visibility: hidden; }
+  @keyframes ftBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+  .ft-rock.land { animation: ftLand 0.7s cubic-bezier(0.34, 1.45, 0.64, 1); }
+  @keyframes ftLand { 0% { transform: translateY(-70px); } 100% { transform: translateY(0); } }
+  #ftStreamRocks { position: absolute; left: 3%; right: 52%; bottom: 7%; top: 52%; }
+  #ftNotNow { position: absolute; left: 4%; bottom: calc(2% + 52px); background: none; border: none; color: #e8f3ea; text-decoration: underline; cursor: pointer; font-family: inherit; font-size: 13px; display: none; z-index: 4; }
+  #ftNotNow.show { display: block; }
+
+  #ftJarWrap { position: absolute; left: 50%; bottom: 21%; width: min(30vw, 350px); height: min(32vh, 270px); transform: translateX(-50%); display: none; transition: left 0.6s ease, transform 0.6s ease; }
+  #ftJarWrap.show { display: block; }
+  #ftJarWrap.with-form { left: 28%; }
+  #ftJar { position: absolute; inset: 0; border: 3px solid rgba(255,255,255,0.75); border-top: none; border-radius: 6px 6px 30px 30px; background: linear-gradient(100deg, rgba(255,255,255,0.20), rgba(255,255,255,0.05) 40%, rgba(255,255,255,0.14)); box-shadow: inset 0 0 22px rgba(255,255,255,0.18), 0 8px 28px rgba(0,0,0,0.3); overflow: hidden; }
+  #ftJarRim { position: absolute; left: -9px; right: -9px; top: -8px; height: 12px; border-radius: 8px; background: rgba(255,255,255,0.7); box-shadow: 0 2px 6px rgba(0,0,0,0.25); }
+  #ftJarInner { position: absolute; left: 4px; right: 4px; top: 6px; bottom: 6px; }
+  #ftWater { position: absolute; left: 0; right: 0; bottom: 0; top: 100%; background: linear-gradient(rgba(120,200,235,0.40), rgba(70,150,200,0.52)); transition: top 2.4s ease; display: flex; align-items: flex-start; justify-content: center; }
+  #ftWater::before { content: ''; position: absolute; left: -10%; right: -10%; top: -6px; height: 12px; background: radial-gradient(ellipse at 50% 100%, rgba(255,255,255,0.7), rgba(255,255,255,0) 70%); animation: ftWave 3s ease-in-out infinite alternate; }
+  @keyframes ftWave { from { transform: translateX(-4%); } to { transform: translateX(4%); } }
+  #ftWater span { position: absolute; top: -26px; left: 8px; font-size: 12px; font-weight: 700; background: rgba(255,255,255,0.85); color: #1c4b66; border-radius: 999px; padding: 2px 10px; display: none; }
+  #ftWater.full span { display: block; }
+  #ftPour { position: absolute; left: 50%; top: -60px; width: 14px; height: 0; margin-left: -7px; background: linear-gradient(rgba(190,230,250,0.9), rgba(120,200,235,0.9)); border-radius: 7px; transition: height 0.7s ease; z-index: 2; }
+  #ftStone { position: absolute; left: -14%; right: -14%; bottom: -26px; height: 40px; border-radius: 50%; background: radial-gradient(ellipse at 50% 30%, #b5b8ad, #6f746a 80%); box-shadow: 0 10px 18px rgba(0,0,0,0.35); z-index: -1; }
+  #ftJarWrap .ft-rock { cursor: default; font-size: 11px; }
+  #ftBackpack { position: absolute; left: 6%; bottom: 25%; width: 120px; height: 130px; display: none; z-index: 3; }
+  #ftBackpack.show { display: block; }
+  #ftBackpack .bp { position: absolute; left: 0; right: 0; bottom: 0; height: 100px; background: linear-gradient(#3f6f93, #2c4f6e); border-radius: 26px 26px 14px 14px; box-shadow: inset -6px -8px 14px rgba(0,0,0,0.3), 0 6px 12px rgba(0,0,0,0.3); }
+  #ftBackpack .bp::before { content: ''; position: absolute; left: 14px; right: 14px; bottom: 12px; height: 38px; border-radius: 10px; background: #355d7e; border: 2px solid rgba(255,255,255,0.25); }
+  #ftBackpack .ft-rock { left: 22px; top: -4px; width: 78px; height: 56px; --c: #6a625a; cursor: default; font-size: 12px; z-index: 1; }
+  #ftHint { position: absolute; left: 50%; transform: translateX(-50%); top: 96px; max-width: min(560px, calc(100vw - 24px)); background: rgba(255,247,200,0.96); color: #2a2a18; padding: 9px 16px; border-radius: 14px; font-size: 15px; font-weight: 600; box-shadow: 0 6px 18px rgba(0,0,0,0.3); display: none; z-index: 6; text-align: center; }
+  #ftHint.show { display: block; }
+  #ftHint button { margin-left: 8px; background: none; border: none; color: #2a2a18; text-decoration: underline; cursor: pointer; font-family: inherit; font-size: 12.5px; }
+  #ftFormHost { position: absolute; right: 3%; top: 150px; bottom: 76px; width: min(390px, 40vw); overflow-y: auto; display: none; z-index: 5; }
+  #ftFormHost.show { display: block; }
+  #ftFormHost .panel { color: var(--ink); margin: 0; box-shadow: 0 12px 34px rgba(0,0,0,0.4); }
+
+  @media (max-width: 900px) {
+    #ftCaption { padding: 14px 12px 28px 14px; font-size: 17px; }
+    #ftEndBox { position: static; }
+    #ftJarWrap { width: 64vw; height: 22vh; bottom: 38%; }
+    #ftJarWrap.with-form { left: 50%; bottom: auto; top: 112px; height: 15vh; width: 46vw; }
+    #ftFormHost { left: 8px; right: 8px; width: auto; top: auto; bottom: 112px; height: 44vh; }
+    #ftHint { top: auto; bottom: calc(112px + 44vh + 8px); font-size: 13.5px; padding: 6px 12px; }
+    #ftBar { gap: 5px; padding: 8px 6px calc(8px + env(safe-area-inset-bottom)); }
+    .ft-btn { padding: 6px 10px; font-size: 12.5px; }
+    #ftTime { min-width: 82px; font-size: 12.5px; }
+    #ftBackpack { width: 84px; height: 94px; left: 4%; bottom: 36%; }
+    #ftBackpack .ft-rock { width: 54px; height: 40px; left: 15px; }
+    #ftStreamRocks { right: 6%; top: 56%; bottom: 17%; }
+    #ftNotNow { bottom: calc(2% + 100px); }
+    .ft-lbl { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) { .ft-dot, .ft-rock.pickable { animation-duration: 3.2s; } }
+
+  #tourSpot { position: fixed; z-index: 640; pointer-events: none; display: none; border-radius: 10px; box-shadow: 0 0 0 9999px rgba(12,26,18,0.55); outline: 3px solid #ffd95a; outline-offset: 3px; transition: left 0.25s ease, top 0.25s ease, width 0.25s ease, height 0.25s ease; animation: tourGlow 1.6s ease-in-out infinite; }
+  #tourSpot.show { display: block; }
+  @keyframes tourGlow { 0%,100% { outline-color: #ffd95a; } 50% { outline-color: #fff2b0; } }
+  #tourCard { position: fixed; z-index: 645; display: none; width: min(360px, calc(100vw - 20px)); background: #fff; color: var(--ink); border-radius: 14px; padding: 14px 16px 12px; box-shadow: 0 14px 44px rgba(0,0,0,0.4); font-size: 14px; line-height: 1.45; }
+  #tourCard.show { display: block; }
+  #tourCard .tc-step { font-size: 11px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.04em; }
+  #tourCard h3 { margin: 2px 0 4px; font-size: 16px; }
+  #tourCard p { margin: 0 0 10px; }
+  #tourCard .tc-buttons { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  #tourCard .tc-buttons .spacer { flex: 1; }
+  #tourCard .tc-hint { font-size: 12.5px; font-weight: 700; color: var(--accent-dark); margin: -4px 0 8px; }
+  #tourCard .tc-link { background: none; border: none; color: var(--ink-soft); text-decoration: underline; cursor: pointer; font-family: inherit; font-size: 12.5px; padding: 0; }
+  @media (max-width: 900px) { #tourCard { left: 8px !important; right: 8px; bottom: 8px; top: auto !important; width: auto; } #tourCard.tc-top { top: 8px !important; bottom: auto !important; } }
 </style>
 </head>
 <body>
@@ -411,6 +547,7 @@
     <button id="monthTabBtn" onclick="switchView('month')">Month</button>
   </div>
   <div class="topbar-actions">
+    <button class="icon-btn fb-btn" onclick="openFeedback()" data-tut="feedbackBtn" title="Send feedback" aria-label="Send feedback"><svg class="tb-ico" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="14.5" rx="4.6" ry="6"/><circle cx="12" cy="7" r="2.4"/><path d="M10.6 5 8.8 3M13.4 5 15.2 3M7.6 11.5 4 10M7.4 14.5H3.5M7.6 17.6 4.3 19.4M16.4 11.5 20 10M16.6 14.5h3.9M16.4 17.6l3.3 1.8M12 9.5v11"/></svg></button>
     <button class="icon-btn" onclick="openSettings()" data-tut="settingsBtn" title="Settings" aria-label="Settings"><svg class="tb-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span class="btn-label">Settings</span></button>
     <button class="icon-btn" onclick="startTutorial()" data-tut="helpBtn" title="Tutorial" aria-label="Tutorial"><svg class="tb-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-2.9 2.6-2.9 4.2"/><circle cx="12" cy="17.4" r="0.9" fill="currentColor" stroke="none"/></svg><span class="btn-label">Tutorial</span></button>
     <button id="breakBtn" onclick="toggleBreak()" data-tut="breakBtn" title="Take a break" aria-label="Take a break"><svg class="tb-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M17.5 9h1a3.5 3.5 0 0 1 0 7h-1"/><path d="M3 9h14.5v6.5a4.5 4.5 0 0 1-4.5 4.5H7.5A4.5 4.5 0 0 1 3 15.5V9z"/><path d="M7 3v3M11 3v3M15 3v3"/></svg><span id="breakLong">Click me to have an auto break</span><span id="breakShort"></span></button>
@@ -617,6 +754,51 @@
   </div>
 </main>
 
+<div class="modal-overlay" id="feedbackOverlay" onclick="if (event.target === this) closeFeedback();">
+  <div class="modal feedback-modal" role="dialog" aria-modal="true" aria-labelledby="fbTitle" style="max-width:480px;">
+    <button class="modal-close" onclick="closeFeedback()" aria-label="Close">x</button>
+    <div id="fbFormView">
+      <h2 id="fbTitle">Please give your feedback!</h2>
+      <p class="fb-intro">Found a bug, or have an idea? Tell us. It only takes a minute.</p>
+      <div class="fb-field">
+        <label for="fbKind">What is it?</label>
+        <select id="fbKind" onchange="fbKindChanged()">
+          <option value="Bug">Bug</option>
+          <option value="Suggestion">Suggestion</option>
+          <option value="Both">Both</option>
+        </select>
+      </div>
+      <div class="fb-field">
+        <textarea id="fbMessage" rows="4" maxlength="4000" placeholder="What happened? What did you expect?" aria-label="Your feedback" oninput="updateFeedbackSend()"></textarea>
+      </div>
+      <div class="fb-field">
+        <label for="fbRole">What role describes you?</label>
+        <select id="fbRole" onchange="fbRoleChanged()">
+          <option value="">Choose one...</option>
+          <option>Working adult</option>
+          <option>College student</option>
+          <option>High school student</option>
+          <option>Middle school student</option>
+          <option>Elementary student</option>
+          <option>Other</option>
+        </select>
+        <input type="text" id="fbRoleOther" maxlength="120" placeholder="Tell us your role" aria-label="Your role" style="display:none;margin-top:6px;">
+      </div>
+      <div class="fb-picture" id="fbPicture"></div>
+      <p class="fb-picture-note" id="fbPictureNote"></p>
+      <input type="file" id="fbFile" accept="image/*" style="display:none;" onchange="fbPickedFile(this)">
+      <div class="fb-error" id="fbError" style="display:none;"></div>
+      <button type="button" class="fb-send" id="fbSend" onclick="sendFeedback()" disabled>Send</button>
+      <p class="fb-alt">Prefer a Google Form instead? <a href="https://forms.gle/vpDJ7YtSomNFnEnC8" target="_blank" rel="noopener">Fill out this short form</a>.</p>
+    </div>
+    <div id="fbThanksView" style="display:none;text-align:center;padding:10px 0 4px;">
+      <h2>Thank you!</h2>
+      <p class="fb-intro">Your feedback was sent. It really helps make Flowfill better.</p>
+      <button type="button" class="fb-send" onclick="closeFeedback()">Done</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="settingsOverlay">
   <div class="modal" style="max-width:520px;">
     <button class="modal-close" onclick="closeSettings()">x</button>
@@ -625,6 +807,11 @@
     <div class="settings-section" id="syncSection">
       <h4>Account &amp; sync</h4>
       <div id="syncBox"></div>
+    </div>
+
+    <div class="settings-section" id="feedbackInboxSection" style="display:none;">
+      <h4>Feedback inbox <span id="fbInboxCount" class="cal-count"></span></h4>
+      <div id="fbInboxBox"></div>
     </div>
 
     <div class="settings-section">
@@ -794,6 +981,77 @@
 </div>
 
 <div id="durationTooltip" style="display:none;position:absolute;background:#1c2b22;color:#fff;padding:8px 14px;border-radius:8px;font-size:12.5px;line-height:1.5;text-align:center;z-index:600;pointer-events:none;"></div>
+
+<div class="modal-overlay" id="tutWelcome">
+  <div class="modal">
+    <div class="brand" style="font-size:22px;">Flowfill</div>
+    <h2 id="tutWelcomeTitle">Welcome!</h2>
+    <p>This is a tutorial that will help you! It takes about 6 minutes, with sound and a gentle voice, and you can skip any part. You can always start it again from the <strong>?</strong> button.</p>
+    <div class="tw-buttons">
+      <button type="button" class="welcome-primary" onclick="tutStart()">Start</button>
+      <button type="button" class="icon-btn" onclick="tutLater()">Later</button>
+    </div>
+    <p class="tw-small">Tip: turn your sound on.</p>
+  </div>
+</div>
+
+<div id="forestTut" role="dialog" aria-modal="true" aria-label="Flowfill tutorial">
+  <canvas id="ftCanvas"></canvas>
+  <div id="ftStage">
+    <div id="ftStreamRocks"></div>
+    <button type="button" id="ftNotNow" onclick="tutNotNow()">Not now, use practice rocks</button>
+    <div id="ftBackpack"><div class="bp"></div></div>
+    <div id="ftJarWrap">
+      <div id="ftJar">
+        <div id="ftJarInner"></div>
+        <div id="ftWater"><span>Breaks</span></div>
+      </div>
+      <div id="ftJarRim"></div>
+      <div id="ftPour"></div>
+      <div id="ftStone"></div>
+    </div>
+    <button type="button" class="ft-dot" id="ftDot" aria-label="Glowing dot"></button>
+    <div id="ftPrompt"></div>
+  </div>
+  <div id="ftCaption" aria-live="polite"></div>
+  <div id="ftHint"></div>
+  <div id="ftFormHost"></div>
+  <div id="ftVoiceMenu">
+    <label for="ftVoiceSelect"><strong>Voice</strong> (pick the one that sounds most natural)</label>
+    <select id="ftVoiceSelect" onchange="tutChooseVoice(this.value)"></select>
+    <button type="button" class="ft-btn" onclick="tutTestVoice()">Hear it</button>
+    <button type="button" class="ft-btn" onclick="document.getElementById('ftVoiceMenu').classList.remove('show')">Close</button>
+  </div>
+  <div id="ftBar">
+    <button type="button" class="ft-btn" id="ftBack" onclick="tutBack()" aria-label="Back one part">&#9664;&#9664; <span class="ft-lbl">Back</span></button>
+    <button type="button" class="ft-btn" id="ftPlay" onclick="tutTogglePause()" aria-label="Pause">&#10074;&#10074; <span class="ft-lbl">Pause</span></button>
+    <button type="button" class="ft-btn" id="ftFwd" onclick="tutForward()" aria-label="Forward one part"><span class="ft-lbl">Forward</span> &#9654;&#9654;</button>
+    <span id="ftTime">0:00 / 0:00</span>
+    <button type="button" class="ft-btn on" id="ftCC" onclick="tutToggleCaptions()" aria-label="Captions" title="Captions on or off">CC</button>
+    <button type="button" class="ft-btn" id="ftMute" onclick="tutToggleMute()" aria-label="Mute sound">&#128266; <span class="ft-lbl">Sound on</span></button>
+    <button type="button" class="ft-btn" onclick="tutVoiceMenu()" aria-label="Choose the voice" title="Choose the voice">&#127908; <span class="ft-lbl">Voice</span></button>
+    <button type="button" class="ft-btn" id="ftFS" onclick="tutFullscreen()" aria-label="Full screen" title="Full screen">&#9974; <span class="ft-lbl">Full screen</span></button>
+    <div id="ftEndBox">
+      <button type="button" class="ft-btn" onclick="tutSkip()" title="Skip the story and go to the hands-on tour of the website">Skip</button>
+      <button type="button" class="ft-btn" onclick="tutEnd()" title="Close the tutorial and go to the website">End</button>
+    </div>
+  </div>
+</div>
+
+<div id="tourSpot"></div>
+<div id="tourCard" role="dialog" aria-label="Flowfill tour">
+  <div class="tc-step" id="tcStep"></div>
+  <h3 id="tcTitle"></h3>
+  <p id="tcText"></p>
+  <div class="tc-hint" id="tcHint" style="display:none;"></div>
+  <div class="tc-buttons">
+    <button type="button" class="icon-btn" id="tcBack" onclick="tourBack()">Back</button>
+    <button type="button" class="primary-btn" id="tcNext" onclick="tourNext()" style="padding:7px 16px;">Next</button>
+    <span class="spacer"></span>
+    <button type="button" class="tc-link" id="tcMute" onclick="tutToggleMute()">Sound on</button>
+    <button type="button" class="tc-link" onclick="tutEnd()">End tutorial</button>
+  </div>
+</div>
 
 <div id="tutorialOverlay">
   <div id="tutorialDim"></div>
@@ -2170,6 +2428,7 @@ function submitTaskForm(e) {
         existingEv.repeatPattern = repeatPattern; existingEv.label = label ? label.name : null; existingEv.optional = optionalEv;
       }
     } else {
+      tutOnTaskAdded({ kind: 'event' });
       localEvents.push({ id: newUniqueId(), title: title, startMin: startMin, endMin: endMin, repeatPattern: repeatPattern, label: label ? label.name : null, optional: optionalEv, createdDate: localDateStr() });
     }
     saveLocalEvents();
@@ -2193,6 +2452,7 @@ function submitTaskForm(e) {
     }
   } else {
     const task = { id: newUniqueId(), title: title, priority: currentPriority, time: time, motivation: motivation, optional: optional, completed: false, label: label ? label.name : null, tomorrow: false, repeatPattern: repeatPattern, createdDate: localDateStr() };
+    tutOnTaskAdded(task); // (during the tutorial these are real tasks, marked as examples)
     tasks.push(task);
   }
   saveTasks();
@@ -3480,7 +3740,7 @@ function applyLayout() {
     const btn = document.querySelector('.rail-btn[data-pop="' + key + '"]');
     const panel = document.querySelector('.panel[data-pop="' + key + '"]');
     if (btn) container.appendChild(btn);
-    if (panel) container.appendChild(panel);
+    if (panel && !(key === 'add' && tut.formMoved)) container.appendChild(panel);
   });
   const main = document.querySelector('main');
   // a side with no blocks disappears (on a phone the left side is always hidden by the stylesheet)
@@ -3675,6 +3935,7 @@ let syncMeta = loadSyncMeta();
 function saveSyncMeta() { try { localStorage.setItem(SYNC_META_KEY, JSON.stringify(syncMeta)); } catch (e) {} }
 
 let syncUser = null;            // { name, email } while signed in
+let syncIsAdmin = false;        // may read the feedback inbox
 let syncAccounts = [];          // the Google accounts connected to this account: [{ id, email, name, owner, current }]
 let syncServerReady = false;    // does the site have its database set up?
 let syncApiThere = null;        // null = not asked yet, true/false = whether the /api answered
@@ -3985,9 +4246,10 @@ async function syncCheckSession() {
     syncApiThere = true;
     syncServerReady = !!j.syncReady;
     syncUser = j.signedIn ? { name: j.name || '', email: j.email || '' } : null;
+    syncIsAdmin = !!(j.signedIn && j.isAdmin);
     syncAccounts = (j.signedIn && Array.isArray(j.accounts)) ? j.accounts : [];
   } catch (e) {
-    syncApiThere = false; syncServerReady = false; syncUser = null; syncAccounts = [];
+    syncApiThere = false; syncServerReady = false; syncUser = null; syncAccounts = []; syncIsAdmin = false;
   }
   renderSyncBox();
 }
@@ -4005,6 +4267,7 @@ async function syncSignOut() {
   try { await syncApi('POST', '/api/auth/logout', {}); } catch (e) {}
   syncUser = null;
   syncAccounts = [];
+  syncIsAdmin = false;
   clearTimeout(syncPushTimer);
   renderSyncBox();
   showToast('Signed out. Your tasks stay on this device.');
@@ -4058,6 +4321,254 @@ function renderSyncBox() {
            '<div class="sync-actions"><a class="icon-btn" href="/api/auth/link">Add another Google account</a><button type="button" class="icon-btn" onclick="syncRun()">Sync now</button><button type="button" class="icon-btn" onclick="syncSignOut()">Sign out</button></div>';
   }
   box.innerHTML = html;
+}
+
+/* ============================================================================================
+   Feedback: the bug button, the form, the picture of the page, and the inbox.
+   ============================================================================================ */
+
+let fbImage = null;        // the picture that goes with the feedback (a small JPEG as text), or null
+let fbPicState = 'none';   // 'taking' (making the picture now), 'has', or 'none'
+let fbPicMine = false;     // true when the picture is one you chose yourself
+let fbBusy = false;
+
+// A picture of what the page looks like RIGHT NOW. The page is copied into an image, so no permission is needed and
+// no outside tool is used. It must be called before the feedback window opens, so the window isn't in the picture.
+// (The copy is made immediately; only turning it into a picture takes a moment.)
+function capturePage() {
+  try {
+    const w = window.innerWidth, h = window.innerHeight;
+    const clone = document.body.cloneNode(true);
+    const live = document.body.querySelectorAll('*'), copy = clone.querySelectorAll('*');
+    for (let i = 0; i < live.length && i < copy.length; i++) {
+      const a = live[i], b = copy[i];
+      if (a.tagName === 'INPUT') {                        // keep what you typed and what is ticked
+        if (a.type === 'checkbox' || a.type === 'radio') { if (a.checked) b.setAttribute('checked', 'checked'); else b.removeAttribute('checked'); }
+        else b.setAttribute('value', a.value);
+      } else if (a.tagName === 'TEXTAREA') {
+        b.textContent = a.value;
+      } else if (a.tagName === 'SELECT') {
+        Array.prototype.forEach.call(b.options, function(o, k) { if (a.options[k] && a.options[k].selected) o.setAttribute('selected', 'selected'); else o.removeAttribute('selected'); });
+      }
+      if ((a.scrollTop || a.scrollLeft) && b.firstChild) { // a box that is scrolled shows the part you were looking at
+        const wrap = document.createElement('div');
+        wrap.style.cssText = 'transform: translate(' + (-a.scrollLeft) + 'px,' + (-a.scrollTop) + 'px);';
+        while (b.firstChild) wrap.appendChild(b.firstChild);
+        b.appendChild(wrap);
+      }
+    }
+    clone.querySelectorAll('script, noscript, link, iframe, canvas, video, audio, #feedbackOverlay, #confettiCanvas').forEach(function(e) { e.remove(); });
+    const style = document.createElement('style');
+    style.textContent = Array.prototype.map.call(document.querySelectorAll('style'), function(st) { return st.textContent; }).join('\n');
+    clone.insertBefore(style, clone.firstChild);
+    const rootStyle = (document.documentElement.getAttribute('style') || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+    const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '" style="' + rootStyle + '"><foreignObject x="0" y="0" width="100%" height="100%">' + new XMLSerializer().serializeToString(clone) + '</foreignObject></svg>';
+    return new Promise(function(resolve) {
+      const timer = setTimeout(function() { resolve(null); }, 8000);
+      const img = new Image();
+      img.onload = function() {
+        clearTimeout(timer);
+        try { resolve(imageToJpeg(img, w, h)); } catch (e) { resolve(null); } // (a browser may refuse to turn it into a picture)
+      };
+      img.onerror = function() { clearTimeout(timer); resolve(null); };
+      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+    });
+  } catch (e) {
+    return Promise.resolve(null);
+  }
+}
+
+// Shrinks a picture to at most 1100 pixels wide and saves it as a small JPEG.
+function imageToJpeg(img, w, h) {
+  const scale = Math.min(1, 1100 / w);
+  const cv = document.createElement('canvas');
+  cv.width = Math.max(1, Math.round(w * scale)); cv.height = Math.max(1, Math.round(h * scale));
+  const c = cv.getContext('2d');
+  c.fillStyle = '#ffffff'; c.fillRect(0, 0, cv.width, cv.height);
+  c.drawImage(img, 0, 0, cv.width, cv.height);
+  let out = cv.toDataURL('image/jpeg', 0.72);
+  if (out.length > 600000) out = cv.toDataURL('image/jpeg', 0.5);
+  return out;
+}
+
+function openFeedback() {
+  const shot = capturePage(); // first the picture of the page, THEN the window
+  resetFeedbackForm();
+  fbPicState = 'taking';
+  renderFeedbackPicture();
+  document.getElementById('feedbackOverlay').classList.add('show');
+  setTimeout(function() { const m = document.getElementById('fbMessage'); if (m) m.focus(); }, 60);
+  shot.then(function(img) {
+    if (fbPicState !== 'taking') return; // you removed it or picked your own while it was being made
+    fbImage = img; fbPicMine = false;
+    fbPicState = img ? 'has' : 'none';
+    renderFeedbackPicture();
+  });
+}
+
+function closeFeedback() { document.getElementById('feedbackOverlay').classList.remove('show'); }
+
+function resetFeedbackForm() {
+  document.getElementById('fbKind').value = 'Bug';
+  document.getElementById('fbMessage').value = '';
+  document.getElementById('fbRole').value = '';
+  document.getElementById('fbRoleOther').value = '';
+  document.getElementById('fbRoleOther').style.display = 'none';
+  document.getElementById('fbError').style.display = 'none';
+  document.getElementById('fbFormView').style.display = '';
+  document.getElementById('fbThanksView').style.display = 'none';
+  fbKindChanged();
+  fbImage = null; fbPicState = 'none'; fbBusy = false;
+  updateFeedbackSend();
+}
+
+function fbKindChanged() {
+  const k = document.getElementById('fbKind').value;
+  document.getElementById('fbMessage').placeholder = (k === 'Suggestion') ? 'What would you like to see? Tell us your idea.' : (k === 'Both' ? 'Tell us about the bug and your idea.' : 'What happened? What did you expect?');
+}
+function fbRoleChanged() {
+  const other = document.getElementById('fbRole').value === 'Other';
+  const box = document.getElementById('fbRoleOther');
+  box.style.display = other ? '' : 'none';
+  if (other) box.focus();
+}
+function updateFeedbackSend() {
+  document.getElementById('fbSend').disabled = fbBusy || document.getElementById('fbMessage').value.trim().length < 2;
+}
+
+function renderFeedbackPicture() {
+  const box = document.getElementById('fbPicture'), note = document.getElementById('fbPictureNote');
+  box.innerHTML = '';
+  if (fbPicState === 'taking') {
+    box.innerHTML = '<div class="fb-picture-wait">Taking a picture of this page...</div>';
+    note.textContent = '';
+  } else if (fbPicState === 'has' && fbImage) {
+    const im = document.createElement('img'); im.alt = 'A picture of this page'; im.src = fbImage; box.appendChild(im);
+    note.innerHTML = (fbPicMine ? 'Your picture goes with it. ' : 'A picture of this page goes with it. ') + '<button type="button" class="fb-link" onclick="fbRemovePicture()">Remove</button> &middot; <button type="button" class="fb-link" onclick="document.getElementById(\'fbFile\').click()">Use a different picture</button>';
+  } else {
+    note.innerHTML = 'No picture will be sent. <button type="button" class="fb-link" onclick="document.getElementById(\'fbFile\').click()">Add a picture</button>';
+  }
+}
+function fbRemovePicture() { fbImage = null; fbPicState = 'none'; renderFeedbackPicture(); }
+
+// "Use a different picture": choose an image from your own files.
+function fbPickedFile(input) {
+  const file = input.files && input.files[0];
+  input.value = '';
+  if (!file) return;
+  if (!/^image\//.test(file.type)) { showFeedbackError('That file is not a picture. Please choose an image.'); return; }
+  const reader = new FileReader();
+  reader.onload = function() {
+    const im = new Image();
+    im.onload = function() {
+      try { fbImage = imageToJpeg(im, im.naturalWidth || 1, im.naturalHeight || 1); fbPicMine = true; fbPicState = 'has'; renderFeedbackPicture(); document.getElementById('fbError').style.display = 'none'; }
+      catch (e) { showFeedbackError("Couldn't use that picture. Please try another one."); }
+    };
+    im.onerror = function() { showFeedbackError("Couldn't open that picture. Please try another one."); };
+    im.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function showFeedbackError(html) {
+  const e = document.getElementById('fbError');
+  e.innerHTML = html; e.style.display = '';
+}
+
+async function sendFeedback() {
+  if (fbBusy) return;
+  const message = document.getElementById('fbMessage').value.trim();
+  if (message.length < 2) return;
+  fbBusy = true;
+  const btn = document.getElementById('fbSend');
+  btn.textContent = 'Sending...'; updateFeedbackSend();
+  document.getElementById('fbError').style.display = 'none';
+  const role = document.getElementById('fbRole').value;
+  let failMessage = "Couldn't send that just now. Please try again, or use the Google Form below.";
+  try {
+    const resp = await fetch('/api/feedback', {
+      method: 'POST', credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json', 'X-Flowgrove': '1' },
+      body: JSON.stringify({
+        kind: document.getElementById('fbKind').value, message: message, role: role,
+        roleOther: role === 'Other' ? document.getElementById('fbRoleOther').value : '',
+        image: fbPicState === 'has' ? fbImage : null,
+        screen: window.innerWidth + 'x' + window.innerHeight, browser: navigator.userAgent.slice(0, 160)
+      })
+    });
+    let j = {};
+    try { j = await resp.json(); } catch (e) { j = {}; }
+    if (resp.ok && j.ok) {
+      document.getElementById('fbFormView').style.display = 'none';
+      document.getElementById('fbThanksView').style.display = '';
+      fbBusy = false; btn.textContent = 'Send';
+      return;
+    }
+    if (resp.status === 429) failMessage = "You've sent a lot of feedback in the last hour, so please try again a little later. Thank you!";
+    else if (resp.status === 413) failMessage = 'That picture is too big. Remove it or choose a smaller one.';
+  } catch (e) { /* offline: keep the default message */ }
+  fbBusy = false; btn.textContent = 'Send';
+  showFeedbackError(failMessage.replace('the Google Form below', '<a href="https://forms.gle/vpDJ7YtSomNFnEnC8" target="_blank" rel="noopener">the Google Form below</a>'));
+  updateFeedbackSend();
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape' && document.getElementById('feedbackOverlay').classList.contains('show')) closeFeedback();
+});
+
+/* ---- the inbox (Settings; only shows for the people in ADMIN_EMAILS) ---- */
+
+let fbInboxItems = [];
+async function renderFeedbackInbox() {
+  const section = document.getElementById('feedbackInboxSection');
+  if (!section) return;
+  section.style.display = syncIsAdmin ? '' : 'none';
+  if (!syncIsAdmin) return;
+  const box = document.getElementById('fbInboxBox');
+  box.innerHTML = '<div class="sync-status">Loading...</div>';
+  try {
+    const resp = await fetch('/api/feedback?list=1', { cache: 'no-store', credentials: 'same-origin' });
+    const j = await resp.json();
+    if (!resp.ok || !j.ok) throw new Error('no');
+    fbInboxItems = j.items || [];
+  } catch (e) {
+    box.innerHTML = '<div class="sync-status bad">Couldn\'t load the feedback just now.</div><div class="sync-actions"><button type="button" class="icon-btn" onclick="renderFeedbackInbox()">Try again</button></div>';
+    return;
+  }
+  document.getElementById('fbInboxCount').textContent = fbInboxItems.length ? '(' + fbInboxItems.length + ')' : '';
+  if (!fbInboxItems.length) { box.innerHTML = '<div class="sync-status">Nothing yet. When someone sends feedback it shows up here.</div>'; return; }
+  box.innerHTML = fbInboxItems.map(function(it) {
+    const when = new Date(it.createdAt).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+    const role = it.role === 'Other' && it.roleOther ? 'Other: ' + it.roleOther : (it.role || 'role not given');
+    return '<div class="fbi" data-id="' + escapeHtml(it.id) + '"><div class="fbi-head" onclick="toggleFeedbackItem(\'' + escapeHtml(it.id) + '\')"><span class="fbi-kind ' + escapeHtml(it.kind) + '">' + escapeHtml(it.kind) + '</span><span>' + escapeHtml(role) + '</span>' + (it.hasImage ? '<span title="Has a picture">&#128247;</span>' : '') + '<span class="fbi-date">' + escapeHtml(when) + '</span></div>' +
+      '<div class="fbi-snippet">' + escapeHtml(it.message.length > 110 ? it.message.slice(0, 110) + '...' : it.message) + '</div><div class="fbi-body" id="fbi-' + escapeHtml(it.id) + '" style="display:none;"></div></div>';
+  }).join('');
+}
+
+async function toggleFeedbackItem(id) {
+  const body = document.getElementById('fbi-' + id);
+  if (!body) return;
+  const preview = body.previousElementSibling; // the short preview line is hidden while the whole message is open
+  if (body.style.display !== 'none') { body.style.display = 'none'; if (preview) preview.style.display = ''; return; }
+  if (preview) preview.style.display = 'none';
+  body.style.display = ''; body.innerHTML = '<div class="sync-status">Loading...</div>';
+  try {
+    const resp = await fetch('/api/feedback?id=' + encodeURIComponent(id), { cache: 'no-store', credentials: 'same-origin' });
+    const j = await resp.json();
+    if (!resp.ok || !j.ok) throw new Error('no');
+    const it = j.item;
+    body.innerHTML = '<p class="fbi-msg"></p>' + (it.image ? '<img alt="Picture sent with the feedback">' : '') +
+      '<p class="fbi-meta">' + escapeHtml((it.signedIn ? 'Signed in' : 'Not signed in') + ' · screen ' + (it.screen || '?') + ' · ' + (it.browser || '')) + '</p>' +
+      '<div class="sync-actions"><button type="button" class="icon-btn" onclick="deleteFeedbackItem(\'' + escapeHtml(id) + '\')">Delete</button></div>';
+    body.querySelector('.fbi-msg').textContent = it.message;           // (as plain text, never as code)
+    if (it.image) body.querySelector('img').src = it.image;
+  } catch (e) { body.innerHTML = '<div class="sync-status bad">Couldn\'t open that one.</div>'; }
+}
+
+async function deleteFeedbackItem(id) {
+  if (!confirm('Delete this feedback for good?')) return;
+  try { await fetch('/api/feedback?id=' + encodeURIComponent(id), { method: 'DELETE', credentials: 'same-origin', headers: { 'X-Flowgrove': '1' } }); } catch (e) {}
+  renderFeedbackInbox();
 }
 
 /* ---- first visit on a device that has no profile yet ---- */
@@ -5261,6 +5772,7 @@ function openSettings() {
   document.getElementById('settingsOverlay').classList.add('show');
   renderLayoutSettings();
   renderSyncBox();
+  renderFeedbackInbox();
   document.getElementById('themeSelect').value = settings.theme;
   document.getElementById('primaryColor').value = settings.primary;
   document.getElementById('secondaryColor').value = settings.secondary;
@@ -5485,6 +5997,983 @@ async function deleteAccount() {
   window.location.href = 'account-setup.html';
 }
 
+
+/* ============================================================================================
+   The tutorial. First a short story in a forest (a jar, rocks, and water that show how Flowfill plans a day),
+   then a hands-on tour of the real website. Everything is drawn and sounded by the page itself.
+   Parts: the narrator (voice + captions), the forest sounds, the picture, the story chapters, the tour.
+   ============================================================================================ */
+
+const TUT_CANCEL = { tutorialCancelled: true };
+const tut = {
+  active: false, mode: null,          // mode: 'story' or 'tour'
+  paused: false, muted: false, captions: true,
+  token: 0, chapter: 0, elapsed: 0, lastTick: 0, timer: 0,
+  view: 'trail', zoom: 1, zoomTarget: 1, walk: 1, pos: 0, raf: 0,
+  rocks: [], eventRocks: [], usingRealEvents: false, afterConnect: false,
+  formMoved: false, formHome: null, formWait: null, formHintOn: false,
+  say: null, sayId: 0, voiceId: 0, voice: null, voicePicked: false,
+  audio: null, tourIndex: 0, tourSteps: null, tourToken: 0, stepClickOff: null,
+  made: { examples: false }
+};
+const FT_CHAPTER_SECONDS = [28, 42, 28, 55, 35, 28, 14];   // about how long each part takes (for the clock)
+function tutSpeed() { return window.__tutSpeed || 1; }       // (tests run it fast)
+function tutEl(id) { return document.getElementById(id); }
+function tutClamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+
+/* ---- waiting that respects Pause and Back/Forward ---- */
+
+function tutSleep(ms, tok) {
+  return new Promise(function(resolve, reject) {
+    let left = ms / tutSpeed();
+    (function step() {
+      if (tok !== tut.token) { reject(TUT_CANCEL); return; }
+      if (tut.paused) { setTimeout(step, 120); return; }
+      if (left <= 0) { resolve(); return; }
+      const d = Math.min(left, 100);
+      left -= d;
+      setTimeout(step, d);
+    })();
+  });
+}
+
+/* ---- the narrator: a calm voice, plus captions ---- */
+
+// Picks the most natural-sounding English voice the device has (names with Natural / Neural / Premium / Enhanced
+// score high; old robotic engines score low). You can choose a different one from the Voice button.
+function tutVoiceScore(v) {
+  const n = (v.name || '').toLowerCase();
+  let s = 0;
+  if (/natural|neural|wavenet|studio/.test(n)) s += 120;
+  if (/premium|enhanced|siri/.test(n)) s += 80;
+  if (/online/.test(n)) s += 40;
+  if (/google/.test(n)) s += 35;
+  if (/\b(aria|jenny|sonia|libby|ava|allison|samantha|serena|moira|karen|susan|zira|hazel|daniel|oliver|guy)\b/.test(n)) s += 30;
+  if (/espeak|festival|robot|compact|pico|flite/.test(n)) s -= 120;
+  if (/^en[-_](us|gb|au|ie|za|nz|ca|in)/i.test(v.lang || '')) s += 6;
+  if (v.default) s += 1;
+  return s;
+}
+function tutEnglishVoices() {
+  if (!window.speechSynthesis) return [];
+  return speechSynthesis.getVoices().filter(function(v) { return /^en/i.test(v.lang || ''); })
+    .sort(function(a, b) { return tutVoiceScore(b) - tutVoiceScore(a); });
+}
+function tutPickVoice() {
+  const list = tutEnglishVoices();
+  if (!list.length) { tut.voice = null; return; }
+  const saved = localStorage.getItem('flowfill_tut_voice');
+  tut.voice = (saved && list.find(function(v) { return v.voiceURI === saved; })) || list[0];
+}
+function tutVoiceMenu() {
+  const menu = tutEl('ftVoiceMenu');
+  const sel = tutEl('ftVoiceSelect');
+  const list = tutEnglishVoices();
+  sel.innerHTML = list.length ? list.map(function(v, i) {
+    return '<option value="' + escapeHtml(v.voiceURI) + '"' + (tut.voice && v.voiceURI === tut.voice.voiceURI ? ' selected' : '') + '>' + escapeHtml(v.name + (i === 0 ? ' (best guess)' : '')) + '</option>';
+  }).join('') : '<option>No voices found on this device (captions only)</option>';
+  menu.classList.toggle('show');
+}
+function tutChooseVoice(uri) {
+  localStorage.setItem('flowfill_tut_voice', uri);
+  tutPickVoice();
+  tutTestVoice();
+}
+function tutTestVoice() {
+  if (!window.speechSynthesis || !tut.voice) return;
+  try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance('Take a breath. You are walking down a quiet trail.'); u.voice = tut.voice; u.lang = tut.voice.lang; u.rate = 0.9; speechSynthesis.speak(u); } catch (e) {}
+}
+if (window.speechSynthesis) { try { speechSynthesis.onvoiceschanged = function() { if (!tut.voicePicked || !tut.voice) { tutPickVoice(); tut.voicePicked = true; } }; } catch (e) {} }
+
+function tutStopSpeech() {
+  tut.voiceId++;
+  const job = tut.say;
+  if (job) { clearTimeout(job.guard); job.ended = true; }
+  tut.say = null;
+  try { if (window.speechSynthesis) speechSynthesis.cancel(); } catch (e) {}
+}
+
+function tutCaption(text) {
+  const c = tutEl('ftCaption');
+  if (c) c.textContent = text;
+}
+
+// Says one line: shows it as a caption and speaks it, then resolves when it has been said.
+function tutSay(text, tok) {
+  tutCaption(text);
+  return new Promise(function(resolve, reject) {
+    if (tok !== tut.token) { reject(TUT_CANCEL); return; }
+    tutStopSpeech();
+    const myId = tut.voiceId;
+    const chunks = (text.match(/[^.!?]+[.!?]+["')]*|[^.!?]+$/g) || [text]).map(function(c) { return c.trim(); }).filter(Boolean);
+    const estimate = Math.max(1100, text.length * 62);
+    const job = { tok: tok, chunks: chunks, i: 0, resolve: resolve, ended: false, cur: 0, guard: 0 };
+    tut.say = job;
+    const canSpeak = !tut.muted && window.speechSynthesis && tut.voice && tutSpeed() === 1;
+    if (!canSpeak) {                                       // captions only: wait about as long as saying it takes
+      tutSleep(estimate + 400, tok).then(function() { if (tut.say === job) { job.ended = true; resolve(); } }, reject);
+      return;
+    }
+    job.reject = reject;
+    tutSpeakNext(job, myId);
+  });
+}
+function tutSpeakNext(job, myId) {
+  if (job.ended || job.tok !== tut.token || myId !== tut.voiceId) return;
+  if (job.i >= job.chunks.length) { job.ended = true; job.resolve(); return; }
+  if (tut.paused) { job.waiting = true; return; }
+  job.waiting = false;
+  const text = job.chunks[job.i];
+  const u = new SpeechSynthesisUtterance(text);
+  if (tut.voice) { u.voice = tut.voice; u.lang = tut.voice.lang; }
+  u.rate = 0.9; u.pitch = 1; u.volume = 1;
+  const uid = ++tut.sayId;
+  job.cur = uid;
+  const advance = function() {
+    if (job.cur !== uid || job.ended || myId !== tut.voiceId) return;
+    clearTimeout(job.guard);
+    job.i++;
+    setTimeout(function() { tutSpeakNext(job, myId); }, 260);   // a small pause between sentences keeps it calm
+  };
+  u.onend = advance; u.onerror = advance;
+  clearTimeout(job.guard);
+  job.guard = setTimeout(advance, Math.max(3000, text.length * 150)); // (if a browser never says "finished")
+  try { speechSynthesis.speak(u); } catch (e) { advance(); }
+}
+
+// Speaks a line while waiting for the person to do something; once they do it, the voice stops.
+async function tutSayUntil(text, tok, until) {
+  let done = false;
+  const result = until.then(function(v) { done = true; return v; });
+  const speaking = tutSay(text, tok).catch(function(e) { if (e === TUT_CANCEL) throw e; });
+  await Promise.race([speaking, result]);
+  if (!done) return result;
+  tutStopSpeech();
+  return result;
+}
+
+/* ---- the sounds of the forest (made by the browser: water, rustling leaves, and birds) ---- */
+
+function tutAudioStart() {
+  if (tut.audio) { tutAudioApplyMute(); return; }
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return;
+  try {
+    const ctx = new AC();
+    const master = ctx.createGain();
+    master.gain.value = tut.muted ? 0 : 0.9;
+    master.connect(ctx.destination);
+    function noiseBuffer(seconds, brown) {
+      const len = ctx.sampleRate * seconds, buf = ctx.createBuffer(1, len, ctx.sampleRate), d = buf.getChannelData(0);
+      let last = 0;
+      for (let i = 0; i < len; i++) { const w = Math.random() * 2 - 1; if (brown) { last = (last + 0.02 * w) / 1.02; d[i] = last * 3.5; } else d[i] = w; }
+      return buf;
+    }
+    function loop(buffer, filterType, freq, q, gain, lfoRate, lfoDepth) {
+      const src = ctx.createBufferSource(); src.buffer = buffer; src.loop = true;
+      const f = ctx.createBiquadFilter(); f.type = filterType; f.frequency.value = freq; f.Q.value = q;
+      const g = ctx.createGain(); g.gain.value = gain;
+      src.connect(f); f.connect(g); g.connect(master);
+      if (lfoRate) {
+        const lfo = ctx.createOscillator(); lfo.frequency.value = lfoRate;
+        const depth = ctx.createGain(); depth.gain.value = lfoDepth;
+        lfo.connect(depth); depth.connect(g.gain); lfo.start();
+      }
+      src.start();
+    }
+    const brown = noiseBuffer(3, true), white = noiseBuffer(3, false);
+    loop(brown, 'bandpass', 520, 0.5, 0.20, 0.17, 0.05);    // the stream, rushing
+    loop(white, 'bandpass', 1900, 0.8, 0.018, 0.31, 0.01);  // sparkle on the water
+    loop(white, 'highpass', 5200, 0.7, 0.010, 0.11, 0.006); // leaves rustling
+    tut.audio = { ctx: ctx, master: master, birds: 0 };
+    tutBirds();
+  } catch (e) { tut.audio = null; }
+}
+function tutBirds() {
+  const a = tut.audio;
+  if (!a) return;
+  function chirp() {
+    if (!tut.audio || tut.audio !== a) return;
+    const ctx = a.ctx, now = ctx.currentTime;
+    const notes = 2 + Math.floor(Math.random() * 4), base = 2000 + Math.random() * 1900, pan = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
+    if (pan) { pan.pan.value = Math.random() * 1.6 - 0.8; pan.connect(a.master); }
+    for (let i = 0; i < notes; i++) {
+      const o = ctx.createOscillator(), g = ctx.createGain(), t0 = now + i * (0.09 + Math.random() * 0.05);
+      o.type = 'sine';
+      o.frequency.setValueAtTime(base * (0.9 + Math.random() * 0.25), t0);
+      o.frequency.exponentialRampToValueAtTime(base * (1.15 + Math.random() * 0.35), t0 + 0.07);
+      g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.045, t0 + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.09);
+      o.connect(g); g.connect(pan || a.master); o.start(t0); o.stop(t0 + 0.11);
+    }
+    a.birds = setTimeout(chirp, 1400 + Math.random() * 4200);
+  }
+  a.birds = setTimeout(chirp, 900);
+}
+function tutAudioApplyMute() {
+  const a = tut.audio;
+  if (!a) return;
+  try { a.master.gain.setTargetAtTime(tut.muted ? 0 : 0.9, a.ctx.currentTime, 0.08); if (a.ctx.state === 'suspended' && !tut.muted) a.ctx.resume(); } catch (e) {}
+}
+function tutAudioStop() {
+  const a = tut.audio;
+  if (!a) return;
+  clearTimeout(a.birds);
+  tut.audio = null;
+  try { a.master.gain.setTargetAtTime(0, a.ctx.currentTime, 0.1); setTimeout(function() { try { a.ctx.close(); } catch (e) {} }, 500); } catch (e) {}
+}
+
+/* ---- the picture: a forest with a stream, drawn fresh every frame ---- */
+
+function tutRng(seed) { return function() { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const ftScene = { w: 0, h: 0, dpr: 1, trees: [], leaves: [], rocks: [], blades: [], ready: false };
+
+function ftBuildScene() {
+  const cv = tutEl('ftCanvas');
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const w = Math.max(320, Math.round(window.innerWidth)), h = Math.max(320, Math.round(window.innerHeight));
+  cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+  ftScene.w = w; ftScene.h = h; ftScene.dpr = dpr;
+  const r = tutRng(7);
+  ftScene.trees = [];
+  for (let layer = 0; layer < 3; layer++) {
+    const count = [16, 10, 6][layer];
+    for (let i = 0; i < count; i++) {
+      ftScene.trees.push({ layer: layer, x: (i / count) * 1.15 + r() * 0.05, scale: [0.55, 0.85, 1.35][layer] * (0.8 + r() * 0.5), pine: r() < 0.45, tint: r(), phase: r() * 6 });
+    }
+  }
+  const leafCount = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches ? 14 : 46;
+  ftScene.leaves = [];
+  for (let i = 0; i < leafCount; i++) ftScene.leaves.push({ x: r(), y: r(), s: 4 + r() * 6, vx: 0.012 + r() * 0.03, vy: 0.01 + r() * 0.025, rot: r() * 6, hue: r(), ph: r() * 6 });
+  ftScene.rocks = [];
+  for (let i = 0; i < 24; i++) ftScene.rocks.push({ x: r(), y: r(), w: 0.018 + r() * 0.04, h: 0.012 + r() * 0.022, tone: 60 + Math.floor(r() * 60) });
+  ftScene.blades = [];
+  for (let i = 0; i < 90; i++) ftScene.blades.push({ x: r(), h: 14 + r() * 26, ph: r() * 6, tone: r() });
+  ftScene.ready = true;
+}
+
+function ftDrawTree(c, x, baseY, scale, t, tr, layerDark) {
+  const sway = Math.sin(t * 0.8 + tr.phase) * 2.2 * scale;
+  const trunkH = 150 * scale, trunkW = 14 * scale;
+  c.fillStyle = 'rgb(' + Math.round(88 - layerDark) + ',' + Math.round(66 - layerDark) + ',' + Math.round(48 - layerDark) + ')';
+  c.fillRect(x - trunkW / 2, baseY - trunkH, trunkW, trunkH);
+  const g = Math.round(112 - layerDark * 0.9 + tr.tint * 40), rr = Math.round(46 - layerDark * 0.4), bb = Math.round(60 - layerDark * 0.5);
+  c.fillStyle = 'rgb(' + rr + ',' + g + ',' + bb + ')';
+  if (tr.pine) {
+    for (let k = 0; k < 4; k++) {
+      const y = baseY - trunkH * (0.35 + k * 0.24), wTier = (78 - k * 14) * scale;
+      c.beginPath(); c.moveTo(x + sway * (k + 1) * 0.3, y - 62 * scale); c.lineTo(x - wTier / 2, y + 12 * scale); c.lineTo(x + wTier / 2, y + 12 * scale); c.closePath(); c.fill();
+    }
+  } else {
+    [[0, -20, 58], [-34, 8, 42], [34, 6, 44], [8, -54, 40]].forEach(function(b) {   // the leafy top, around the top of the trunk
+      c.beginPath(); c.arc(x + b[0] * scale + sway, baseY - trunkH + b[1] * scale, b[2] * scale, 0, Math.PI * 2); c.fill();
+    });
+  }
+}
+
+function ftDraw(now) {
+  const cv = tutEl('ftCanvas');
+  if (!tut.active || !ftScene.ready) { tut.raf = 0; return; }
+  const c = cv.getContext('2d');
+  const W = ftScene.w, H = ftScene.h, t = now / 1000;
+  const dt = Math.min(0.05, (now - (tut.lastFrame || now)) / 1000);
+  tut.lastFrame = now;
+  const slow = tut.paused ? 0.25 : 1;
+  tut.zoom += (tut.zoomTarget - tut.zoom) * Math.min(1, dt * 2.2);
+  const walkTarget = tut.view === 'trail' && !tut.paused ? 1 : 0;
+  tut.walk += (walkTarget - tut.walk) * Math.min(1, dt * 1.5);
+  tut.pos += tut.walk * dt;
+  c.setTransform(ftScene.dpr, 0, 0, ftScene.dpr, 0, 0);
+  c.clearRect(0, 0, W, H);
+  const sky = c.createLinearGradient(0, 0, 0, H * 0.62);
+  sky.addColorStop(0, '#a9d9c2'); sky.addColorStop(0.6, '#e6efc8'); sky.addColorStop(1, '#f6edc2');
+  c.fillStyle = sky; c.fillRect(0, 0, W, H);
+  c.save();
+  const z = tut.zoom;
+  c.translate(W * 0.5, H * 0.9); c.scale(z, z); c.translate(-W * 0.5, -H * 0.9);
+  // soft hills
+  c.fillStyle = '#9cc79d'; c.beginPath(); c.moveTo(-50, H * 0.5); for (let x = -50; x <= W + 50; x += 40) c.lineTo(x, H * 0.46 + Math.sin(x * 0.006 + 1) * 26 + Math.sin(x * 0.015) * 8); c.lineTo(W + 50, H * 0.62); c.lineTo(-50, H * 0.62); c.fill();
+  const farBank = H * 0.56;
+  // trees in three layers; the nearer, the faster they slide past
+  const speeds = [18, 40, 90];
+  for (let layer = 0; layer < 3; layer++) {
+    const span = W * 1.25, shift = (tut.pos * speeds[layer]) % span;
+    ftScene.trees.filter(function(tr) { return tr.layer === layer; }).forEach(function(tr) {
+      let x = tr.x * span - shift; if (x < -90) x += span;
+      const baseY = farBank + layer * (H * 0.045) + (layer === 2 ? H * 0.05 : 0);
+      ftDrawTree(c, x, baseY, tr.scale * (H / 620), t, tr, [34, 18, 0][layer]);
+    });
+    if (layer === 1) { // the far bank of grass, in front of the far trees
+      c.fillStyle = '#6a9f58'; c.fillRect(-50, farBank + H * 0.02, W + 100, H * 0.06);
+    }
+  }
+  // sunbeams
+  c.save(); c.globalAlpha = 0.10 + Math.sin(t * 0.5) * 0.03;
+  for (let k = 0; k < 3; k++) { c.fillStyle = '#fff6c8'; c.beginPath(); const x0 = W * (0.1 + k * 0.3) + Math.sin(t * 0.2 + k) * 24; c.moveTo(x0, 0); c.lineTo(x0 + 70, 0); c.lineTo(x0 + 260, H * 0.8); c.lineTo(x0 + 130, H * 0.8); c.fill(); }
+  c.restore();
+  // the stream
+  const sTop = H * 0.64, sBot = H * 0.9;
+  const water = c.createLinearGradient(0, sTop, 0, sBot);
+  water.addColorStop(0, '#7ec1cf'); water.addColorStop(1, '#3d8aa6');
+  c.fillStyle = water; c.fillRect(-50, sTop, W + 100, sBot - sTop);
+  ftScene.rocks.forEach(function(r) {   // rocks lying on the bottom, seen through the water
+    const rx = r.x * W, ry = sTop + (sBot - sTop) * (0.25 + r.y * 0.72);
+    c.fillStyle = 'rgb(' + (r.tone + 20) + ',' + (r.tone + 18) + ',' + (r.tone + 10) + ')';
+    c.beginPath(); c.ellipse(rx, ry, r.w * W, r.h * H, 0, 0, Math.PI * 2); c.fill();
+    c.fillStyle = 'rgba(255,255,255,0.22)'; c.beginPath(); c.ellipse(rx - r.w * W * 0.25, ry - r.h * H * 0.3, r.w * W * 0.45, r.h * H * 0.3, 0, 0, Math.PI * 2); c.fill();
+  });
+  c.fillStyle = 'rgba(70,150,180,0.28)'; c.fillRect(-50, sTop, W + 100, sBot - sTop);
+  for (let k = 0; k < 9; k++) {          // the water running
+    const yy = sTop + (k + 0.5) * (sBot - sTop) / 9;
+    c.beginPath();
+    for (let x = -20; x <= W + 20; x += 14) { const y = yy + Math.sin(x * 0.02 + t * (1.2 + k * 0.12) * slow + k) * (3 + k * 0.35); if (x === -20) c.moveTo(x, y); else c.lineTo(x, y); }
+    c.strokeStyle = 'rgba(255,255,255,' + (0.10 + (k % 3) * 0.05) + ')'; c.lineWidth = 2; c.stroke();
+  }
+  for (let k = 0; k < 26; k++) {         // sparkles
+    const sx = ((k * 0.137 + t * 0.03 * (1 + (k % 3) * 0.4) * slow) % 1) * W, sy = sTop + ((k * 0.311) % 1) * (sBot - sTop), a = Math.max(0, Math.sin(t * 2.4 + k * 1.7));
+    c.fillStyle = 'rgba(255,255,255,' + (a * 0.55) + ')'; c.beginPath(); c.ellipse(sx, sy, 5, 1.6, 0, 0, Math.PI * 2); c.fill();
+  }
+  // the bank in front
+  c.fillStyle = '#4f8a45'; c.fillRect(-50, sBot, W + 100, H - sBot + 60);
+  ftScene.blades.forEach(function(b) {
+    const bx = b.x * W, sw = Math.sin(t * 1.4 + b.ph) * 5 * slow;
+    c.strokeStyle = 'rgb(' + Math.round(60 + b.tone * 30) + ',' + Math.round(130 + b.tone * 40) + ',' + Math.round(60 + b.tone * 20) + ')'; c.lineWidth = 2;
+    c.beginPath(); c.moveTo(bx, sBot + 6); c.quadraticCurveTo(bx + sw * 0.5, sBot - b.h * 0.5, bx + sw, sBot - b.h); c.stroke();
+  });
+  c.restore();
+  // leaves drifting through the air
+  ftScene.leaves.forEach(function(l) {
+    l.x += (l.vx + Math.sin(t * 0.7 + l.ph) * 0.006) * dt * slow; l.y += l.vy * dt * slow;
+    if (l.x > 1.05) l.x = -0.05; if (l.y > 1.05) { l.y = -0.05; l.x = Math.random(); }
+    const lx = l.x * W, ly = l.y * H + Math.sin(t * 1.3 + l.ph) * 8;
+    c.save(); c.translate(lx, ly); c.rotate(l.rot + t * 0.9 * slow + l.ph);
+    c.fillStyle = l.hue < 0.5 ? 'rgba(122,180,70,0.9)' : (l.hue < 0.8 ? 'rgba(214,176,60,0.9)' : 'rgba(196,110,52,0.9)');
+    c.beginPath(); c.ellipse(0, 0, l.s, l.s * 0.5, 0, 0, Math.PI * 2); c.fill(); c.restore();
+  });
+  tut.raf = requestAnimationFrame(ftDraw);
+}
+function tutView(v) {
+  tut.view = v;
+  tut.zoomTarget = v === 'trail' ? 1 : 1.45;
+  tutEl('ftJarWrap').classList.toggle('show', v !== 'trail');
+}
+
+/* ---- the rock jar: events are the biggest rocks, then heavy and lighter tasks, then water for breaks ---- */
+
+const FT_ROCK_W = { heavy: 28, medium: 21, light: 16 };
+const FT_ROCK_LOOK = { heavy: { label: 'Heavy task', color: '#6b4f3a' }, medium: { label: 'Medium task', color: '#7b8a62' }, light: { label: 'Light task', color: '#b3ab96' } };
+
+function ftRockMake(label, color, cls) {
+  const el = document.createElement('div');
+  el.className = 'ft-rock' + (cls ? ' ' + cls : '');
+  el.style.setProperty('--c', color);
+  const s = document.createElement('span'); s.textContent = label; el.appendChild(s);
+  return el;
+}
+
+// The events you have today (as rocks), or three practice rocks.
+function ftBuildEventRocks(forceSample) {
+  const gcal = labelColor('Google Calendar');
+  const real = (!forceSample && Array.isArray(events)) ? events.slice().sort(function(a, b) { return a.startMin - b.startMin; }).slice(0, 4) : [];
+  tut.usingRealEvents = real.length > 0;
+  if (real.length) return real.map(function(e) { return { kind: 'event', label: e.title || 'Event', color: gcal, w: tutClamp(14 + (e.endMin - e.startMin) / 8, 16, 30) }; });
+  return [{ kind: 'event', label: 'Class', color: gcal, w: 26 }, { kind: 'event', label: 'Practice', color: gcal, w: 20 }, { kind: 'event', label: 'Dinner', color: gcal, w: 24 }];
+}
+
+// Lays every rock out in the jar. The positions are worked out for ALL the rocks from the start (so nothing jumps
+// around when a new rock arrives); only rocks that are in the jar so far count as resting on each other.
+function ftLayoutJar() {
+  const inner = tutEl('ftJarInner'), box = inner.getBoundingClientRect();
+  const aspect = (box.width > 0 && box.height > 0) ? box.width / box.height : 0.7;
+  const heights = []; for (let i = 0; i <= 100; i++) heights.push(100);
+  const events = tut.rocks.filter(function(r) { return r.kind === 'event'; });
+  const gap1 = FT_ROCK_W.heavy + 6, gap = 4;
+  let total = events.reduce(function(s, r) { return s + r.w; }, 0) + (events.length > 1 ? gap1 + (events.length - 2) * gap : FT_ROCK_W.heavy + 6);
+  const k = total > 94 ? 94 / total : 1;
+  let x = 3 + (94 - Math.min(94, total * k)) / 2;
+  events.forEach(function(r, i) { r.ww = r.w * k; r.cx = x + r.ww / 2; x += r.ww + (i === 0 ? (events.length > 1 ? gap1 * k : 6 * k) : gap * k); });
+  let heavyCx = 50;
+  if (events.length > 1) heavyCx = (events[0].cx + events[0].ww / 2 + events[1].cx - events[1].ww / 2) / 2;   // between the first two events
+  else if (events.length === 1) heavyCx = events[0].cx + events[0].ww / 2 + 3 * k + FT_ROCK_W.heavy * k / 2;
+  tut.rocks.forEach(function(r) {
+    const w = r.kind === 'event' ? r.ww : FT_ROCK_W[r.kind] * k;
+    let cx = r.kind === 'event' ? r.cx : (r.kind === 'heavy' ? heavyCx : (r.kind === 'medium' ? heavyCx + 3 : (events.length ? events[events.length - 1].cx : 78)));
+    cx = tutClamp(cx, w / 2 + 1, 99 - w / 2);
+    const h = 0.7 * w * aspect;
+    const lo = Math.max(0, Math.floor(cx - w / 2)), hi = Math.min(100, Math.ceil(cx + w / 2));
+    let bottom = 100;
+    for (let xx = lo; xx <= hi; xx++) bottom = Math.min(bottom, heights[xx]);
+    const top = Math.max(0, bottom - h);
+    if (r.shown) for (let xx = lo; xx <= hi; xx++) { const u = (xx - cx) / (w / 2); heights[xx] = Math.min(heights[xx], top + h * 0.5 * (1 - Math.sqrt(Math.max(0, 1 - u * u)))); }
+    r.layout = { left: cx - w / 2, top: top, width: w, height: h };
+    if (r.el) {
+      r.el.style.left = r.layout.left + '%'; r.el.style.top = r.layout.top + '%'; r.el.style.width = r.layout.width + '%'; r.el.style.height = r.layout.height + '%';
+      r.el.style.visibility = (r.shown && !r.hiding) ? 'visible' : 'hidden';
+    }
+  });
+  tut.jarTop = Math.min.apply(null, heights);
+}
+
+function ftBuildJarRocks() {
+  const inner = tutEl('ftJarInner');
+  inner.innerHTML = '';
+  tut.rocks.forEach(function(r) { r.el = ftRockMake(r.label, r.color); inner.appendChild(r.el); });
+}
+
+// Clears everything the story put on screen and sets it up the way chapter `c` begins.
+function ftSetScene(c) {
+  ftStreamClear();
+  tutEl('ftDot').classList.remove('show'); tutEl('ftPrompt').classList.remove('show'); tutEl('ftNotNow').classList.remove('show');
+  tutEl('ftBackpack').classList.remove('show'); tutEl('ftBackpack').querySelectorAll('.ft-rock').forEach(function(e) { e.remove(); });
+  tutHideForm();
+  tutEl('ftHint').classList.remove('show');
+  const water = tutEl('ftWater'); water.style.transition = 'none'; water.style.top = '100%'; water.classList.remove('full'); void water.offsetHeight; water.style.transition = '';
+  tutEl('ftPour').style.height = '0';
+  if (!tut.eventRocks.length) tut.eventRocks = ftBuildEventRocks(false);
+  tut.rocks = tut.eventRocks.map(function(r) { return Object.assign({}, r, { shown: c >= 2, el: null }); });
+  ['heavy', 'medium', 'light'].forEach(function(kind, idx) {
+    tut.rocks.push({ kind: kind, label: FT_ROCK_LOOK[kind].label, color: FT_ROCK_LOOK[kind].color, w: FT_ROCK_W[kind], shown: c >= idx + 3, el: null });
+  });
+  ftBuildJarRocks();
+  tutView(c === 0 ? 'trail' : 'close');
+  ftLayoutJar();
+  if (c >= 6) ftSetWater(true, true);
+}
+
+function ftSetWater(full, instant) {
+  const water = tutEl('ftWater');
+  if (instant) water.style.transition = 'none';
+  water.style.top = full ? Math.max(6, (tut.jarTop || 40) - 4) + '%' : '100%';
+  water.classList.toggle('full', !!full);
+  if (instant) { void water.offsetHeight; water.style.transition = ''; }
+}
+
+// A rock flies from where it was (a rect on screen) into its place in the jar, or drops in from above.
+function ftDropRock(r, fromRect, tok) {
+  return new Promise(function(resolve, reject) {
+    r.shown = true; r.hiding = true;
+    ftLayoutJar();
+    const target = r.el.getBoundingClientRect();
+    const dur = 950 / tutSpeed();
+    const jarRect = tutEl('ftJar').getBoundingClientRect();
+    const start = fromRect || { left: jarRect.left + jarRect.width / 2 - target.width / 2, top: jarRect.top - 110, width: target.width, height: target.height };
+    const fly = ftRockMake(r.label, r.color, 'fly');
+    fly.style.position = 'fixed'; fly.style.zIndex = '30'; fly.style.pointerEvents = 'none';
+    fly.style.left = start.left + 'px'; fly.style.top = start.top + 'px'; fly.style.width = start.width + 'px'; fly.style.height = start.height + 'px';
+    document.body.appendChild(fly);
+    const midTop = Math.min(start.top, target.top) - 70;
+    const anim = fly.animate([
+      { left: start.left + 'px', top: start.top + 'px', width: start.width + 'px', height: start.height + 'px', offset: 0 },
+      { left: ((start.left + target.left) / 2) + 'px', top: midTop + 'px', width: ((start.width + target.width) / 2) + 'px', height: ((start.height + target.height) / 2) + 'px', offset: 0.45, easing: 'ease-in' },
+      { left: target.left + 'px', top: target.top + 'px', width: target.width + 'px', height: target.height + 'px', offset: 1 }
+    ], { duration: dur, easing: 'cubic-bezier(0.3, 0.1, 0.6, 1)', fill: 'forwards' });
+    anim.onfinish = function() {
+      fly.remove(); r.hiding = false; ftLayoutJar();
+      r.el.classList.remove('land'); void r.el.offsetWidth; r.el.classList.add('land');
+      setTimeout(function() { if (tok === tut.token) resolve(); else reject(TUT_CANCEL); }, 420 / tutSpeed());
+    };
+  });
+}
+
+/* ---- rocks in the stream (the ones you click), glowing dots, and the backpack ---- */
+
+function ftStreamClear() { tutEl('ftStreamRocks').innerHTML = ''; }
+function ftStreamRock(text, color, wPx, hPx, leftPct, bottomPct, pick) {
+  const el = ftRockMake(text, color, pick ? 'pickable' : '');
+  el.style.position = 'absolute'; el.style.width = wPx + 'px'; el.style.height = hPx + 'px'; el.style.left = leftPct + '%'; el.style.bottom = bottomPct + '%';
+  if (pick) { el.setAttribute('role', 'button'); el.tabIndex = 0; el.onkeydown = function(e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); el.click(); } }; }
+  tutEl('ftStreamRocks').appendChild(el);
+  return el;
+}
+// Shows a glowing dot (x, y in percent) and waits until it is clicked.
+function tutDot(x, y, label, tok) {
+  return new Promise(function(resolve, reject) {
+    const d = tutEl('ftDot'), p = tutEl('ftPrompt');
+    d.style.left = x + '%'; d.style.top = y + '%'; d.setAttribute('aria-label', label); d.classList.add('show');
+    p.textContent = label; p.style.left = x + '%'; p.style.top = y + '%'; p.classList.add('show');
+    const iv = setInterval(function() { if (tok !== tut.token) { clearInterval(iv); d.classList.remove('show'); p.classList.remove('show'); d.onclick = null; reject(TUT_CANCEL); } }, 150);
+    d.onclick = function() { clearInterval(iv); d.classList.remove('show'); p.classList.remove('show'); d.onclick = null; resolve(); };
+  });
+}
+
+/* ---- the real Add form, moved into the story so you use the real thing ---- */
+
+function tutShowForm() {
+  const panel = tutEl('addPanel');
+  if (!panel || tut.formMoved) return;
+  tut.formHome = document.createComment('add-panel-home');
+  panel.parentNode.insertBefore(tut.formHome, panel);
+  tutEl('ftFormHost').appendChild(panel);
+  tutEl('ftFormHost').classList.add('show');
+  tutEl('ftJarWrap').classList.add('with-form');
+  tut.formMoved = true;
+  panel.addEventListener('focusin', tutFormEvent); panel.addEventListener('input', tutFormEvent); panel.addEventListener('click', tutFormEvent); panel.addEventListener('keyup', tutFormEvent);
+  setTimeout(function() { const t = tutEl('typeSeg'); if (t) t.focus(); tutUpdateFormHint(true); }, 120);
+}
+function tutHideForm() {
+  const panel = tutEl('addPanel');
+  if (!tut.formMoved || !panel) { tutEl('ftFormHost').classList.remove('show'); tutEl('ftJarWrap').classList.remove('with-form'); return; }
+  panel.removeEventListener('focusin', tutFormEvent); panel.removeEventListener('input', tutFormEvent); panel.removeEventListener('click', tutFormEvent); panel.removeEventListener('keyup', tutFormEvent);
+  if (tut.formHome && tut.formHome.parentNode) { tut.formHome.parentNode.insertBefore(panel, tut.formHome); tut.formHome.remove(); }
+  tut.formHome = null; tut.formMoved = false;
+  tutEl('ftFormHost').classList.remove('show');
+  tutEl('ftJarWrap').classList.remove('with-form');
+  tutEl('ftHint').classList.remove('show');
+}
+function tutFormEvent() { setTimeout(function() { tutUpdateFormHint(false); }, 30); }
+// A short instruction that follows where you are in the form (type, title, priority, time, ...).
+function tutUpdateFormHint(first) {
+  if (!tut.formMoved) return;
+  const a = document.activeElement, id = a ? a.id : '';
+  let text = 'Press 1 to choose Task, or 2 for an Event.';
+  const inside = a && tutEl('addPanel').contains(a);
+  if (inside) {
+    if (id === 'title') text = 'Type what you need to do, then press Enter to move on.';
+    else if (id === 'prioritySeg' || (a.closest && a.closest('#prioritySeg'))) text = 'Priority: 1 is Low, 2 is Medium, 3 is Top. Try making this a medium priority: press 2.';
+    else if (id === 'time') text = 'How many minutes will it take? Type a number, then press Enter.';
+    else if (id === 'motivation') text = 'How motivated are you, from 1 to 10? Type a number, then press Enter.';
+    else if (id === 'labelSearch') text = 'A label is optional. Press Enter to skip it.';
+    else if (id === 'optional' || id === 'repeatCheck') text = 'Optional and Repeat are for later. Press Enter to skip them.';
+    else if (id === 'taskSubmitBtn') text = 'Press Enter to add your task!';
+  }
+  const hint = tutEl('ftHint');
+  if (hint.dataset.text !== text) {
+    hint.dataset.text = text;
+    hint.innerHTML = '';
+    hint.appendChild(document.createTextNode(text));
+    const skip = document.createElement('button'); skip.type = 'button'; skip.textContent = 'Skip adding'; skip.onclick = function() { if (tut.formWait) tut.formWait('skip'); };
+    hint.appendChild(skip);
+    if (tut.hintVoice) { clearTimeout(tut.hintTimer); tut.hintTimer = setTimeout(function() { tutSay(text, tut.token).catch(function() {}); }, 450); }
+  }
+  hint.classList.add('show');
+}
+// Called by the Add form whenever a task (or event) is added.
+function tutOnTaskAdded(task) {
+  if (tut.active && task && task.kind !== 'event') task.example = true;     // these are real tasks, marked as examples (delete them any time)
+  if (tut.formWait) tut.formWait('added');
+}
+function tutEnsureExamples() {
+  if (tut.made.examples) return;
+  const open = tasks.filter(function(t) { return isTaskActiveToday(t) && !t.completed; });
+  if (open.length >= 2) { tut.made.examples = true; return; }
+  const base = { optional: false, completed: false, label: null, tomorrow: false, createdDate: localDateStr(), example: true };
+  tasks.push(Object.assign({ id: newUniqueId(), title: 'Example: read for 20 minutes', priority: 2, time: 20, motivation: 6 }, base));
+  tasks.push(Object.assign({ id: newUniqueId(), title: 'Example: tidy your desk', priority: 1, time: 10, motivation: 4 }, base));
+  saveTasks(); render();
+  tut.made.examples = true;
+}
+
+/* ---- the chapters of the story ---- */
+
+async function tutAddStep(first, tok) {
+  tutShowForm();
+  const added = new Promise(function(resolve) { tut.formWait = resolve; });
+  tut.hintVoice = first;
+  const line = first ? 'You can either click the buttons, or you can quick add with your keyboard. Try the quick add!' : 'Add this one the same way.';
+  await tutSayUntil(line, tok, added);
+  tut.formWait = null; tut.hintVoice = false; clearTimeout(tut.hintTimer);
+  tutHideForm();
+}
+
+async function chTrail(tok) {
+  await tutSay('Take a breath. You are walking down a quiet trail, beside a gentle stream.', tok);
+  await tutSay('You are walking down the trail, and you are thinking of all the things that you have to do.', tok);
+  await tutSay('Then you get reminded of the events you have to go to today.', tok);
+  await tutSayUntil("Look, there's one!", tok, tutDot(60, 74, 'Click the glowing dot in the river', tok));
+}
+async function chRocks(tok) {
+  tutView('close');
+  ftStreamClear();
+  const gcal = labelColor('Google Calendar');
+  ftStreamRock('Google Calendar', gcal, 150, 98, 6, 46, false);
+  await tutSay('Here is a rock in the stream. It says Google Calendar, in the same color you will see on your schedule.', tok);
+  let practice = false;
+  if (!calendarConnected && !tut.afterConnect) {
+    const conn = ftStreamRock('Connect your Google Calendar', '#587a66', 172, 104, 34, 14, true);
+    tutEl('ftNotNow').classList.add('show');
+    const choice = new Promise(function(resolve) { conn.onclick = function() { resolve('connect'); }; tut.notNow = function() { resolve('skip'); }; });
+    const which = await tutSayUntil('Next to it is a rock that says, connect your Google Calendar. Click it to connect.', tok, choice);
+    tutEl('ftNotNow').classList.remove('show');
+    if (which === 'connect') { tutBeginConnect(); await new Promise(function() {}); }   // (the page leaves for Google and comes back to this spot)
+    practice = true;
+  } else if (tut.afterConnect) {
+    tut.afterConnect = false;
+    for (let i = 0; i < 40 && typeof googleLoading !== 'undefined' && googleLoading > 0; i++) await tutSleep(150, tok);
+  }
+  ftStreamClear();
+  tut.eventRocks = ftBuildEventRocks(practice);
+  tut.rocks = tut.eventRocks.map(function(r) { return Object.assign({}, r, { shown: false, el: null }); });
+  ['heavy', 'medium', 'light'].forEach(function(kind) { tut.rocks.push({ kind: kind, label: FT_ROCK_LOOK[kind].label, color: FT_ROCK_LOOK[kind].color, w: FT_ROCK_W[kind], shown: false, el: null }); });
+  ftBuildJarRocks(); ftLayoutJar();
+  const els = tut.eventRocks.map(function(r, i) {
+    return ftStreamRock(r.label, r.color, Math.round(70 + r.w * 2.4), Math.round(52 + r.w * 1.5), 4 + i * (92 / tut.eventRocks.length), 30 + (i % 2) * 20, true);
+  });
+  const picked = new Promise(function(resolve) {
+    let n = 0;
+    els.forEach(function(el, i) {
+      el.onclick = function() {
+        el.onclick = null; el.classList.remove('pickable');
+        const rect = el.getBoundingClientRect();
+        el.classList.add('gone');
+        ftDropRock(tut.rocks[i], { left: rect.left, top: rect.top, width: rect.width, height: rect.height }, tok).then(function() { n++; if (n === els.length) resolve(); }, function() {});
+      };
+    });
+  });
+  const msg = tut.usingRealEvents ? 'Here are the events you have today. Pick up these rocks.'
+    : (practice ? 'No problem. Here are three practice rocks. Pick up these rocks.' : 'You do not have any events today, so here are three rocks to practice with. Pick up these rocks.');
+  await tutSayUntil(msg, tok, picked);
+  await tutSay('Good. The big, fixed things go in the jar first, because they cannot move.', tok);
+}
+async function chHeavy(tok) {
+  const bp = tutEl('ftBackpack');
+  const rock = ftRockMake('Heavy task', FT_ROCK_LOOK.heavy.color); bp.appendChild(rock); bp.classList.add('show');
+  await tutSay('You have a backpack on, and there is a very heavy rock in there. It has been weighing on you all night, and you know you have to get it done today.', tok);
+  await tutDot(92, 14, 'Click the glowing dot to drop the heavy rock in the jar', tok);
+  const rect = rock.getBoundingClientRect();
+  rock.style.visibility = 'hidden';
+  await ftDropRock(tut.rocks.find(function(r) { return r.kind === 'heavy'; }), { left: rect.left, top: rect.top, width: rect.width, height: rect.height }, tok);
+  bp.classList.remove('show');
+  await tutSay('There. It settles right in between your events.', tok);
+}
+async function chMedium(tok) {
+  await tutSay('Another task pops into your mind. This one is not as heavy as the last.', tok);
+  await tutAddStep(true, tok);
+  await tutSay('You just added your first task!', tok);
+  await ftDropRock(tut.rocks.find(function(r) { return r.kind === 'medium'; }), null, tok);
+}
+async function chLight(tok) {
+  await tutSay('And yet another task pops into your mind. This one is the lightest of them all.', tok);
+  await tutAddStep(false, tok);
+  await tutSay('Nicely done.', tok);
+  await ftDropRock(tut.rocks.find(function(r) { return r.kind === 'light'; }), null, tok);
+}
+async function chWater(tok) {
+  await tutSay("Now, let's add your breaks.", tok);
+  await tutDot(26, 80, 'Click the glowing dot in the river', tok);
+  const pour = tutEl('ftPour');
+  pour.style.height = '120px';
+  await tutSleep(700, tok);
+  ftSetWater(true, false);
+  await tutSleep(1900, tok);
+  pour.style.height = '0';
+  await tutSay('The water pours in and fills every little gap. That is what your breaks do for you.', tok);
+}
+async function chBridge(tok) {
+  await tutSay("Let's take you to the actual website. This rock jar that you just built here represents how this website works, putting priority first. Let's see how it works.", tok);
+  await tutSleep(600, tok);
+}
+const FT_CHAPTERS = [chTrail, chRocks, chHeavy, chMedium, chLight, chWater, chBridge];
+
+async function tutRun(from) {
+  const tok = ++tut.token;
+  for (let c = from; c < FT_CHAPTERS.length; c++) {
+    if (tok !== tut.token) return;
+    tut.chapter = c;
+    try { await FT_CHAPTERS[c](tok); }
+    catch (e) { if (e === TUT_CANCEL) return; throw e; }
+  }
+  if (tok === tut.token) tutStartTour();
+}
+function tutChapterStartSeconds(c) { let s = 0; for (let i = 0; i < c; i++) s += FT_CHAPTER_SECONDS[i]; return s; }
+function tutGoto(c) {
+  c = tutClamp(c, 0, FT_CHAPTERS.length - 1);
+  tut.token++;
+  tutStopSpeech();
+  tutCaption('');
+  ftSetScene(c);
+  tut.chapter = c;
+  tut.elapsed = tutChapterStartSeconds(c) * 1000;
+  tut.paused = false; tutSyncPlayButton();
+  tutRun(c);
+}
+
+/* ---- the controls: back, pause, forward, captions, sound, voice, full screen, skip, end ---- */
+
+function tutFmt(ms) { const s = Math.max(0, Math.round(ms / 1000)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
+function tutTickClock() {
+  if (!tut.active) return;
+  const now = Date.now();
+  if (tut.mode === 'story' && !tut.paused) tut.elapsed += (now - tut.lastTick) * tutSpeed();
+  tut.lastTick = now;
+  const total = Math.max(tutChapterStartSeconds(FT_CHAPTERS.length) * 1000, tut.elapsed + 1000);
+  const t = tutEl('ftTime');
+  if (t) t.textContent = tutFmt(tut.elapsed) + ' / ' + tutFmt(total);
+}
+function tutSyncPlayButton() {
+  const b = tutEl('ftPlay');
+  b.innerHTML = tut.paused ? '&#9654; <span class="ft-lbl">Play</span>' : '&#10074;&#10074; <span class="ft-lbl">Pause</span>';
+  b.setAttribute('aria-label', tut.paused ? 'Play' : 'Pause');
+}
+function tutTogglePause() {
+  tut.paused = !tut.paused;
+  tutSyncPlayButton();
+  const job = tut.say;
+  if (tut.paused) {
+    if (job && !job.ended && job.chunks) { job.cur = -1; clearTimeout(job.guard); try { if (window.speechSynthesis) speechSynthesis.cancel(); } catch (e) {} }
+    try { if (tut.audio) tut.audio.ctx.suspend(); } catch (e) {}
+  } else {
+    try { if (tut.audio && !tut.muted) tut.audio.ctx.resume(); } catch (e) {}
+    if (job && !job.ended && job.chunks && window.speechSynthesis && tut.voice && !tut.muted) tutSpeakNext(job, tut.voiceId);
+  }
+}
+function tutBack() { if (tut.mode === 'tour') { tourBack(); return; } tutGoto(tut.chapter - 1); }
+function tutForward() { if (tut.mode === 'tour') { tourNext(); return; } if (tut.chapter >= FT_CHAPTERS.length - 1) { tutStartTour(); return; } tutGoto(tut.chapter + 1); }
+function tutToggleCaptions() {
+  tut.captions = !tut.captions;
+  tutEl('ftCaption').classList.toggle('off', !tut.captions);
+  tutEl('ftCC').classList.toggle('on', tut.captions);
+  tutEl('ftCC').setAttribute('aria-pressed', String(tut.captions));
+}
+function tutToggleMute() {
+  tut.muted = !tut.muted;
+  const lbl = tut.muted ? 'Sound off' : 'Sound on';
+  tutEl('ftMute').innerHTML = (tut.muted ? '&#128263; ' : '&#128266; ') + '<span class="ft-lbl">' + lbl + '</span>';
+  tutEl('tcMute').textContent = lbl;
+  tutAudioApplyMute();
+  const job = tut.say;
+  if (tut.muted && job && !job.ended && job.chunks) {          // keep the words moving along, just silently
+    job.cur = -1; clearTimeout(job.guard); try { if (window.speechSynthesis) speechSynthesis.cancel(); } catch (e) {}
+    const rest = job.chunks.slice(job.i).join(' ');
+    tutSleep(Math.max(800, rest.length * 62), job.tok).then(function() { if (tut.say === job && !job.ended) { job.ended = true; job.resolve(); } }, function() {});
+  }
+}
+function tutFullscreen() {
+  const el = tutEl('forestTut');
+  try {
+    if (document.fullscreenElement || document.webkitFullscreenElement) { (document.exitFullscreen || document.webkitExitFullscreen).call(document); }
+    else (el.requestFullscreen || el.webkitRequestFullscreen).call(el);
+  } catch (e) {}
+}
+function tutSkip() { tutStartTour(); }                  // skip the story, go to the hands-on tour of the website
+function tutEnd() { tutFinish('end'); }                 // close the tutorial and go to the website
+function tutNotNow() { if (tut.notNow) tut.notNow(); }
+
+/* ---- starting, finishing, and coming back from Google ---- */
+
+function tutSeen() {
+  if (localStorage.getItem('flowgrove_tutorial_seen') === 'true') return true;
+  const p = profileNow();
+  return !!(p && p.tutorialSeen);
+}
+function tutMarkSeen() {
+  localStorage.setItem('flowgrove_tutorial_seen', 'true');
+  const p = profileNow();
+  if (p && !p.tutorialSeen) { p.tutorialSeen = true; try { localStorage.setItem('flowgrove_profile', JSON.stringify(p)); syncMarkProfile(); } catch (e) {} }
+}
+function startTutorial() { tutShowWelcome(true); }       // (the ? button)
+function tutShowWelcome(fromButton) {
+  const p = profileNow();
+  const name = p && p.nickname ? p.nickname : '';
+  tutEl('tutWelcomeTitle').textContent = fromButton ? 'Take the tutorial' : (name ? 'Welcome, ' + name + '!' : 'Welcome!');
+  tutEl('tutWelcome').classList.add('show');
+}
+function tutLater() {
+  tutEl('tutWelcome').classList.remove('show');
+  tutMarkSeen();
+  showToast('No problem. You can start the tutorial any time from the ? button.');
+}
+function tutStart() {
+  tutEl('tutWelcome').classList.remove('show');
+  tutMarkSeen();
+  tutBegin(0, false);
+}
+function tutBegin(chapter, afterConnect) {
+  tutEl('tutWelcome').classList.remove('show');
+  tut.active = true; tut.mode = 'story'; tut.paused = false; tut.afterConnect = !!afterConnect;
+  tut.eventRocks = []; tut.made.examples = false;
+  tutSyncPlayButton(); tutEl('ftCC').classList.toggle('on', tut.captions); tutEl('ftCaption').classList.toggle('off', !tut.captions);
+  tutEl('ftFS').style.display = (document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen) ? '' : 'none';
+  tutEl('forestTut').classList.add('show');
+  ftBuildScene();
+  if (!tut.voicePicked || !tut.voice) { tutPickVoice(); tut.voicePicked = true; }
+  tutAudioStart();
+  tut.lastTick = Date.now(); clearInterval(tut.timer); tut.timer = setInterval(tutTickClock, 250);
+  if (!tut.raf) tut.raf = requestAnimationFrame(ftDraw);
+  tut.token++;
+  tut.chapter = chapter;
+  tut.elapsed = tutChapterStartSeconds(chapter) * 1000;
+  ftSetScene(chapter);
+  tutRun(chapter);
+}
+// The "Connect your Google Calendar" rock takes you to Google and back; this remembers where you were.
+function tutBeginConnect() {
+  localStorage.setItem('flowfill_tut_resume', JSON.stringify({ chapter: 1, at: Date.now() }));
+  window.location.href = '/api/auth/google';
+}
+function tutOnAppStart() {
+  let resume = null;
+  try { resume = JSON.parse(localStorage.getItem('flowfill_tut_resume') || 'null'); } catch (e) { resume = null; }
+  if (resume) {
+    localStorage.removeItem('flowfill_tut_resume');
+    if (Date.now() - resume.at < 20 * 60 * 1000) { setTimeout(function() { tutBegin(1, true); }, 500); return; }
+  }
+  if (!tutSeen()) setTimeout(function() { tutShowWelcome(false); }, 700);
+}
+function tutCleanup() {
+  tut.token++; tut.tourToken++;
+  tutStopSpeech();
+  tutAudioStop();
+  clearInterval(tut.timer); cancelAnimationFrame(tut.raf); tut.raf = 0;
+  tutHideForm();
+  if (tut.stepClickOff) { tut.stepClickOff(); tut.stepClickOff = null; }
+  tutEl('forestTut').classList.remove('show');
+  tutEl('ftVoiceMenu').classList.remove('show');
+  tutEl('tourSpot').classList.remove('show'); tutEl('tourCard').classList.remove('show');
+  try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {}
+  tut.active = false; tut.mode = null;
+}
+function tutFinish(how) {
+  tutCleanup();
+  tutMarkSeen();
+  render();
+  if (how === 'done') showToast("You're all set! The example tasks are real, so you can delete them any time.");
+}
+
+/* ---- the hands-on tour of the real website ---- */
+
+function tutStartTour() {
+  tutEl('tutWelcome').classList.remove('show');
+  tut.token++; tutStopSpeech();
+  tut.mode = 'tour';
+  tutAudioStop();
+  tutHideForm();
+  clearInterval(tut.timer); cancelAnimationFrame(tut.raf); tut.raf = 0;
+  tutEl('forestTut').classList.remove('show');
+  try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {}
+  tutEnsureExamples();
+  tut.tourSteps = tourBuildSteps();
+  tut.tourIndex = 0;
+  tourShow(0);
+}
+function tourSection(word) {
+  return [].slice.call(document.querySelectorAll('#settingsOverlay .settings-section')).find(function(s) { const h = s.querySelector('h4'); return h && h.textContent.toLowerCase().indexOf(word) !== -1; }) || null;
+}
+function tourPrepSettings() { if (!tutEl('settingsOverlay').classList.contains('show')) openSettings(); }
+function tourCloseSettings() { closeSettings(); }
+function tourPrepBlock(key) { closeSettings(); revealPanel(key); }
+function tourFirstTask() { return document.querySelector('#grid .block.task:not(.completed):not(.worked)') || document.querySelector('#grid .block.task'); }
+
+function tourBuildSteps() {
+  return [
+    { title: 'Settings', text: "Let's start with Settings. Click the Settings button.", click: true,
+      target: function() { return document.querySelector('[data-tut="settingsBtn"]'); }, prepare: function() { tourCloseSettings(); } },
+    { title: 'Your account', text: 'This is your account. Sign in with Google here, and your tasks, events and settings follow you to every device. You can even add a second Google account, like home and school.',
+      target: function() { return tourSection('account &'); }, prepare: tourPrepSettings },
+    { title: 'Working hours', text: 'Here are your working hours. Flowfill plans your tasks inside them, so nothing gets scheduled in the middle of the night.',
+      target: function() { return tourSection('working hours'); }, prepare: tourPrepSettings },
+    { title: 'Breaks', text: 'And here is how long you work before a break, and how long your breaks last.',
+      target: function() { return tourSection('break settings'); }, prepare: tourPrepSettings },
+    { title: 'Google Calendar', text: 'Connect Google Calendar here, and your events become the big rocks that everything else fits around. Flowfill only reads your calendar. It never changes it.',
+      target: function() { return tourSection('google calendar'); }, prepare: tourPrepSettings },
+    { title: 'Make it yours', text: 'You can change the colors, and even move the blocks to the side you like. There is more in here, but you do not need to change anything right now.',
+      target: function() { return tourSection('appearance'); }, prepare: tourPrepSettings },
+    { title: 'Close Settings', text: 'Click the X to close Settings.', click: true,
+      target: function() { return document.querySelector('#settingsOverlay .modal-close'); }, prepare: tourPrepSettings },
+    { title: "Today's Schedule", text: 'This is your schedule for today. Your calendar events are fixed blocks, and Flowfill fits your tasks around them. The dark line is right now.',
+      target: function() { const g = tutEl('grid'); return (g && g.closest('.schedule-panel')) || g; }, prepare: function() { closeSettings(); switchView('day'); } },
+    { title: 'Your tasks', text: 'Check a task off when you finish it. The pencil edits it. Right-click it, or press and hold on a phone, to see its details.',
+      target: tourFirstTask, prepare: function() { closeSettings(); switchView('day'); } },
+    { title: 'Timer and stopwatch', text: 'Click a task to open its timer and stopwatch.', click: true,
+      target: tourFirstTask, prepare: function() { closeSettings(); switchView('day'); } },
+    { title: 'Timer and stopwatch', text: "Press Start when you begin working. This tells Flowfill when you really work, so your schedule stays accurate. If you start another task's timer, Flowfill knows you moved on.",
+      target: function() { return tutEl('clockPanel'); },
+      prepare: function() { closeSettings(); const t = tourFirstTask(); if (!workState.panelTaskId && t) { const first = tasks.find(function(x) { return !x.completed && isTaskActiveToday(x); }); if (first) openClockPanel(first.id); } revealPanel('clock'); } },
+    { title: 'Add a task or event', text: 'This is where you add tasks and events. Press 1 for a task, 2 for an event, and Enter to move quickly. You already know how.',
+      target: function() { return tutEl('addPanel'); }, prepare: function() { tourPrepBlock('add'); } },
+    { title: 'All tasks today', text: 'Everything for today, in order. Remove deletes a task, and you can always undo it. On a phone, the Tomorrow button moves a task to tomorrow.',
+      target: function() { return tutEl('tasksPanel'); }, prepare: function() { tourPrepBlock('tasks'); } },
+    { title: 'Fixed events', text: 'Fixed events are things like lunch or practice. They can repeat, and your tasks are planned around them.',
+      target: function() { return tutEl('eventsSidebarPanel'); }, prepare: function() { tourPrepBlock('events'); } },
+    { title: 'Tomorrow', text: 'Not today? Drag a task here, or tap Tomorrow on a phone, and it moves to tomorrow.',
+      target: function() { return tutEl('tomorrowPanel'); }, prepare: function() { tourPrepBlock('tomorrow'); } },
+    { title: 'Labels', text: 'Labels color-code your tasks, so you can see what kind of work is coming up.',
+      target: function() { return tutEl('labelsSidebarPanel'); }, prepare: function() { tourPrepBlock('labels'); } },
+    { title: 'Motivation', text: 'And a little encouragement, whenever you need it. Press Refresh for a new one.',
+      target: function() { return tutEl('motivationPanel'); }, prepare: function() { tourPrepBlock('motivation'); } },
+    { title: 'Other views', text: 'Switch between Day, Weekdays, Week and Month here. Use the arrows to look at other weeks and months.',
+      target: function() { return document.querySelector('.view-switch'); }, prepare: function() { closeSettings(); switchView('day'); } },
+    { title: 'Breaks', text: 'Press this any time to take a break. Flowfill also adds breaks for you.',
+      target: function() { return tutEl('breakBtn'); }, prepare: function() { closeSettings(); } },
+    { title: 'Feedback', text: 'Feedback will make this website better, so please fill out this quick form whenever you have a bug or a suggestion.', last: true,
+      target: function() { return document.querySelector('.fb-btn'); }, prepare: function() { closeSettings(); } }
+  ];
+}
+
+function tourFindTarget(step, tries) {
+  return new Promise(function(resolve) {
+    let n = 0;
+    (function look() {
+      const el = step.target ? step.target() : null;
+      if (el && el.getBoundingClientRect().width > 0) { resolve(el); return; }
+      if (++n > (tries || 14)) { resolve(null); return; }
+      setTimeout(look, 120);
+    })();
+  });
+}
+async function tourShow(i) {
+  const steps = tut.tourSteps;
+  if (!steps || i < 0) return;
+  if (i >= steps.length) { tutFinish('done'); return; }
+  const tt = ++tut.tourToken;
+  tut.tourIndex = i;
+  tutStopSpeech();
+  if (tut.stepClickOff) { tut.stepClickOff(); tut.stepClickOff = null; }
+  const step = steps[i];
+  try { if (step.prepare) step.prepare(); } catch (e) {}
+  await new Promise(function(r) { setTimeout(r, 220); });
+  if (tt !== tut.tourToken) return;
+  const el = await tourFindTarget(step);
+  if (tt !== tut.tourToken) return;
+  if (!el) { tourShow(i + 1); return; }          // (nothing to point at here, so move on)
+  try { el.scrollIntoView({ block: window.innerWidth <= 900 ? 'start' : 'center', behavior: 'instant' }); } catch (e) { el.scrollIntoView(); }
+  tutEl('tcStep').textContent = 'Step ' + (i + 1) + ' of ' + steps.length;
+  tutEl('tcTitle').textContent = step.title;
+  tutEl('tcText').textContent = step.text;
+  const hint = tutEl('tcHint');
+  hint.style.display = step.click ? '' : 'none'; hint.textContent = 'Try it: click the highlighted button.';
+  tutEl('tcBack').disabled = (i === 0);
+  const next = tutEl('tcNext');
+  next.textContent = step.last ? 'Finish' : (step.click ? 'Skip this step' : 'Next');
+  next.className = step.click ? 'icon-btn' : 'primary-btn';
+  tutEl('tourCard').classList.add('show');
+  tutEl('tourSpot').classList.add('show');
+  tourPlace(el);
+  if (step.click) {
+    const handler = function() { tut.stepClickOff = null; setTimeout(function() { if (tt === tut.tourToken) tourShow(i + 1); }, 420); };
+    el.addEventListener('click', handler, { once: true });
+    tut.stepClickOff = function() { el.removeEventListener('click', handler); };
+  }
+  tutSay(step.text, tut.token).catch(function() {});
+  tourFollow(el, tt);
+}
+// Keeps the highlight on its target while things move (scrolling, panels sliding in).
+function tourFollow(el, tt) {
+  if (tt !== tut.tourToken || tut.mode !== 'tour') return;
+  tourPlace(el);
+  requestAnimationFrame(function() { tourFollow(el, tt); });
+}
+function tourPlace(el) {
+  const r = el.getBoundingClientRect();
+  const spot = tutEl('tourSpot'), card = tutEl('tourCard');
+  const pad = 5;
+  spot.style.left = (r.left - pad) + 'px'; spot.style.top = (r.top - pad) + 'px'; spot.style.width = (r.width + pad * 2) + 'px'; spot.style.height = (r.height + pad * 2) + 'px';
+  if (window.innerWidth <= 900) {                         // on a phone the card is a sheet: at the bottom, or at the top when the block is down there
+    const sh = card.offsetHeight || 190, above = r.top, below = window.innerHeight - r.bottom;
+    card.classList.toggle('tc-top', below < sh + 14 && above > below);
+    return;
+  }
+  const cw = card.offsetWidth || 340, ch = card.offsetHeight || 170;
+  let left = r.right + 16, top = r.top;
+  if (left + cw > window.innerWidth - 10) left = r.left - cw - 16;
+  if (left < 10) { left = tutClamp(r.left, 10, window.innerWidth - cw - 10); top = r.bottom + 14; if (top + ch > window.innerHeight - 10) top = r.top - ch - 14; }
+  card.style.left = tutClamp(left, 10, window.innerWidth - cw - 10) + 'px';
+  card.style.top = tutClamp(top, 10, window.innerHeight - ch - 10) + 'px';
+}
+function tourNext() { const steps = tut.tourSteps; if (!steps) return; if (tut.tourIndex >= steps.length - 1) { tutFinish('done'); return; } tourShow(tut.tourIndex + 1); }
+function tourBack() { if (tut.tourIndex > 0) tourShow(tut.tourIndex - 1); }
+
+window.addEventListener('resize', function() { if (tut.active && tut.mode === 'story') { ftBuildScene(); ftLayoutJar(); } });
+
+/* (the older step-by-step tutorial below is no longer used) */
 const TUTORIAL_STEPS = [
   { target: null, title: "Hey, glad you're here!", text: "Let's take a quick, friendly tour together. Skip anytime, no pressure." },
   { target: '[data-tut="settingsBtn"]', title: "Your Settings live here", text: "Whenever you have a moment, take a look through Settings, you can adjust the appearance, working hours, notifications, and more, whatever fits how you like to work." },
@@ -5508,7 +6997,7 @@ const TUTORIAL_STEPS = [
 let tutStep = 0;
 let tutHiddenTries = 0;
 
-function startTutorial() {
+function startClassicTutorial() {
   // Make sure both side panels are open so every tutorial step has something to point at.
   setSidebar('left', false);
   setSidebar('right', false);
@@ -5678,9 +7167,7 @@ function startApp() {
     window.history.replaceState({}, '', 'index.html');
   }
 
-  if (!localStorage.getItem('flowgrove_tutorial_seen')) {
-    setTimeout(startTutorial, 400);
-  }
+  tutOnAppStart(); // first visit: offer the tutorial (or carry on after connecting Google Calendar)
 }
 
 if (!localStorage.getItem('flowgrove_profile')) {

@@ -63,3 +63,6 @@ export async function getIdentities(owner) {
 }
 export async function setIdentities(owner, list) { await run(['SET', 'fg:ids:' + owner, JSON.stringify(list)]); }
 export async function deleteIdentities(owner) { await run(['DEL', 'fg:ids:' + owner]); }
+
+// ----- Anything else (used by the feedback inbox: lists, counters) -----
+export async function rawCommand(command) { return run(command); }

@@ -28,21 +28,30 @@ const MAX_PER_HOUR = 8;                // per person (address), so nobody can fl
 
 const clip = function(s, n) { return String(s == null ? '' : s).slice(0, n); };
 
-// Sends the "you have new feedback" email. It never makes sending feedback fail: any problem is ignored.
+// Sends the "you have new feedback" email, with everything the person filled in. It never makes sending feedback fail: any
+// problem is ignored, but what happened is written down (and shown in the Feedback inbox) so you can see why an email did not arrive.
 async function notifyByEmail(item, image) {
   try {
     const key = process.env.RESEND_API_KEY;
     const to = String(process.env.NOTIFY_EMAILS || process.env.ADMIN_EMAILS || '').split(/[,\s]+/).filter(Boolean);
-    if (!key || !to.length) return false;
-    const role = item.role === 'Other' && item.roleOther ? 'Other: ' + item.roleOther : (item.role || 'not given');
+    if (!key) return 'not set up (add RESEND_API_KEY in Vercel)';
+    if (!to.length) return 'not set up (add NOTIFY_EMAILS in Vercel)';
+    const role = item.role === 'Other' ? 'Other: ' + (item.roleOther || '(nothing typed)') : (item.role || '(not chosen)');
     const oneLine = item.message.replace(/[\r\n\t]+/g, ' ').slice(0, 70);
+    let when = new Date(item.createdAt).toISOString();
+    try { when = new Date(item.createdAt).toLocaleString('en-US', { timeZone: process.env.FEEDBACK_TZ || 'America/Chicago', dateStyle: 'full', timeStyle: 'short' }); } catch (e) {}
     const payload = {
       from: process.env.FEEDBACK_FROM || 'Flowfill <onboarding@resend.dev>',
       to: to,
       subject: 'Flowfill ' + item.kind.toLowerCase() + ': ' + oneLine,
-      text: ['Someone sent a ' + item.kind.toLowerCase() + ' from Flowfill.', '', item.message, '',
-        'Role: ' + role, 'Signed in: ' + (item.signedIn ? 'yes' : 'no'), 'Screen: ' + (item.screen || '?'), 'Browser: ' + (item.browser || '?'), '',
-        image ? 'Their picture of the page is attached.' : 'No picture was sent.',
+      text: ['New feedback from Flowfill', '',
+        'What is it?   ' + item.kind,
+        'Role:         ' + role,
+        'Sent:         ' + when,
+        'Picture:      ' + (image ? 'attached to this email' : 'none was sent'), '',
+        'What they wrote:', '', item.message, '',
+        '-----',
+        'Signed in: ' + (item.signedIn ? 'yes' : 'no'), 'Screen: ' + (item.screen || '?'), 'Browser: ' + (item.browser || '?'),
         'You can also read it, and delete it, in Flowfill: Settings > Feedback inbox.'].join('\n')
     };
     if (image) {
@@ -50,15 +59,17 @@ async function notifyByEmail(item, image) {
       if (m) payload.attachments = [{ filename: 'their-screen.' + (m[1] === 'jpeg' ? 'jpg' : m[1]), content: m[2] }];
     }
     const ctl = new AbortController();
-    const timer = setTimeout(function() { ctl.abort(); }, 6000);
+    const timer = setTimeout(function() { ctl.abort(); }, 7000);
     const resp = await fetch('https://api.resend.com/emails', {
       method: 'POST', signal: ctl.signal,
       headers: { 'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
     clearTimeout(timer);
-    return resp.ok;
-  } catch (e) { return false; }
+    if (resp.ok) return 'sent to ' + to.join(', ');
+    let why = ''; try { const j = await resp.json(); why = j && (j.message || j.error || j.name) || ''; } catch (e) {}
+    return 'failed (' + resp.status + ')' + (why ? ': ' + String(why).slice(0, 180) : '');
+  } catch (e) { return 'failed: ' + String(e && e.message || e).slice(0, 120); }
 }
 
 export default async function handler(req, res) {
@@ -99,6 +110,7 @@ export default async function handler(req, res) {
         hasImage: !!image, signedIn: !!session,
         screen: clip(body.screen, 20), browser: clip(body.browser || req.headers['user-agent'], 160)
       };
+      item.email = await notifyByEmail(item, image);        // (what happened with the email alert is saved with the feedback)
       await rawCommand(['SET', 'fg:fb:' + id, JSON.stringify(item)]);
       if (image) await rawCommand(['SET', 'fg:fbimg:' + id, image]);
       await rawCommand(['LPUSH', 'fg:fb:list', id]);
@@ -107,7 +119,6 @@ export default async function handler(req, res) {
         await rawCommand(['LTRIM', 'fg:fb:list', '0', String(KEEP - 1)]);
         for (let i = 0; i < dropped.length; i++) { await rawCommand(['DEL', 'fg:fb:' + dropped[i], 'fg:fbimg:' + dropped[i]]); }
       }
-      await notifyByEmail(item, image);
       res.status(200).json({ ok: true });
       return;
     }

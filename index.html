@@ -439,105 +439,6 @@
   #tutWelcome .tw-buttons button { flex: 1; }
   #tutWelcome .tw-small { font-size: 11.5px; margin: 12px 0 0; }
 
-  #forestTut { position: fixed; inset: 0; z-index: 650; display: none; background: #12261a; color: #fff; overflow: hidden; font-family: 'Lora', serif; user-select: none; -webkit-user-select: none; }
-  #forestTut.show { display: block; }
-  #ftCanvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-  #ftStage { position: absolute; inset: 0; pointer-events: none; }
-  #ftStage > * { pointer-events: auto; }
-  #ftCaption { position: absolute; top: 0; left: 0; right: 0; padding: 20px 24px 40px 24px; font-size: clamp(18px, 2.6vw, 30px); line-height: 1.35; font-weight: 600; text-shadow: 0 2px 10px rgba(0,0,0,0.7); background: linear-gradient(rgba(8,22,14,0.78), rgba(8,22,14,0)); pointer-events: none; min-height: 40px; }
-  #ftCaption.off { visibility: hidden; }
-  #ftNotice { position: absolute; top: 84px; left: 50%; transform: translateX(-50%); max-width: min(560px, calc(100vw - 24px)); background: rgba(255,247,200,0.96); color: #2a2a18; padding: 9px 16px; border-radius: 14px; font-size: 14px; font-weight: 600; text-align: center; box-shadow: 0 6px 18px rgba(0,0,0,0.3); display: none; z-index: 6; }
-  #ftNotice.show { display: block; }
-
-  /* the player bar, like a video: a progress bar made of the parts of the story, and icon buttons */
-  #ftHoverZone { display: none; }
-  #forestTut.fs #ftHoverZone { display: block; position: absolute; left: 0; right: 0; bottom: 0; height: 110px; z-index: 7; }
-  #ftBar { position: absolute; left: 0; right: 0; bottom: 0; padding: 0 12px calc(8px + env(safe-area-inset-bottom)); background: linear-gradient(rgba(6,18,12,0), rgba(6,18,12,0.88) 60%); z-index: 8; transition: opacity 0.25s ease, transform 0.25s ease; }
-  #forestTut.fs:not(.reveal) #ftBar { opacity: 0; transform: translateY(100%); pointer-events: none; }
-  #ftSeek { display: flex; gap: 3px; height: 16px; align-items: center; margin: 22px 4px 4px; }
-  .ft-seg { height: 4px; border: none; padding: 0; background: rgba(255,255,255,0.3); border-radius: 2px; position: relative; cursor: pointer; transition: height 0.12s ease; overflow: hidden; }
-  .ft-seg:hover, .ft-seg.now { height: 7px; }
-  .ft-seg .ft-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: #8ad3a8; }
-  .ft-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; flex-wrap: wrap; }
-  .ft-group { display: flex; align-items: center; gap: 2px; flex-wrap: wrap; }
-  .ft-ib { background: none; border: none; color: #fff; width: 40px; height: 40px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; position: relative; }
-  .ft-ib:hover { background: rgba(255,255,255,0.18); }
-  .ft-ib.on::after { content: ''; position: absolute; left: 9px; right: 9px; bottom: 4px; height: 3px; border-radius: 2px; background: #8ad3a8; }
-  #ftTime { font-variant-numeric: tabular-nums; font-size: 14px; margin-left: 8px; color: #e8f3ea; text-shadow: 0 1px 4px rgba(0,0,0,0.6); white-space: nowrap; }
-  .ft-btn { background: rgba(255,255,255,0.16); color: #fff; border: none; border-radius: 999px; padding: 8px 16px; font-family: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; margin-left: 4px; }
-  .ft-btn:hover { background: rgba(255,255,255,0.3); }
-  #ftVoiceMenu { position: absolute; bottom: 84px; right: 12px; width: min(340px, calc(100vw - 24px)); background: rgba(10,28,18,0.96); border: 1px solid rgba(255,255,255,0.3); border-radius: 12px; padding: 12px; z-index: 9; display: none; font-size: 13px; line-height: 1.4; }
-  #ftVoiceMenu.show { display: block; }
-  #ftVoiceMenu select { width: 100%; margin: 8px 0; padding: 7px; border-radius: 8px; font-family: inherit; background: #fff; color: #1c2b22; }
-  #ftVoiceNote { margin: 6px 0 4px; }
-
-  .ft-dot { position: absolute; width: 34px; height: 34px; margin: -17px 0 0 -17px; border-radius: 50%; border: none; cursor: pointer; display: none; background: radial-gradient(circle, #fff7c8 0%, #ffe27a 45%, rgba(255,226,122,0) 72%); box-shadow: 0 0 22px 10px rgba(255,226,122,0.55); animation: ftPulse 1.6s ease-in-out infinite; z-index: 4; padding: 0; }
-  .ft-dot.show { display: block; }
-  .ft-dot::after { content: ''; position: absolute; inset: 9px; border-radius: 50%; background: #fff; opacity: 0.9; }
-  @keyframes ftPulse { 0%,100% { transform: scale(0.85); box-shadow: 0 0 16px 6px rgba(255,226,122,0.45); } 50% { transform: scale(1.15); box-shadow: 0 0 30px 14px rgba(255,226,122,0.75); } }
-  #ftPrompt { position: absolute; transform: translate(-50%, -54px); background: rgba(10,28,18,0.82); border-radius: 999px; padding: 4px 12px; font-size: 12.5px; white-space: nowrap; display: none; z-index: 4; pointer-events: none; }
-  #ftPrompt.show { display: block; }
-
-  .ft-rock { position: absolute; border: none; cursor: pointer; padding: 0; color: #fff; font-family: inherit; font-weight: 700; font-size: 12px; text-shadow: 0 1px 3px rgba(0,0,0,0.65); border-radius: 48% 52% 50% 50% / 62% 60% 40% 38%; background: radial-gradient(ellipse at 30% 22%, rgba(255,255,255,0.4), rgba(255,255,255,0) 50%), repeating-linear-gradient(100deg, rgba(0,0,0,0.05) 0 3px, rgba(255,255,255,0.04) 3px 6px), var(--c, #888); box-shadow: inset -7px -9px 14px rgba(0,0,0,0.34), inset 5px 5px 9px rgba(255,255,255,0.18), 0 6px 10px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1.1; overflow: hidden; }
-  .ft-rock span { padding: 0 6px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-  .ft-rock.pickable { animation: ftBob 2.2s ease-in-out infinite; outline: 3px solid rgba(255,226,122,0.9); outline-offset: 3px; }
-  .ft-rock.gone { visibility: hidden; }
-  @keyframes ftBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
-  .ft-rock.land { animation: ftLand 0.7s cubic-bezier(0.34, 1.45, 0.64, 1); }
-  @keyframes ftLand { 0% { transform: translateY(-70px); } 100% { transform: translateY(0); } }
-  #ftStreamRocks { position: absolute; left: 2%; right: 2%; bottom: 6%; top: 50%; }
-  #ftNotNow { position: absolute; left: 4%; bottom: 112px; background: none; border: none; color: #e8f3ea; text-decoration: underline; cursor: pointer; font-family: inherit; font-size: 13px; display: none; z-index: 4; text-shadow: 0 1px 4px rgba(0,0,0,0.7); }
-  #ftNotNow.show { display: block; }
-  #ftConnectBtn { position: absolute; left: 30%; bottom: 104px; background: #5c8f73; color: #fff; border: 2px solid rgba(255,255,255,0.85); border-radius: 999px; padding: 9px 20px; font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer; display: none; z-index: 4; box-shadow: 0 6px 16px rgba(0,0,0,0.35); }
-  #ftConnectBtn:hover { background: #6fa287; }
-  #ftConnectBtn.show { display: block; }
-
-  #ftJarWrap { position: absolute; left: 50%; bottom: 22%; width: min(30vw, 350px); height: min(23vh, 200px); transform: translateX(-50%); display: none; transition: left 0.6s ease, transform 0.6s ease; }
-  #ftJarWrap.show { display: block; }
-  #ftJarWrap.with-form { left: 28%; }
-  #ftJar { position: absolute; inset: 0; border: 3px solid rgba(255,255,255,0.78); border-top: none; border-radius: 4px 4px 26px 26px; background: linear-gradient(100deg, rgba(255,255,255,0.20), rgba(255,255,255,0.05) 40%, rgba(255,255,255,0.14)); box-shadow: inset 0 0 22px rgba(255,255,255,0.18), 0 8px 28px rgba(0,0,0,0.3); overflow: hidden; }
-  #ftJarRim { position: absolute; left: -9px; right: -9px; top: -8px; height: 12px; border-radius: 8px; background: rgba(255,255,255,0.7); box-shadow: 0 2px 6px rgba(0,0,0,0.25); }
-  #ftJarInner { position: absolute; left: 4px; right: 4px; top: 6px; bottom: 6px; }
-  #ftWater { position: absolute; left: 0; right: 0; bottom: 0; top: 100%; background: linear-gradient(rgba(140,212,242,0.78), rgba(70,150,205,0.9)); transition: top 2.2s ease; }
-  #ftWater::before { content: ''; position: absolute; left: -10%; right: -10%; top: -5px; height: 10px; background: radial-gradient(ellipse at 50% 100%, rgba(255,255,255,0.7), rgba(255,255,255,0) 70%); animation: ftWave 3s ease-in-out infinite alternate; }
-  @keyframes ftWave { from { transform: translateX(-4%); } to { transform: translateX(4%); } }
-  #ftWater span { position: absolute; top: -26px; left: 8px; z-index: 3; font-size: 12px; font-weight: 700; background: rgba(255,255,255,0.88); color: #1c4b66; border-radius: 999px; padding: 2px 10px; display: none; }
-  #ftWater.full span { display: block; }
-  #ftPour { position: absolute; left: 50%; top: -60px; width: 12px; height: 0; margin-left: -6px; background: linear-gradient(rgba(190,230,250,0.9), rgba(120,200,235,0.9)); border-radius: 6px; transition: height 0.7s ease; z-index: 2; }
-  #ftStone { position: absolute; left: -14%; right: -14%; bottom: -24px; height: 36px; border-radius: 50%; background: radial-gradient(ellipse at 50% 30%, #b5b8ad, #6f746a 80%); box-shadow: 0 10px 18px rgba(0,0,0,0.35); z-index: -1; }
-  #ftJarWrap .ft-rock { cursor: default; font-size: 11px; }
-
-  /* the backpack, sitting on the grass at the left, with its heavy rock peeking out of the top */
-  #ftBackpack { position: absolute; left: 4.5%; bottom: 9%; width: 150px; height: 178px; display: none; z-index: 3; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.35)); }
-  #ftBackpack.show { display: block; }
-  #ftBackpack svg { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
-  #ftBackpack .bp-back { z-index: 0; } #ftBackpack .bp-front { z-index: 2; pointer-events: none; }
-  #ftBackpack .ft-rock { left: 19%; top: 0; width: 62%; height: 22%; z-index: 1; --c: #6e5a48; cursor: default; font-size: 11px; }
-
-  #ftHint { position: absolute; left: 50%; transform: translateX(-50%); top: 96px; max-width: min(560px, calc(100vw - 24px)); background: rgba(255,247,200,0.96); color: #2a2a18; padding: 9px 16px; border-radius: 14px; font-size: 15px; font-weight: 600; box-shadow: 0 6px 18px rgba(0,0,0,0.3); display: none; z-index: 6; text-align: center; }
-  #ftHint.show { display: block; }
-  #ftHint button { margin-left: 8px; background: none; border: none; color: #2a2a18; text-decoration: underline; cursor: pointer; font-family: inherit; font-size: 12.5px; }
-  #ftFormHost { position: absolute; right: 3%; top: 160px; bottom: 96px; width: min(390px, 40vw); overflow-y: auto; display: none; z-index: 5; }
-  #ftFormHost.show { display: block; }
-  #ftFormHost .panel { color: var(--ink); margin: 0; box-shadow: 0 12px 34px rgba(0,0,0,0.4); }
-
-  @media (max-width: 900px) {
-    #ftCaption { padding: 14px 12px 28px 14px; font-size: 17px; }
-    #ftNotice { top: 70px; font-size: 13px; }
-    #ftJarWrap { width: 64vw; height: 19vh; bottom: 49%; }
-    #ftJarWrap.with-form { left: 50%; bottom: auto; top: 118px; height: 14vh; width: 46vw; }
-    #ftFormHost { left: 8px; right: 8px; width: auto; top: auto; bottom: 118px; height: 42vh; }
-    #ftHint { top: auto; bottom: calc(118px + 42vh + 8px); font-size: 13.5px; padding: 6px 12px; }
-    #ftBar { padding: 0 6px calc(6px + env(safe-area-inset-bottom)); }
-    .ft-ib { width: 38px; height: 38px; }
-    #ftTime { font-size: 12.5px; margin-left: 4px; }
-    .ft-btn { padding: 7px 12px; font-size: 12.5px; }
-    #ftBackpack { width: 104px; height: 124px; left: 3%; bottom: 17%; }
-      #ftStreamRocks { top: 55%; bottom: 29%; }
-    #ftConnectBtn { left: 4%; bottom: 150px; padding: 8px 16px; font-size: 14px; } #ftNotNow { left: 4%; bottom: 122px; }
-  }
-  @media (prefers-reduced-motion: reduce) { .ft-dot, .ft-rock.pickable { animation-duration: 3.2s; } }
-
   /* the tour: a soft glowing outline on the real thing, and a friendly card */
   #tourSpot { position: fixed; z-index: 640; pointer-events: none; display: none; border-radius: 12px; box-shadow: 0 0 0 4px rgba(255,217,90,0.95), 0 0 26px 8px rgba(255,217,90,0.5), 0 0 0 9999px rgba(10,32,20,0.55); transition: left 0.25s ease, top 0.25s ease, width 0.25s ease, height 0.25s ease; animation: tourGlow 1.8s ease-in-out infinite; }
   #tourSpot.show { display: block; }
@@ -575,6 +476,18 @@
     #tcNext { padding: 7px 18px; font-size: 13px; } #tcBack { padding: 6px 12px; font-size: 13px; }
   }
   @media (max-width: 900px) { #tourCard { left: 8px !important; right: 8px; bottom: 8px; top: auto !important; width: auto; } #tourCard.tc-top { top: 8px !important; bottom: auto !important; } }
+
+  /* the sound switch on the tour card: a mute symbol on one side, a speaker on the other; it always starts on mute */
+  #tcSwitch { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; padding: 2px 2px; position: relative; }
+  #tcSwitch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  #tcSwitch .tc-ico { width: 18px; height: 18px; color: var(--ink-soft); transition: opacity 0.2s ease, color 0.2s ease; flex: none; }
+  #tcSwitch .tc-ico.mute { opacity: 1; } #tcSwitch .tc-ico.vol { opacity: 0.35; }
+  #tcSwitch.on .tc-ico.mute { opacity: 0.35; } #tcSwitch.on .tc-ico.vol { opacity: 1; color: var(--tertiary); }
+  #tcSwitch .tc-track { position: relative; width: 42px; height: 24px; border-radius: 999px; background: #cbd5ce; transition: background 0.2s ease; flex: none; }
+  #tcSwitch .tc-thumb { position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.3); transition: transform 0.2s ease; }
+  #tcSwitch.on .tc-track { background: var(--tertiary); } #tcSwitch.on .tc-thumb { transform: translateX(18px); }
+  #tcSwitch input:focus-visible + .tc-track { outline: 2px solid var(--tertiary); outline-offset: 2px; }
+  .drop-ready { outline: 3px dashed var(--tertiary); outline-offset: -3px; background: var(--accent-light); }
 </style>
 </head>
 <body>
@@ -899,7 +812,7 @@
 
     <div class="settings-section">
       <h4>Task Completion Sound</h4>
-      <div class="toggle-row"><span>Play a sound on completion</span><input type="checkbox" id="soundToggle" checked></div>
+      <div class="toggle-row"><span>Play a sound on completion</span><input type="checkbox" id="soundToggle"></div>
       <div class="toggle-row"><span>Confetti when a task is completed</span><input type="checkbox" id="confettiToggle" checked></div>
       <div style="margin:6px 0 4px;font-size:12px;color:var(--ink-soft);">Pick a sound (tap ▶ to preview):</div>
       <div class="sound-option"><label><input type="radio" name="completionSoundChoice" value="chime"> Soft Chime</label><button type="button" class="icon-btn" onclick="previewSound('chime')">▶</button></div>
@@ -911,7 +824,7 @@
 
     <div class="settings-section">
       <h4>Timer Sound</h4>
-      <div class="toggle-row"><span>Ring when the timer ends</span><input type="checkbox" id="timerSoundToggle" checked></div>
+      <div class="toggle-row"><span>Ring when the timer ends</span><input type="checkbox" id="timerSoundToggle"></div>
       <div style="margin:6px 0 4px;font-size:12px;color:var(--ink-soft);">Pick a sound (tap ▶ to preview):</div>
       <div class="sound-option"><label><input type="radio" name="timerSoundChoice" value="bell"> Ring Bell</label><button type="button" class="icon-btn" onclick="previewTimerSound('bell')">▶</button></div>
       <div class="sound-option"><label><input type="radio" name="timerSoundChoice" value="marimba"> Marimba</label><button type="button" class="icon-btn" onclick="previewTimerSound('marimba')">▶</button></div>
@@ -1030,98 +943,16 @@
   <div class="modal">
     <div class="brand" style="font-size:22px;">Flowfill</div>
     <h2 id="tutWelcomeTitle">Welcome!</h2>
-    <p>This is a tutorial that will help you! It takes about 6 minutes, with calm forest sounds, and you can skip any part. You can always start it again from the <strong>?</strong> button.</p>
+    <p>A quick, hands-on tour of what Flowfill can do and how to use it. About 3 minutes.</p>
     <div class="tw-buttons">
       <button type="button" class="welcome-primary" onclick="tutStart()">Start</button>
       <button type="button" class="icon-btn" onclick="tutLater()">Later</button>
-    </div>
-    <p class="tw-small">Tip: turn your sound on.</p>
-  </div>
-</div>
-
-<div id="forestTut" role="dialog" aria-modal="true" aria-label="Flowfill tutorial">
-  <canvas id="ftCanvas"></canvas>
-  <div id="ftStage">
-    <div id="ftStreamRocks"></div>
-    <button type="button" id="ftNotNow" onclick="tutNotNow()">Not now, use practice rocks</button>
-    <button type="button" id="ftConnectBtn">Connect Google Calendar</button>
-    <div id="ftBackpack">
-      <svg class="bp-back" viewBox="0 0 160 190" aria-hidden="true">
-        <ellipse cx="80" cy="184" rx="62" ry="6" fill="rgba(0,0,0,0.28)"/>
-        <path d="M28 52 Q28 20 80 20 Q132 20 132 52 L132 60 L28 60 Z" fill="#16314a"/>
-        <ellipse cx="80" cy="29" rx="46" ry="10" fill="#0c1c2c"/>
-      </svg>
-      <svg class="bp-front" viewBox="0 0 160 190" aria-hidden="true">
-        <defs>
-          <linearGradient id="bpBody" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5b91c0"/><stop offset="0.55" stop-color="#34648f"/><stop offset="1" stop-color="#1f4466"/></linearGradient>
-          <linearGradient id="bpLid" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6aa0cd"/><stop offset="1" stop-color="#3c6e9b"/></linearGradient>
-          <linearGradient id="bpPocket" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4a80b0"/><stop offset="1" stop-color="#25496e"/></linearGradient>
-          <radialGradient id="bpShine" cx="0.25" cy="0.15" r="0.8"><stop offset="0" stop-color="rgba(255,255,255,0.35)"/><stop offset="1" stop-color="rgba(255,255,255,0)"/></radialGradient>
-        </defs>
-        <path d="M60 22 Q80 -4 100 22" fill="none" stroke="#183552" stroke-width="7" stroke-linecap="round"/>
-        <path d="M60 22 Q80 -2 100 22" fill="none" stroke="#2c5a85" stroke-width="3" stroke-linecap="round"/>
-        <path d="M22 70 Q10 74 10 92 L10 150 Q10 160 22 160 L30 160 L30 70 Z" fill="#274e75"/>
-        <path d="M24 98 L30 98 M24 106 L30 106 M24 114 L30 114 M24 122 L30 122" stroke="rgba(255,255,255,0.28)" stroke-width="1.5"/>
-        <rect x="14" y="110" width="9" height="34" rx="4" fill="#9fb3c4" opacity="0.8"/>
-        <path d="M26 56 Q26 36 80 36 Q134 36 134 56 L138 166 Q138 182 122 182 L38 182 Q22 182 22 166 Z" fill="url(#bpBody)"/>
-        <path d="M26 56 Q26 36 80 36 Q134 36 134 56 L138 166 Q138 182 122 182 L38 182 Q22 182 22 166 Z" fill="url(#bpShine)"/>
-        <path d="M27 56 Q27 41 80 41 Q133 41 133 56" fill="none" stroke="rgba(0,0,0,0.35)" stroke-width="3"/>
-        <path d="M30 62 Q30 44 80 44 Q130 44 130 62 L130 96 Q80 108 30 96 Z" fill="url(#bpLid)"/>
-        <path d="M30 96 Q80 108 130 96" fill="none" stroke="rgba(0,0,0,0.3)" stroke-width="2.5"/>
-        <path d="M34 62 Q34 48 80 48 Q126 48 126 62 L126 92 Q80 103 34 92 Z" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="1" stroke-dasharray="3 3"/>
-        <rect x="72" y="52" width="16" height="56" rx="3" fill="#264c72"/>
-        <rect x="74" y="54" width="12" height="52" rx="2" fill="none" stroke="rgba(255,255,255,0.28)" stroke-width="1" stroke-dasharray="2 2"/>
-        <rect x="70" y="96" width="20" height="14" rx="3" fill="#cfd6dc"/><rect x="73" y="99" width="14" height="8" rx="2" fill="#7d8a95"/>
-        <path d="M38 118 Q38 112 46 112 L114 112 Q122 112 122 118 L122 168 Q122 176 114 176 L46 176 Q38 176 38 168 Z" fill="url(#bpPocket)"/>
-        <path d="M38 118 Q38 112 46 112 L114 112 Q122 112 122 118" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
-        <path d="M42 126 L118 126" stroke="#d8dde1" stroke-width="2.5" stroke-dasharray="2 2"/>
-        <rect x="74" y="122" width="10" height="9" rx="2" fill="#cfd6dc"/>
-        <path d="M43 117 Q43 115 46 115 L114 115 Q117 115 117 117 L117 170 Q117 172 114 172 L46 172 Q43 172 43 170 Z" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1" stroke-dasharray="3 3"/>
-        <circle cx="80" cy="150" r="9" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="2"/><path d="M75 150 L80 145 L85 150 L80 155 Z" fill="rgba(255,255,255,0.45)"/>
-        <path d="M22 70 Q22 60 30 56" fill="none" stroke="rgba(0,0,0,0.25)" stroke-width="2"/>
-      </svg>
-    </div>
-    <div id="ftJarWrap">
-      <div id="ftJar">
-        <div id="ftWater"><span>Breaks</span></div>
-        <div id="ftJarInner"></div>
-      </div>
-      <div id="ftJarRim"></div>
-      <div id="ftPour"></div>
-      <div id="ftStone"></div>
-    </div>
-    <button type="button" class="ft-dot" id="ftDot" aria-label="Glowing dot"></button>
-    <div id="ftPrompt"></div>
-  </div>
-  <div id="ftCaption" aria-live="polite"></div>
-  <div id="ftNotice"></div>
-  <div id="ftHint"></div>
-  <div id="ftFormHost"></div>
-  <div id="ftHoverZone"></div>
-  <div id="ftBar">
-    <div id="ftSeek"></div>
-    <div class="ft-row">
-      <div class="ft-group">
-        <button type="button" class="ft-ib" id="ftPlay" onclick="tutTogglePause()" aria-label="Pause"></button>
-        <button type="button" class="ft-ib" id="ftBack" onclick="tutBack()" aria-label="Back one part" title="Back one part"></button>
-        <button type="button" class="ft-ib" id="ftFwd" onclick="tutForward()" aria-label="Forward one part" title="Forward one part"></button>
-        <button type="button" class="ft-ib" id="ftMute" onclick="tutToggleMute()" aria-label="Mute" title="Mute"></button>
-        <span id="ftTime">0:00 / 0:00</span>
-      </div>
-      <div class="ft-group">
-        <button type="button" class="ft-ib on" id="ftCC" onclick="tutToggleCaptions()" aria-label="Captions" title="Captions on or off"></button>
-        <button type="button" class="ft-ib" id="ftFS" onclick="tutFullscreen()" aria-label="Full screen" title="Full screen"></button>
-        <span id="ftEndBox">
-          <button type="button" class="ft-btn" onclick="tutSkip()" title="Skip the story and go to the hands-on tour of the website">Skip</button>
-          <button type="button" class="ft-btn" onclick="tutEnd()" title="Close the tutorial and go to the website">End</button>
-        </span>
-      </div>
     </div>
   </div>
 </div>
 
 <div id="tourSpot"></div>
-<div id="tourCard" role="dialog" aria-label="Flowfill tour">
+<div id="tourCard" role="dialog" aria-label="Flowfill tutorial">
   <div class="tc-bar"><div id="tcProgress"></div></div>
   <div class="tc-body">
     <div class="tc-head">
@@ -1134,7 +965,12 @@
       <button type="button" class="icon-btn" id="tcBack" onclick="tourBack()">Back</button>
       <button type="button" id="tcNext" onclick="tourNext()">Next</button>
       <span class="spacer"></span>
-      <button type="button" class="tc-link" id="tcMute" onclick="tutToggleMute()">Sound is on</button>
+      <label id="tcSwitch" title="Sound effects">
+        <svg class="tc-ico mute" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.796 8.796 0 0 0 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06a8.99 8.99 0 0 0 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>
+        <input type="checkbox" id="tcSound" role="switch" aria-label="Sound effects" onchange="tutSoundChanged(this.checked)">
+        <span class="tc-track"><span class="tc-thumb"></span></span>
+        <svg class="tc-ico vol" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+      </label>
       <button type="button" class="tc-link" onclick="tutEnd()">End tutorial</button>
     </div>
   </div>
@@ -1470,7 +1306,7 @@ for (let i = SYSTEM_LABEL_DEFAULTS.length - 1; i >= 0; i--) {
 }
 let settings = JSON.parse(localStorage.getItem('flowgrove_settings') || 'null') || {
   theme: 'modern', primary: '#ffffff', secondary: '#ffffff', tertiary: '#6fa287',
-  sound: true, sayings: true, timeFormat: '12', completionSound: 'sparkle', timerSound: 'bell', timerSoundOn: true, confetti: true,
+  sound: false, sayings: true, timeFormat: '12', completionSound: 'sparkle', timerSound: 'bell', timerSoundOn: false, confetti: true,
   quoteCategories: { Wellness: true, Encouragement: true, Bible: true },
   shortWorkMin: 25, shortBreakMin: 5, medBreakMin: 15,
   workingHours: {
@@ -3827,7 +3663,7 @@ function applyLayout() {
     const btn = document.querySelector('.rail-btn[data-pop="' + key + '"]');
     const panel = document.querySelector('.panel[data-pop="' + key + '"]');
     if (btn) container.appendChild(btn);
-    if (panel && !(key === 'add' && tut.formMoved)) container.appendChild(panel);
+    if (panel) container.appendChild(panel);
   });
   const main = document.querySelector('main');
   // a side with no blocks disappears (on a phone the left side is always hidden by the stylesheet)
@@ -5612,6 +5448,7 @@ function renderGrid(sched) {
     // Short blocks only show the title: there isn't room for a second line without cutting something off.
     const showMeta = duration >= 30;
     el.innerHTML = '<label class="task-checkbox-wrap" onclick="event.stopPropagation()"><input type="checkbox" ' + (t.completed ? 'checked' : '') + ' onchange="toggleComplete(' + t.id + ')"></label><span class="title">' + escapeHtml(t.title + partSuffix) + (t.worked && !t.workedCurrent ? ' <span class="worked-tag">worked</span>' : '') + (t.optional ? '<span class="badge">Optional</span>' : '') + '</span>' + (showMeta ? '<span class="meta">' + escapeHtml(metaText) + '</span>' : '') + '<button type="button" class="task-edit-btn" title="Edit this task" aria-label="Edit this task" onclick="event.stopPropagation(); startEditTask(' + t.id + ')">&#9998;</button>';
+    el.dataset.taskId = t.id;
     el.onclick = function() { openClockPanel(t.id); };
     el.oncontextmenu = function(e) { showTaskTooltip(e, t); };
     el.draggable = true;
@@ -5780,6 +5617,14 @@ function renderTaskList(sched) {
     const t = tasks.find(function(x) { return x.id === draggedTaskId; });
     if (t && t.tomorrow) { t.tomorrow = false; saveTasks(); render(); }
   };
+  // ...and dropping a task anywhere on the All Tasks block brings it back from Tomorrow.
+  const panel = document.getElementById('tasksPanel');
+  panel.ondragover = function(e) { e.preventDefault(); };
+  panel.ondrop = function(e) {
+    e.preventDefault();
+    const t = tasks.find(function(x) { return x.id === draggedTaskId; });
+    if (t && t.tomorrow) { t.tomorrow = false; saveTasks(); render(); }
+  };
 }
 
 function reorderTaskBefore(draggedId, targetId) {
@@ -5813,6 +5658,15 @@ function renderTomorrow() {
   ul.ondragover = function(e) { e.preventDefault(); };
   ul.ondrop = function(e) {
     e.preventDefault();
+    const t = tasks.find(function(x) { return x.id === draggedTaskId; });
+    if (t && !t.tomorrow) { t.tomorrow = true; saveTasks(); render(); }
+  };
+  // The whole Tomorrow block is a place to drop a task (the little list inside it has no height when it is empty).
+  const panel = document.getElementById('tomorrowPanel');
+  panel.ondragover = function(e) { e.preventDefault(); panel.classList.add('drop-ready'); };
+  panel.ondragleave = function(e) { if (!panel.contains(e.relatedTarget)) panel.classList.remove('drop-ready'); };
+  panel.ondrop = function(e) {
+    e.preventDefault(); panel.classList.remove('drop-ready');
     const t = tasks.find(function(x) { return x.id === draggedTaskId; });
     if (t && !t.tomorrow) { t.tomorrow = true; saveTasks(); render(); }
   };
@@ -6086,898 +5940,20 @@ async function deleteAccount() {
 
 
 /* ============================================================================================
-   The tutorial. First a short story in a forest (a jar, rocks and water that show how Flowfill plans a day),
-   then a hands-on tour of the real website.
-   Parts: the narrator (voice + captions), the forest sounds, the picture, the story chapters, the tour.
+   The tutorial: a short, hands-on tour of the real app. Every step points at the real thing, most have a "Try it",
+   and doing the Try it moves on by itself. Sound effects stay off unless the person flips the little sound switch.
    ============================================================================================ */
 
-const TUT_CANCEL = { tutorialCancelled: true };
 const tut = {
-  active: false, mode: null,          // mode: 'story' or 'tour'
-  paused: false, muted: false, captions: true,
-  token: 0, chapter: 0, elapsed: 0, lastTick: 0, timer: 0,
-  view: 'trail', zoom: 1, zoomTarget: 1, walk: 1, pos: 0, raf: 0,
-  rocks: [], eventRocks: [], usingRealEvents: false, afterConnect: false,
-  formMoved: false, formHome: null, formWait: null, addKind: 'medium',
-  say: null, voiceId: 0,
-  audio: null, tourIndex: 0, tourSteps: null, tourToken: 0, stepCleanup: null, started: { clock: false, breakOn: false, view: false },
+  active: false, muted: true,
+  tourIndex: 0, tourToken: 0, tourSteps: null, stepCleanup: null, tourTasks: [],
+  started: { clock: false, breakOn: false, view: false, form: false, checked: [], tomorrow: [] },
   made: { examples: false }
 };
-const FT_CHAPTER_SECONDS = [28, 42, 30, 58, 36, 28, 14];   // about how long each part takes (for the clock)
-const FT_CHAPTER_NAMES = ['The trail', 'Rocks in the stream', 'The heavy rock', 'A medium task', 'A light task', 'Breaks', 'On to the website'];
-function tutSpeed() { return window.__tutSpeed || 1; }       // (tests run it fast)
 function tutEl(id) { return document.getElementById(id); }
 function tutClamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
 
-/* ---- waiting that respects Pause and Back/Forward ---- */
-
-function tutSleep(ms, tok) {
-  return new Promise(function(resolve, reject) {
-    let left = ms / tutSpeed();
-    (function step() {
-      if (tok !== tut.token) { reject(TUT_CANCEL); return; }
-      if (tut.paused) { setTimeout(step, 120); return; }
-      if (left <= 0) { resolve(); return; }
-      const d = Math.min(left, 100);
-      left -= d;
-      setTimeout(step, d);
-    })();
-  });
-}
-
-/* ---- the narrator: the words appear as captions at the top, paced so they are easy to read (there is no spoken voice) ---- */
-
-function tutNotice(text, ms) {
-  const n = tutEl('ftNotice');
-  if (!n) return;
-  n.textContent = text; n.classList.add('show');
-  clearTimeout(tut.noticeTimer);
-  tut.noticeTimer = setTimeout(function() { n.classList.remove('show'); }, ms || 6000);
-}
-function tutCaption(text) { const c = tutEl('ftCaption'); if (c) c.textContent = text; }
-function tutStopSpeech() { tut.voiceId++; if (tut.say) tut.say.ended = true; tut.say = null; }
-
-// Shows one line as a caption and waits about as long as it takes to read it comfortably, then resolves.
-function tutSay(text, tok) {
-  tutCaption(text);
-  return new Promise(function(resolve, reject) {
-    if (tok !== tut.token) { reject(TUT_CANCEL); return; }
-    tutStopSpeech();
-    const job = { tok: tok, text: text, ended: false, resolve: resolve, reject: reject };
-    tut.say = job;
-    tutSleep(Math.max(1900, text.length * 72) + 500, tok).then(function() { if (tut.say === job && !job.ended) { job.ended = true; resolve(); } }, reject);
-  });
-}
-// Shows a line while waiting for the person to do something; once they do it, we move on straight away.
-async function tutSayUntil(text, tok, until) {
-  let done = false;
-  const result = until.then(function(v) { done = true; return v; });
-  const showing = tutSay(text, tok).catch(function(e) { if (e === TUT_CANCEL) throw e; });
-  await Promise.race([showing, result]);
-  if (!done) return result;
-  tutStopSpeech();
-  return result;
-}
-
-/* ---- the sounds of the forest: a soft, babbling stream and a few distant birds. Quiet on purpose: no low rumble, no wind. ---- */
-
-function tutNoiseBuffer(ctx, seconds) {
-  const len = Math.round(ctx.sampleRate * seconds), buf = ctx.createBuffer(1, len, ctx.sampleRate), d = buf.getChannelData(0);
-  for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
-  return buf;
-}
-// The steady part: a gentle airy hiss and a faint body, both slowly breathing.
-function tutAmbientBed(ctx, dest) {
-  const white = tutNoiseBuffer(ctx, 4), nodes = [];
-  function layer(type1, f1, q1, type2, f2, gain, lfoRate, lfoDepth) {
-    const src = ctx.createBufferSource(); src.buffer = white; src.loop = true;
-    const a = ctx.createBiquadFilter(); a.type = type1; a.frequency.value = f1; a.Q.value = q1;
-    const b = ctx.createBiquadFilter(); b.type = type2; b.frequency.value = f2; b.Q.value = 0.7;
-    const g = ctx.createGain(); g.gain.value = gain;
-    src.connect(a); a.connect(b); b.connect(g); g.connect(dest);
-    const lfo = ctx.createOscillator(); lfo.frequency.value = lfoRate; const depth = ctx.createGain(); depth.gain.value = lfoDepth; lfo.connect(depth); depth.connect(g.gain);
-    src.start(); lfo.start(); nodes.push(src, lfo);
-  }
-  layer('highpass', 2400, 0.7, 'lowpass', 7200, 0.0085, 0.11, 0.0028);   // water hiss
-  layer('bandpass', 1100, 1.4, 'lowpass', 3000, 0.0042, 0.17, 0.0014);   // a faint body to the stream
-  return nodes;
-}
-// Lots of tiny "bloop" sounds make water sound like it is babbling over stones.
-function tutScheduleBubbles(ctx, dest, from, to, rnd) {
-  let t = from;
-  while (t < to) {
-    t += 0.025 + rnd() * 0.1;
-    const f0 = 420 + rnd() * 1250, dur = 0.05 + rnd() * 0.07, o = ctx.createOscillator(), g = ctx.createGain();
-    o.type = 'sine'; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f0 * (1.35 + rnd() * 0.5), t + dur);
-    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.0025 + rnd() * 0.0045, t + 0.009); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    o.connect(g); g.connect(dest); o.start(t); o.stop(t + dur + 0.02);
-  }
-}
-// A few soft, far-away bird calls, now and then.
-function tutScheduleBirds(ctx, dest, from, to, rnd) {
-  let t = from + rnd() * 1.5;
-  while (t < to) {
-    const notes = 2 + Math.floor(rnd() * 3), base = 2300 + rnd() * 1500, pan = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
-    if (pan) { pan.pan.value = rnd() * 1.4 - 0.7; pan.connect(dest); }
-    for (let i = 0; i < notes; i++) {
-      const t0 = t + i * (0.13 + rnd() * 0.07), o = ctx.createOscillator(), g = ctx.createGain();
-      o.type = 'sine'; o.frequency.setValueAtTime(base * (0.92 + rnd() * 0.2), t0); o.frequency.exponentialRampToValueAtTime(base * (1.1 + rnd() * 0.25), t0 + 0.09);
-      g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.014, t0 + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.13);
-      o.connect(g); g.connect(pan || dest); o.start(t0); o.stop(t0 + 0.15);
-    }
-    t += 3.5 + rnd() * 6;
-  }
-}
-
-function tutAudioStart() {
-  if (tut.audio) { tutAudioApplyMute(); return; }
-  const AC = window.AudioContext || window.webkitAudioContext;
-  if (!AC) return;
-  try {
-    const ctx = new AC(), master = ctx.createGain(), rnd = tutRng(Date.now() & 0xffff);
-    master.gain.value = tut.muted ? 0 : 1.9; master.connect(ctx.destination);
-    const nodes = tutAmbientBed(ctx, master);
-    const a = { ctx: ctx, master: master, nodes: nodes, until: ctx.currentTime, timer: 0 };
-    const feed = function() {                          // keep scheduling the next few seconds of babble and birdsong
-      if (tut.audio !== a) return;
-      const from = Math.max(a.until, ctx.currentTime), to = from + 4;
-      tutScheduleBubbles(ctx, master, from, to, rnd); tutScheduleBirds(ctx, master, from, to, rnd); a.until = to;
-    };
-    feed(); a.timer = setInterval(feed, 2500);
-    tut.audio = a;
-  } catch (e) { tut.audio = null; }
-}
-function tutAudioApplyMute() {
-  const a = tut.audio;
-  if (!a) return;
-  try { a.master.gain.setTargetAtTime(tut.muted ? 0 : 1.9, a.ctx.currentTime, 0.08); if (a.ctx.state === 'suspended' && !tut.muted && !tut.paused) a.ctx.resume(); } catch (e) {}
-}
-function tutAudioStop() {
-  const a = tut.audio;
-  if (!a) return;
-  clearInterval(a.timer); tut.audio = null;
-  try { a.master.gain.setTargetAtTime(0, a.ctx.currentTime, 0.1); setTimeout(function() { try { a.ctx.close(); } catch (e) {} }, 500); } catch (e) {}
-}
-// (for testing) renders a few seconds of the forest sounds without speakers and reports how loud and how deep it is
-async function tutAmbientMeasure(seconds) {
-  const rate = 44100, ctx = new OfflineAudioContext(1, rate * seconds, rate), master = ctx.createGain(), rnd = tutRng(7);
-  master.gain.value = 1.9; master.connect(ctx.destination);
-  tutAmbientBed(ctx, master); tutScheduleBubbles(ctx, master, 0, seconds, rnd); tutScheduleBirds(ctx, master, 0, seconds, rnd);
-  const buf = await ctx.startRendering(), d = buf.getChannelData(0);
-  let sum = 0, peak = 0; for (let i = 0; i < d.length; i++) { sum += d[i] * d[i]; peak = Math.max(peak, Math.abs(d[i])); }
-  // how much of the energy is low (below about 250 Hz) vs high: a crude split with a one-pole filter
-  let lp = 0, low = 0; const a = Math.exp(-2 * Math.PI * 250 / rate);
-  for (let i = 0; i < d.length; i++) { lp = (1 - a) * d[i] + a * lp; low += lp * lp; }
-  return { rmsDb: 20 * Math.log10(Math.sqrt(sum / d.length) + 1e-9), peakDb: 20 * Math.log10(peak + 1e-9), lowShare: low / sum };
-}
-
-/* ---- the picture: a realistic forest beside a stream. The scenery is painted once (trees, hills, rocks); the water, light,
-   leaves and birds move. ---- */
-
-function tutRng(seed) { return function() { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
-const ftScene = { w: 0, h: 0, dpr: 1, ready: false, L: {}, rocks: [], streaks: [], leaves: [], birds: [], shore: 0, wb: 0, tile: 0 };
-
-function ftCanvas(w, h) { const c = document.createElement('canvas'); c.width = Math.max(2, Math.round(w)); c.height = Math.max(2, Math.round(h)); return c; }
-function ftLayerCtx(w, h, s) { const c = ftCanvas(w * s, h * s), g = c.getContext('2d'); g.scale(s, s); return { c: c, g: g }; }
-
-// one spruce: a dark trunk with drooping branches, brighter where the sun hits (the left side)
-function ftSpruce(g, x, base, h, rnd, hue, light) {
-  const w = h * (0.30 + rnd() * 0.08);
-  g.fillStyle = 'rgb(48,36,28)'; g.fillRect(x - h * 0.012, base - h * 0.14, h * 0.024, h * 0.14);
-  const tiers = Math.max(9, Math.round(h / 7));
-  for (let i = 0; i < tiers; i++) {
-    const f = i / (tiers - 1), y = base - h + f * h * 0.93, half = w * (0.05 + f * 0.95) * 0.5, n = 3 + Math.round(f * 8);
-    for (let k = 0; k < n; k++) {
-      const side = (k % 2 ? 1 : -1), len = half * (0.5 + rnd() * 0.55), droop = h * 0.034 * (0.55 + f) * (0.6 + rnd() * 0.7);
-      const lum = light + (side < 0 ? 9 : -5) + rnd() * 9 - f * 3;
-      g.strokeStyle = 'hsl(' + (hue + rnd() * 16) + ',' + (34 + rnd() * 16) + '%,' + lum + '%)';
-      g.lineWidth = Math.max(1, (1.2 + f * 3.4 * (0.7 + rnd() * 0.6)) * (h / 280));
-      g.beginPath(); g.moveTo(x, y + rnd() * 3); g.quadraticCurveTo(x + side * len * 0.55, y - droop * 0.25, x + side * len, y + droop); g.stroke();
-    }
-  }
-}
-// a tall pine: a bare reddish trunk and a rounded crown made of many small needle clumps
-function ftPine(g, x, base, h, rnd, hue, light) {
-  const tw = Math.max(1.5, h * 0.017);
-  g.fillStyle = 'rgb(104,66,44)'; g.fillRect(x - tw, base - h * 0.86, tw * 2, h * 0.86);
-  g.fillStyle = 'rgba(190,130,84,0.55)'; g.fillRect(x - tw, base - h * 0.86, tw * 0.75, h * 0.86);
-  g.fillStyle = 'rgba(40,24,16,0.35)'; g.fillRect(x + tw * 0.4, base - h * 0.86, tw * 0.6, h * 0.86);
-  for (let gi = 0; gi < 7; gi++) {
-    const gy = base - h + gi * h * 0.045 + rnd() * h * 0.02, gx = x + (rnd() - 0.5) * h * 0.13, R = h * (0.05 + rnd() * 0.05);
-    for (let i = 0; i < 80; i++) {
-      const a = rnd() * 6.283, r = Math.sqrt(rnd()) * R, px = gx + Math.cos(a) * r * 1.3, py = gy + Math.sin(a) * r * 0.8;
-      g.fillStyle = 'hsla(' + (hue + rnd() * 20) + ',' + (36 + rnd() * 18) + '%,' + (light + (px < gx ? 8 : -4) + rnd() * 10) + '%,' + (0.7 + rnd() * 0.3) + ')';
-      g.beginPath(); g.ellipse(px, py, 1.6 + rnd() * 3.2, 1 + rnd() * 1.8, rnd() * 3, 0, 6.283); g.fill();
-    }
-  }
-}
-// a birch: white trunk with dark marks and a cloud of small bright leaves
-function ftBirch(g, x, base, h, rnd, light) {
-  const tw = Math.max(1.4, h * 0.02);
-  g.fillStyle = '#ecebe0'; g.beginPath(); g.moveTo(x - tw, base); g.lineTo(x - tw * 0.55, base - h * 0.82); g.lineTo(x + tw * 0.55, base - h * 0.82); g.lineTo(x + tw, base); g.fill();
-  g.fillStyle = 'rgba(70,84,64,0.28)'; g.fillRect(x + tw * 0.15, base - h * 0.82, tw * 0.85, h * 0.82);
-  for (let i = 0; i < h / 13; i++) { g.fillStyle = 'rgba(38,34,30,' + (0.4 + rnd() * 0.45) + ')'; g.fillRect(x - tw * 0.95 + rnd() * tw * 0.4, base - rnd() * h * 0.78, tw * (0.5 + rnd() * 0.9), 1.2 + rnd() * 1.8); }
-  const cx = x + (rnd() - 0.5) * h * 0.06, cy = base - h * 0.64, R = h * (0.26 + rnd() * 0.06);
-  for (let i = 0; i < 300; i++) {
-    const a = rnd() * 6.283, r = Math.sqrt(rnd()) * R, px = cx + Math.cos(a) * r * 0.82, py = cy + Math.sin(a) * r - R * 0.15;
-    g.fillStyle = 'hsla(' + (72 + rnd() * 34) + ',' + (58 + rnd() * 28) + '%,' + (light + (px < cx ? 7 : -3) + rnd() * 18) + '%,' + (0.55 + rnd() * 0.4) + ')';
-    g.beginPath(); g.ellipse(px, py, 2.2 + rnd() * 4.5, 1.4 + rnd() * 2.6, rnd() * 3, 0, 6.283); g.fill();
-  }
-}
-function ftHaze(L, color, alpha) { L.g.save(); L.g.globalCompositeOperation = 'source-atop'; L.g.fillStyle = color.replace('A', alpha); L.g.fillRect(0, 0, ftScene.tile, ftScene.h); L.g.restore(); }
-
-// a river rock: a soft irregular shape, lit from the upper left, speckled, sometimes with moss
-function ftRockSprite(w, h, rnd, tone, moss) {
-  const pad = 4, c = ftCanvas(w + pad * 2, h + pad * 2), g = c.getContext('2d'), cx = w / 2 + pad, cy = h / 2 + pad, n = 12, pts = [];
-  for (let i = 0; i < n; i++) { const a = i / n * 6.283; pts.push([cx + Math.cos(a) * (w / 2) * (0.84 + rnd() * 0.18), cy + Math.sin(a) * (h / 2) * (0.82 + rnd() * 0.2)]); }
-  g.beginPath(); g.moveTo((pts[0][0] + pts[n - 1][0]) / 2, (pts[0][1] + pts[n - 1][1]) / 2);
-  for (let i = 0; i < n; i++) { const p = pts[i], q = pts[(i + 1) % n]; g.quadraticCurveTo(p[0], p[1], (p[0] + q[0]) / 2, (p[1] + q[1]) / 2); }
-  g.closePath(); g.save(); g.clip();
-  const gr = g.createLinearGradient(cx - w * 0.4, cy - h * 0.6, cx + w * 0.4, cy + h * 0.6);
-  gr.addColorStop(0, 'hsl(' + (28 + rnd() * 12) + ',9%,' + (tone + 20) + '%)'); gr.addColorStop(0.55, 'hsl(' + (26 + rnd() * 14) + ',8%,' + tone + '%)'); gr.addColorStop(1, 'hsl(215,10%,' + (tone - 20) + '%)');
-  g.fillStyle = gr; g.fillRect(0, 0, c.width, c.height);
-  for (let i = 0; i < w * h / 30; i++) { g.fillStyle = rnd() < 0.5 ? 'rgba(20,20,20,' + (0.06 + rnd() * 0.16) + ')' : 'rgba(255,255,255,' + (0.05 + rnd() * 0.14) + ')'; g.fillRect(pad + rnd() * w, pad + rnd() * h, 1 + rnd() * 2.4, 1 + rnd() * 2); }
-  g.strokeStyle = 'rgba(30,30,30,0.22)'; g.lineWidth = 1;
-  for (let i = 0; i < 3; i++) { g.beginPath(); const sx = pad + rnd() * w, sy = pad + rnd() * h; g.moveTo(sx, sy); g.lineTo(sx + (rnd() - 0.5) * w * 0.5, sy + (rnd() - 0.5) * h * 0.4); g.stroke(); }
-  if (moss) for (let i = 0; i < 40; i++) { g.fillStyle = 'hsla(' + (85 + rnd() * 30) + ',45%,' + (28 + rnd() * 16) + '%,' + (0.35 + rnd() * 0.4) + ')'; g.beginPath(); g.ellipse(cx + (rnd() - 0.5) * w * 0.55, cy - h * 0.18 - rnd() * h * 0.22, 2 + rnd() * 5, 1.4 + rnd() * 2.6, 0, 0, 6.283); g.fill(); }
-  const sh = g.createLinearGradient(0, cy, 0, cy + h / 2); sh.addColorStop(0, 'rgba(0,0,0,0)'); sh.addColorStop(1, 'rgba(0,10,20,0.4)'); g.fillStyle = sh; g.fillRect(0, cy, c.width, h);
-  g.restore(); g.strokeStyle = 'rgba(15,20,25,0.28)'; g.lineWidth = 1.2; g.stroke();
-  return c;
-}
-
-function ftBuildScene() {
-  const cv = tutEl('ftCanvas'), t0 = performance.now();
-  const dpr = Math.min(1.5, window.devicePixelRatio || 1);
-  const W = Math.round(window.innerWidth), H = Math.round(window.innerHeight), s = ftScene;
-  cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
-  s.w = W; s.h = H; s.dpr = dpr; s.shore = Math.round(H * 0.585); s.wb = Math.round(H * 0.905); s.tile = Math.round(W * 1.7);
-  const T = s.tile, shore = s.shore, wb = s.wb, rnd = tutRng(21);
-  const wrap = function(L, draw, margin) { draw(0); [-1, 1].forEach(function(k) { draw(k * T); }); };   // draw a tree again one tile over, so the layer repeats seamlessly
-
-  // the sky: deep blue at the top, paler towards the trees, warm light from the upper left
-  { const L = ftLayerCtx(W, shore + 4, dpr), g = L.g, sky = g.createLinearGradient(0, 0, 0, shore);
-    sky.addColorStop(0, '#1c6bd0'); sky.addColorStop(0.35, '#3f8fe3'); sky.addColorStop(0.7, '#8ec6f3'); sky.addColorStop(1, '#cfe9fb');
-    g.fillStyle = sky; g.fillRect(0, 0, W, shore + 4);
-    const sun = g.createRadialGradient(W * 0.2, H * 0.02, 0, W * 0.2, H * 0.02, W * 0.55); sun.addColorStop(0, 'rgba(255,252,230,0.7)'); sun.addColorStop(0.4, 'rgba(255,250,225,0.18)'); sun.addColorStop(1, 'rgba(255,250,225,0)'); g.fillStyle = sun; g.fillRect(0, 0, W, shore);
-    s.L.sky = L.c; }
-  // soft clouds (they drift)
-  { const L = ftLayerCtx(T, shore, dpr), g = L.g, r = tutRng(5);
-    for (let i = 0; i < 7; i++) {
-      const cx = (i + 0.5) / 7 * T + (r() - 0.5) * 80, cy = H * (0.07 + r() * 0.2), cw = W * (0.1 + r() * 0.1);
-      for (let k = 0; k < 16; k++) {
-        const px = cx + (r() - 0.5) * cw * 1.6, py = cy + (r() - 0.5) * cw * 0.28, rr = cw * (0.16 + r() * 0.2), gr = g.createRadialGradient(px, py - rr * 0.2, 0, px, py, rr);
-        gr.addColorStop(0, 'rgba(255,255,255,0.88)'); gr.addColorStop(0.6, 'rgba(250,252,255,0.45)'); gr.addColorStop(1, 'rgba(240,248,255,0)');
-        g.fillStyle = gr; g.beginPath(); g.ellipse(px, py, rr * 1.5, rr * 0.8, 0, 0, 6.283); g.fill();
-        const sh = g.createRadialGradient(px, py + rr * 0.45, 0, px, py + rr * 0.45, rr * 0.9); sh.addColorStop(0, 'rgba(120,150,190,0.22)'); sh.addColorStop(1, 'rgba(120,150,190,0)'); g.fillStyle = sh; g.beginPath(); g.ellipse(px, py + rr * 0.45, rr * 1.3, rr * 0.5, 0, 0, 6.283); g.fill();
-      }
-    }
-    s.L.clouds = L.c; }
-  // far blue mountains (the pattern repeats because the ridges are made of waves that fit the tile exactly)
-  { const L = ftLayerCtx(T, shore + 2, dpr), g = L.g, r = tutRng(9);
-    const ridge = function(x, base, amp, seed) { let y = base; const q = tutRng(seed); for (let k = 1; k <= 6; k++) y += Math.sin(2 * Math.PI * k * 2 * x / T + q() * 6.283) * amp / k; return y; };
-    [[0.33, 0.055, '#9dbbdc', '#c6dcef', 31], [0.40, 0.05, '#7597bd', '#a9c4de', 77]].forEach(function(m) {
-      const gr = g.createLinearGradient(0, H * (m[0] - 0.05), 0, shore); gr.addColorStop(0, m[2]); gr.addColorStop(1, m[3]);
-      g.fillStyle = gr; g.beginPath(); g.moveTo(0, shore + 2);
-      for (let x = 0; x <= T; x += 6) g.lineTo(x, ridge(x, H * m[0], H * m[1], m[4]));
-      g.lineTo(T, shore + 2); g.closePath(); g.fill();
-    });
-    for (let x = 0; x < T; x += 5) { const y = ridge(x, H * 0.40, H * 0.05, 77) + 4 + r() * 18, hh = 6 + r() * 16; g.fillStyle = 'rgba(52,84,104,' + (0.25 + r() * 0.3) + ')'; g.beginPath(); g.moveTo(x, y - hh); g.lineTo(x - hh * 0.28, y); g.lineTo(x + hh * 0.28, y); g.fill(); }
-    s.L.mount = L.c; }
-  // the far band of spruce, hazy blue-green
-  { const L = ftLayerCtx(T, shore + 2, dpr), g = L.g, r = tutRng(13), n = Math.round(T / 16);
-    for (let i = 0; i < n; i++) { const x = (i + r() * 0.8) * T / n, h = H * (0.09 + r() * 0.1); wrap(L, function(off) { ftSpruce(g, x + off, shore - 1, h, r, 150 + r() * 14, 20 + r() * 8); }); }
-    ftHaze({ g: g }, 'rgba(176,208,232,A)', 0.30); s.L.far = L.c; }
-  // the main forest: sunlit pines, birches and spruce, as in a real shoreline
-  { const L = ftLayerCtx(T, shore + 6, dpr), g = L.g, r = tutRng(17), n = Math.round(T / 62);
-    for (let i = 0; i < n; i++) {
-      const x = (i + 0.15 + r() * 0.7) * T / n, kind = r(), h = H * (0.26 + r() * 0.26);
-      wrap(L, function(off) {
-        const rr = tutRng(1000 + i);
-        if (kind < 0.36) ftSpruce(g, x + off, shore + 3, h * 0.92, rr, 118 + rr() * 30, 24 + rr() * 8);
-        else if (kind < 0.7) ftPine(g, x + off, shore + 3, h * 1.12, rr, 108 + rr() * 22, 26 + rr() * 8);
-        else ftBirch(g, x + off, shore + 3, h * 0.82, rr, 40 + rr() * 8);
-      });
-    }
-    // undergrowth: bushes and long grass in front of the trunks, dark at the bottom
-    for (let i = 0; i < T / 5; i++) { const x = r() * T, y = shore - r() * H * 0.03; g.fillStyle = 'hsla(' + (86 + r() * 40) + ',' + (44 + r() * 25) + '%,' + (20 + r() * 26) + '%,' + (0.6 + r() * 0.4) + ')'; g.beginPath(); g.ellipse(x, y, 4 + r() * 12, 3 + r() * 7, 0, 0, 6.283); g.fill(); }
-    const sh = g.createLinearGradient(0, shore - H * 0.05, 0, shore + 6); sh.addColorStop(0, 'rgba(8,24,14,0)'); sh.addColorStop(1, 'rgba(8,24,14,0.5)'); g.fillStyle = sh; g.fillRect(0, shore - H * 0.05, T, H * 0.05 + 6);
-    s.L.mid = L.c; }
-  // the water's edge: lit grass, reeds and small stones
-  { const L = ftLayerCtx(T, H * 0.06, dpr), g = L.g, r = tutRng(23), hh = H * 0.06, rocks = [];
-    for (let i = 0; i < 6; i++) rocks.push(ftRockSprite(20 + i * 5, 11 + i * 2.5, tutRng(300 + i), 46 + i * 2, i % 2 === 0));
-    const gr = g.createLinearGradient(0, 0, 0, hh); gr.addColorStop(0, 'rgba(70,110,40,0.0)'); gr.addColorStop(0.5, 'rgba(98,146,48,0.95)'); gr.addColorStop(1, 'rgba(60,96,40,1)'); g.fillStyle = gr; g.fillRect(0, 0, T, hh);
-    for (let i = 0; i < T / 2.2; i++) { const x = r() * T, y = hh * (0.2 + r() * 0.75), len = 6 + r() * 20; g.strokeStyle = 'hsl(' + (70 + r() * 40) + ',' + (50 + r() * 30) + '%,' + (30 + r() * 32) + '%)'; g.lineWidth = 1 + r() * 1.4; g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(x + (r() - 0.5) * 6, y - len * 0.5, x + (r() - 0.5) * 12, y - len); g.stroke(); }
-    for (let i = 0; i < T / 70; i++) { const sp = rocks[Math.floor(r() * rocks.length)]; g.drawImage(sp, r() * T, hh * (0.55 + r() * 0.35), sp.width * 0.9, sp.height * 0.9); }
-    s.L.edge = L.c; }
-  // the stream bed: pebbles and rocks you can see through the water
-  { const bh = wb - shore, L = ftLayerCtx(T, bh, dpr), g = L.g, r = tutRng(29);
-    const base = g.createLinearGradient(0, 0, 0, bh); base.addColorStop(0, '#4b8aa6'); base.addColorStop(1, '#2a669a'); g.fillStyle = base; g.fillRect(0, 0, T, bh);
-    for (let i = 0; i < T / 3; i++) { const x = r() * T, y = r() * bh, tone = 38 + r() * 40; g.fillStyle = 'hsla(' + (30 + r() * 25) + ',' + (6 + r() * 12) + '%,' + tone + '%,' + (0.4 + r() * 0.5) + ')'; g.beginPath(); g.ellipse(x, y, 2 + r() * 6 * (0.4 + y / bh), 1.4 + r() * 3.4 * (0.4 + y / bh), 0, 0, 6.283); g.fill(); }
-    s.rockData = [];
-    for (let i = 0; i < 26; i++) {
-      const sc = 0.5 + (i / 26) * 1.0, w = (36 + r() * 90) * sc, h = w * (0.38 + r() * 0.22), sp = ftRockSprite(w, h, tutRng(500 + i), 46 + r() * 22, r() < 0.3), x = r() * T, y = bh * (0.12 + r() * 0.8) - h / 2;
-      [0, -T, T].forEach(function(off) { g.drawImage(sp, x + off, y); });
-    }
-    g.fillStyle = 'rgba(28,105,170,0.32)'; g.fillRect(0, 0, T, bh);        // the water over them: a blue tint
-    s.L.bed = L.c; }
-  // a few big rocks that break the surface (they get white foam around them)
-  { s.emerge = [];
-    const r = tutRng(41), sprites = [];
-    for (let i = 0; i < 6; i++) sprites.push(ftRockSprite(70 + i * 22, 34 + i * 10, tutRng(700 + i), 50 + i * 3, i % 2 === 1));
-    for (let i = 0; i < 9; i++) { const sp = sprites[Math.floor(r() * sprites.length)]; s.emerge.push({ sp: sp, x: r() * T, y: shore + (wb - shore) * (0.22 + r() * 0.62) }); }
-    s.emerge.sort(function(a, b) { return a.y - b.y; }); }
-  // the grassy bank in the front
-  { const fh = H * 0.16, L = ftLayerCtx(T, fh, dpr), g = L.g, r = tutRng(37);
-    const gr = g.createLinearGradient(0, fh * 0.3, 0, fh); gr.addColorStop(0, 'rgba(110,150,52,0)'); gr.addColorStop(0.35, '#6f9a3a'); gr.addColorStop(1, '#2e5f24'); g.fillStyle = gr; g.fillRect(0, fh * 0.3, T, fh * 0.7);
-    for (let i = 0; i < T / 1.6; i++) { const x = r() * T, y = fh * (0.35 + r() * 0.65), len = 14 + r() * 40 * (y / fh); g.strokeStyle = 'hsl(' + (60 + r() * 50) + ',' + (45 + r() * 35) + '%,' + (24 + r() * 36) + '%)'; g.lineWidth = 1 + r() * 1.8; g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(x + (r() - 0.5) * 10, y - len * 0.5, x + (r() - 0.5) * 22, y - len); g.stroke(); }
-    for (let i = 0; i < T / 55; i++) { g.fillStyle = r() < 0.5 ? '#fff6c9' : '#ffd34a'; const x = r() * T, y = fh * (0.5 + r() * 0.45); g.beginPath(); g.arc(x, y, 1.6 + r() * 1.6, 0, 6.283); g.fill(); }
-    s.L.fg = L.c; }
-  // things that move
-  { const r = tutRng(3); s.streaks = []; for (let i = 0; i < 46; i++) s.streaks.push({ x: r() * W, y: shore + (wb - shore) * r(), len: 50 + r() * 170, v: 14 + r() * 50, a: 0.05 + r() * 0.12, th: 0.8 + r() * 1.6 });
-    s.leaves = []; for (let i = 0; i < 26; i++) s.leaves.push({ x: r(), y: r() * 0.6, s: 3 + r() * 4, vx: 0.01 + r() * 0.025, vy: 0.012 + r() * 0.02, rot: r() * 6, hue: r(), ph: r() * 6 });
-    s.birds = [{ x: -0.1, y: 0.16, v: 0.035, sz: 9, ph: 0 }, { x: -0.55, y: 0.11, v: 0.028, sz: 7, ph: 2 }]; }
-  s.refl = ftCanvas(W * 0.5, shore * 0.5);
-  s.ready = true; s.buildMs = Math.round(performance.now() - t0);
-}
-
-function ftTileDraw(c, img, x, y, shift, T, w) {   // draws a repeating layer shifted sideways
-  let sx = -(shift % T); if (sx > 0) sx -= T;
-  for (let k = sx; k < w; k += T) c.drawImage(img, k, y, T, img.height / ftScene.dpr);
-}
-
-function ftDraw(now) {
-  if (!tut.active || !ftScene.ready || tut.mode === 'tour') { tut.raf = 0; return; }
-  const cv = tutEl('ftCanvas'), c = cv.getContext('2d'), s = ftScene, W = s.w, H = s.h, T = s.tile, shore = s.shore, wb = s.wb, t = now / 1000;
-  const dt = Math.min(0.05, (now - (tut.lastFrame || now)) / 1000); tut.lastFrame = now;
-  const slow = tut.paused ? 0.2 : 1, reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches ? 0.4 : 1;
-  tut.zoom += (tut.zoomTarget - tut.zoom) * Math.min(1, dt * 2.2);
-  const walkTarget = (tut.view === 'trail' && !tut.paused) ? 1 : 0;
-  tut.walk += (walkTarget - tut.walk) * Math.min(1, dt * 1.4);
-  tut.pos += tut.walk * dt * reduce;
-  const p = tut.pos, cloud = t * 3 * slow;
-  c.setTransform(s.dpr, 0, 0, s.dpr, 0, 0); c.clearRect(0, 0, W, H);
-  // the reflection buffer: the scenery above the water, drawn small, to be flipped into the water
-  const rb = s.refl, rc = rb.getContext('2d'), k = 0.5;
-  rc.setTransform(k, 0, 0, k, 0, 0); rc.clearRect(0, 0, W, shore);
-  rc.drawImage(s.L.sky, 0, 0, W, shore + 4); ftTileDraw(rc, s.L.clouds, 0, 0, cloud, T, W);
-  ftTileDraw(rc, s.L.mount, 0, 0, p * 1.5, T, W); ftTileDraw(rc, s.L.far, 0, 0, p * 4, T, W); ftTileDraw(rc, s.L.mid, 0, 0, p * 9, T, W);
-  c.save();
-  const z = tut.zoom; c.translate(W * 0.5, H * 0.9); c.scale(z, z); c.translate(-W * 0.5, -H * 0.9);
-  // sky, clouds, mountains, forest
-  c.drawImage(s.L.sky, 0, 0, W, shore + 4); ftTileDraw(c, s.L.clouds, 0, 0, cloud, T, W);
-  s.birds.forEach(function(b) { b.x += b.v * dt * slow; if (b.x > 1.15) b.x = -0.15; const bx = b.x * W, by = b.y * H + Math.sin(t * 0.8 + b.ph) * 6, fl = Math.sin(t * 9 + b.ph) * b.sz * 0.6; c.strokeStyle = 'rgba(30,40,50,0.7)'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(bx - b.sz, by - fl); c.quadraticCurveTo(bx - b.sz * 0.4, by - b.sz * 0.3, bx, by); c.quadraticCurveTo(bx + b.sz * 0.4, by - b.sz * 0.3, bx + b.sz, by - fl); c.stroke(); });
-  ftTileDraw(c, s.L.mount, 0, 0, p * 1.5, T, W); ftTileDraw(c, s.L.far, 0, 0, p * 4, T, W);
-  c.save(); c.translate(Math.sin(t * 0.7) * 0.9 * reduce, 0); ftTileDraw(c, s.L.mid, 0, 0, p * 9, T, W); c.restore();   // the forest sways a little
-  // light beams through the trees
-  c.save(); c.globalAlpha = (0.07 + Math.sin(t * 0.4) * 0.025); c.fillStyle = '#fff8d0';
-  for (let i = 0; i < 4; i++) { const x0 = W * (0.05 + i * 0.26) + Math.sin(t * 0.15 + i) * 22; c.beginPath(); c.moveTo(x0, 0); c.lineTo(x0 + 90, 0); c.lineTo(x0 + 330, shore + 40); c.lineTo(x0 + 170, shore + 40); c.fill(); }
-  c.restore();
-  ftTileDraw(c, s.L.edge, 0, shore - H * 0.035, p * 20, T, W);
-  // the water
-  const wg = c.createLinearGradient(0, shore, 0, wb); wg.addColorStop(0, '#2a8fc4'); wg.addColorStop(1, '#14589a'); c.fillStyle = wg; c.fillRect(-60, shore, W + 120, wb - shore + 2);
-  for (let y = shore; y < wb; y += 3) {           // the bed, seen through the moving water
-    const f = (y - shore) / (wb - shore), off = Math.sin(y * 0.05 + t * 1.3 * slow) * (0.8 + f * 2.4);
-    let sx = -(p * 20 % T); if (sx > 0) sx -= T;
-    for (let kx = sx; kx < W; kx += T) c.drawImage(s.L.bed, 0, (y - shore) * s.dpr, T * s.dpr, 3 * s.dpr, kx + off, y, T, 3);
-  }
-  for (let y = shore; y < wb; y += 3) {           // the trees and sky mirrored in the water
-    const f = (y - shore) / (wb - shore), sy = (shore - (y - shore) * 0.95) * k; if (sy < 0) break;
-    const off = Math.sin(y * 0.07 + t * 1.8 * slow) * (1 + f * 3.6) + Math.sin(y * 0.021 - t * 0.9) * 2;
-    c.globalAlpha = 0.52 - f * 0.34; c.drawImage(rb, 0, sy, rb.width, 1.5, off, y, W, 3);
-  }
-  c.globalAlpha = 1;
-  const tint = c.createLinearGradient(0, shore, 0, wb); tint.addColorStop(0, 'rgba(10,70,110,0.10)'); tint.addColorStop(1, 'rgba(8,60,110,0.22)'); c.fillStyle = tint; c.fillRect(-60, shore, W + 120, wb - shore);
-  s.streaks.forEach(function(st) { st.x += st.v * dt * slow; if (st.x > W + st.len) st.x = -st.len; c.fillStyle = 'rgba(255,255,255,' + st.a + ')'; c.beginPath(); c.ellipse(st.x, st.y + Math.sin(t + st.len) * 1.5, st.len / 2, st.th, 0, 0, 6.283); c.fill(); });
-  for (let i = 0; i < 40; i++) { const sx = ((i * 0.173 + t * 0.02 * (1 + (i % 3) * 0.4) * slow) % 1) * W, sy = shore + ((i * 0.397) % 1) * (wb - shore), a = Math.max(0, Math.sin(t * 2.6 + i * 1.9)); c.fillStyle = 'rgba(255,255,255,' + (a * 0.7) + ')'; c.beginPath(); c.ellipse(sx, sy, 4.5, 1.4, 0, 0, 6.283); c.fill(); }
-  // big rocks poking out of the water, with foam
-  s.emerge.forEach(function(e) {
-    let ex = e.x - (p * 20 % T); ex = ((ex % T) + T) % T; if (ex > W + 200) ex -= T;
-    const w = e.sp.width, h = e.sp.height;
-    c.fillStyle = 'rgba(255,255,255,' + (0.28 + Math.sin(t * 2 + e.x) * 0.08) + ')'; c.beginPath(); c.ellipse(ex + w * 0.5, e.y + h * 0.78, w * 0.66, h * 0.2 + Math.sin(t * 3 + e.x) * 1.5, 0, 0, 6.283); c.fill();
-    c.drawImage(e.sp, ex, e.y);
-    c.strokeStyle = 'rgba(255,255,255,0.55)'; c.lineWidth = 1.6; c.beginPath(); c.ellipse(ex + w * 0.5, e.y + h * 0.84, w * 0.58, h * 0.14, 0, 0, 6.283); c.stroke();
-  });
-  ftTileDraw(c, s.L.fg, 0, wb - H * 0.05, p * 34, T, W);
-  c.restore();
-  // drifting leaves and seeds in front of everything
-  s.leaves.forEach(function(l) {
-    l.x += (l.vx + Math.sin(t * 0.7 + l.ph) * 0.006) * dt * slow; l.y += l.vy * dt * slow;
-    if (l.x > 1.05) l.x = -0.05; if (l.y > 1.0) { l.y = -0.05; l.x = Math.random(); }
-    c.save(); c.translate(l.x * W, l.y * H + Math.sin(t * 1.3 + l.ph) * 8); c.rotate(l.rot + t * 0.9 * slow + l.ph);
-    c.fillStyle = l.hue < 0.55 ? 'rgba(138,188,70,0.92)' : (l.hue < 0.85 ? 'rgba(222,190,70,0.92)' : 'rgba(205,120,60,0.9)'); c.beginPath(); c.ellipse(0, 0, l.s, l.s * 0.5, 0, 0, 6.283); c.fill(); c.restore();
-  });
-  const vg = c.createRadialGradient(W / 2, H * 0.55, H * 0.35, W / 2, H * 0.55, H * 0.95); vg.addColorStop(0, 'rgba(0,20,10,0)'); vg.addColorStop(1, 'rgba(0,20,10,0.38)'); c.fillStyle = vg; c.fillRect(0, 0, W, H);
-  tut.raf = requestAnimationFrame(ftDraw);
-}
-function tutView(v) {
-  tut.view = v;
-  tut.zoomTarget = v === 'trail' ? 1 : 1.4;
-  tutEl('ftJarWrap').classList.toggle('show', v !== 'trail');
-}
-
-/* ---- the rock jar: events are the biggest rocks, then the heavy and lighter tasks. Flat river stones, mostly rocks, a little water. ---- */
-
-const FT_ROCK_W = { heavy: 30, medium: 26, light: 21 };
-const FT_FLAT = 0.44;                      // how flat the stones are (height compared to width)
-const FT_ROCK_LOOK = { heavy: { label: 'Heavy task', color: '#6e5a48' }, medium: { label: 'Medium task', color: '#7e8a68' }, light: { label: 'Light task', color: '#b4ad98' } };
-
-// the lines that are always the same (so the natural voice can get them ready ahead of time)
-const FT_LINES = {
-  trail1: 'Take a breath. You are walking down a quiet trail, beside a gentle stream.',
-  trail2: 'You are walking down the trail, and you are thinking of all the things that you have to do.',
-  trail3: 'Then you get reminded of the events you have to go to today.',
-  trail4: "Look, there's one!",
-  rock1: 'Here is a rock in the stream. It says Google Calendar, in the same color you will see on your schedule.',
-  rock2: 'Next to it is a rock that says, connect your Google Calendar. Click it to connect.',
-  rockReal: 'Here are the events you have today. Pick up these rocks.',
-  rockNone: 'You do not have any events today, so here are three rocks to practice with. Pick up these rocks.',
-  rockSkip: 'No problem. Here are three practice rocks. Pick up these rocks.',
-  rockDone: 'Good. The big, fixed things go in the jar first, because they cannot move.',
-  heavy1: 'You have a backpack on, and there is a very heavy rock in there. It has been weighing on you all night, and you know you have to get it done today.',
-  heavy2: 'There. It settles right in between your events.',
-  med1: 'Another task pops into your mind. This one is not as heavy as the last.',
-  quick: 'You can either click the buttons, or you can quick add with your keyboard. Try the quick add!',
-  med2: 'You just added your first task!',
-  light1: 'And yet another task pops into your mind. This one is the lightest of them all.',
-  light2: 'Nicely done.',
-  water1: "Now, let's add your breaks.",
-  water2: 'The water pours in, but only a little. Breaks just fill the small gaps between everything else.',
-  bridge: "Let's take you to the actual website. This rock jar that you just built here represents how this website works, putting priority first. Let's see how it works."
-};
-const FT_HINTS = {
-  type: 'Press 1 to choose Task, or 2 for an Event.',
-  title: 'Type what you need to do, then press Enter to move on.',
-  mediumP: 'Priority: 1 is Low, 2 is Medium, 3 is Top. Try making this a medium priority. Press 2 on your keyboard.',
-  lowP: 'Priority: 1 is Low, 2 is Medium, 3 is Top. Try making this a low priority. Press 1 on your keyboard.',
-  time: 'How many minutes will it take? Type a number, then press Enter.',
-  motivation: 'How motivated are you, from 1 to 10? Type a number, then press Enter.',
-  label: 'A label is optional. Press Enter to skip it.',
-  optional: 'Optional means you can skip it if you run out of time. Press Space to turn it on or off, then press Enter to move on.',
-  repeat: 'Repeat brings a task back on the days you choose. Press Space to turn it on or off, then press Enter to move on.',
-  add: 'Press Enter to add your task!'
-};
-
-function ftRockMake(label, color, cls) {
-  const el = document.createElement('div');
-  el.className = 'ft-rock' + (cls ? ' ' + cls : '');
-  el.style.setProperty('--c', color);
-  const s = document.createElement('span'); s.textContent = label; el.appendChild(s);
-  return el;
-}
-
-// The events you have today (as rocks), or three practice rocks.
-function ftBuildEventRocks(forceSample) {
-  const gcal = labelColor('Google Calendar');
-  const real = (!forceSample && Array.isArray(events)) ? events.slice().sort(function(a, b) { return a.startMin - b.startMin; }).slice(0, 4) : [];
-  tut.usingRealEvents = real.length > 0;
-  if (real.length) return real.map(function(e) { return { kind: 'event', label: e.title || 'Event', color: gcal, w: tutClamp(26 + (e.endMin - e.startMin) / 7, 28, 40) }; });
-  return [{ kind: 'event', label: 'Class', color: gcal, w: 38 }, { kind: 'event', label: 'Practice', color: gcal, w: 31 }, { kind: 'event', label: 'Dinner', color: gcal, w: 34 }];
-}
-
-// Lays the rocks out in the jar like a small cairn. The first two events sit against the two walls with a gap between them
-// that is just wide enough for the heavy rock; any other events rest on top of those two; then the medium and light rocks
-// go on top, wherever they sit lowest. Only rocks that are already in the jar count as something to rest on.
-function ftLayoutJar() {
-  const inner = tutEl('ftJarInner'), box = inner.getBoundingClientRect();
-  const aspect = (box.width > 0 && box.height > 0) ? box.width / box.height : 1.5;
-  const heights = []; for (let i = 0; i <= 100; i++) heights.push(100);
-  const ev = tut.rocks.filter(function(r) { return r.kind === 'event'; });
-  const wall = 1.5, heavyW = FT_ROCK_W.heavy;
-  if (ev.length >= 2) {
-    const room = 100 - wall * 2 - (heavyW + 3);
-    let w0 = ev[0].w, w1 = ev[1].w;
-    if (w0 + w1 > room) { const f = room / (w0 + w1); w0 *= f; w1 *= f; }
-    ev[0].ww = w0; ev[0].cx = wall + w0 / 2; ev[1].ww = w1; ev[1].cx = 100 - wall - w1 / 2;
-  } else if (ev.length === 1) { ev[0].ww = Math.min(ev[0].w, 100 - heavyW - 6); ev[0].cx = wall + ev[0].ww / 2; }
-  if (ev[2]) { ev[2].ww = Math.min(ev[2].w, (ev[0].ww || 30) * 0.96); ev[2].cx = ev[0].cx; }
-  if (ev[3]) { ev[3].ww = Math.min(ev[3].w, (ev[1] ? ev[1].ww : 30) * 0.96); ev[3].cx = ev[1] ? ev[1].cx : 70; }
-  const heavyCx = ev.length >= 2 ? ((ev[0].cx + ev[0].ww / 2) + (ev[1].cx - ev[1].ww / 2)) / 2 : (ev.length === 1 ? ev[0].cx + ev[0].ww / 2 + 2 + heavyW / 2 : 50);
-  const rest = function(cx, w, h) {
-    const lo = Math.max(0, Math.floor(cx - w / 2)), hi = Math.min(100, Math.ceil(cx + w / 2));
-    let bottom = 100; for (let x = lo; x <= hi; x++) bottom = Math.min(bottom, heights[x]);
-    return { lo: lo, hi: hi, bottom: bottom, top: Math.max(0, bottom - h) };
-  };
-  tut.rocks.forEach(function(r) {
-    let w, cx;
-    if (r.kind === 'event') { w = r.ww; cx = r.cx; }
-    else if (r.kind === 'heavy') { w = heavyW; cx = heavyCx; }
-    else if (r.kind === 'medium') { w = FT_ROCK_W.medium; cx = heavyCx; }
-    else {                                                   // light: wherever it can sit lowest
-      w = FT_ROCK_W.light; const h0 = FT_FLAT * w * aspect; let best = null;
-      [ev[0] && ev[0].cx, ev[1] && ev[1].cx, heavyCx].forEach(function(c) { if (c == null) return; const q = rest(tutClamp(c, w / 2 + 1, 99 - w / 2), w, h0); if (!best || q.bottom > best.bottom) best = { cx: c, bottom: q.bottom }; });
-      cx = best ? best.cx : 78;
-    }
-    cx = tutClamp(cx, w / 2 + 1, 99 - w / 2);
-    const h = FT_FLAT * w * aspect, q = rest(cx, w, h);
-    if (r.shown) for (let x = q.lo; x <= q.hi; x++) { const u = (x - cx) / (w / 2); heights[x] = Math.min(heights[x], q.top + h * 0.45 * (1 - Math.sqrt(Math.max(0, 1 - u * u)))); }
-    r.layout = { left: cx - w / 2, top: q.top, width: w, height: h };
-    if (r.el) {
-      r.el.style.left = r.layout.left + '%'; r.el.style.top = r.layout.top + '%'; r.el.style.width = r.layout.width + '%'; r.el.style.height = r.layout.height + '%';
-      r.el.style.visibility = (r.shown && !r.hiding) ? 'visible' : 'hidden';
-    }
-  });
-  tut.jarTop = Math.min.apply(null, heights);
-  const row1 = ev.slice(0, 2).map(function(r) { return r.layout ? r.layout.height : 0; });
-  tut.firstRow = row1.length ? Math.max.apply(null, row1) : 20;
-}
-function ftBuildJarRocks() {
-  const inner = tutEl('ftJarInner'); inner.innerHTML = '';
-  tut.rocks.forEach(function(r) { r.el = ftRockMake(r.label, r.color); inner.appendChild(r.el); });
-}
-function ftNewRocks(shownFrom) {
-  tut.rocks = tut.eventRocks.map(function(r) { return Object.assign({}, r, { shown: shownFrom >= 2, el: null }); });
-  ['heavy', 'medium', 'light'].forEach(function(kind, idx) {
-    tut.rocks.push({ kind: kind, label: FT_ROCK_LOOK[kind].label, color: FT_ROCK_LOOK[kind].color, w: FT_ROCK_W[kind], shown: shownFrom >= idx + 3, el: null });
-  });
-}
-
-// Clears everything the story put on screen and sets it up the way chapter `c` begins.
-function ftSetScene(c) {
-  ftStreamClear();
-  tutEl('ftDot').classList.remove('show'); tutEl('ftPrompt').classList.remove('show'); tutEl('ftNotNow').classList.remove('show'); tutEl('ftConnectBtn').classList.remove('show');
-  tutEl('ftBackpack').classList.remove('show'); tutEl('ftBackpack').querySelectorAll('.ft-rock').forEach(function(e) { e.remove(); });
-  tutHideForm();
-  tutEl('ftHint').classList.remove('show');
-  const water = tutEl('ftWater'); water.style.transition = 'none'; water.style.top = '100%'; water.classList.remove('full'); void water.offsetHeight; water.style.transition = '';
-  tutEl('ftPour').style.height = '0';
-  if (!tut.eventRocks.length) tut.eventRocks = ftBuildEventRocks(false);
-  ftNewRocks(c);
-  ftBuildJarRocks();
-  tutView(c === 0 ? 'trail' : 'close');
-  ftLayoutJar();
-  if (c >= 6) ftSetWater(true, true);
-}
-// The water only fills the gaps around the bottom row of stones. It stays low: mostly rocks, a little water.
-function ftSetWater(full, instant) {
-  const water = tutEl('ftWater');
-  if (instant) water.style.transition = 'none';
-  water.style.top = full ? (100 - (tut.firstRow || 20) * 0.78 - 3) + '%' : '100%';
-  water.classList.toggle('full', !!full);
-  if (instant) { void water.offsetHeight; water.style.transition = ''; }
-}
-
-// A rock flies from where it was (a rect on screen) into its place in the jar, or drops in from above.
-function ftDropRock(r, fromRect, tok) {
-  return new Promise(function(resolve, reject) {
-    r.shown = true; r.hiding = true;
-    ftLayoutJar();
-    const target = r.el.getBoundingClientRect(), dur = 950 / tutSpeed(), jarRect = tutEl('ftJar').getBoundingClientRect();
-    const start = fromRect || { left: jarRect.left + jarRect.width / 2 - target.width / 2, top: jarRect.top - 110, width: target.width, height: target.height };
-    const fly = ftRockMake(r.label, r.color, 'fly');
-    fly.style.position = 'fixed'; fly.style.zIndex = '30'; fly.style.pointerEvents = 'none';
-    fly.style.left = start.left + 'px'; fly.style.top = start.top + 'px'; fly.style.width = start.width + 'px'; fly.style.height = start.height + 'px';
-    document.body.appendChild(fly);
-    const midTop = Math.min(start.top, target.top) - 70;
-    const anim = fly.animate([
-      { left: start.left + 'px', top: start.top + 'px', width: start.width + 'px', height: start.height + 'px', offset: 0 },
-      { left: ((start.left + target.left) / 2) + 'px', top: midTop + 'px', width: ((start.width + target.width) / 2) + 'px', height: ((start.height + target.height) / 2) + 'px', offset: 0.45, easing: 'ease-in' },
-      { left: target.left + 'px', top: target.top + 'px', width: target.width + 'px', height: target.height + 'px', offset: 1 }
-    ], { duration: dur, easing: 'cubic-bezier(0.3, 0.1, 0.6, 1)', fill: 'forwards' });
-    anim.onfinish = function() {
-      fly.remove(); r.hiding = false; ftLayoutJar();
-      r.el.classList.remove('land'); void r.el.offsetWidth; r.el.classList.add('land');
-      setTimeout(function() { if (tok === tut.token) resolve(); else reject(TUT_CANCEL); }, 420 / tutSpeed());
-    };
-  });
-}
-
-/* ---- rocks in the stream (the ones you click), glowing dots, and the backpack ---- */
-
-function ftStreamClear() { tutEl('ftStreamRocks').innerHTML = ''; }
-function ftStreamRock(text, color, wPx, hPx, leftPct, bottomPct, pick) {
-  const el = ftRockMake(text, color, pick ? 'pickable' : '');
-  el.style.position = 'absolute'; el.style.width = wPx + 'px'; el.style.height = hPx + 'px'; el.style.left = leftPct + '%'; el.style.bottom = bottomPct + '%';
-  if (pick) { el.setAttribute('role', 'button'); el.tabIndex = 0; el.onkeydown = function(e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); el.click(); } }; }
-  tutEl('ftStreamRocks').appendChild(el);
-  return el;
-}
-// Shows a glowing dot at a place on the screen (in pixels) and waits until it is clicked.
-function tutDotAt(px, py, label, tok) {
-  return new Promise(function(resolve, reject) {
-    const d = tutEl('ftDot'), p = tutEl('ftPrompt');
-    d.style.left = px + 'px'; d.style.top = py + 'px'; d.setAttribute('aria-label', label); d.classList.add('show');
-    p.textContent = label; p.style.left = px + 'px'; p.style.top = py + 'px'; p.classList.add('show');
-    const iv = setInterval(function() { if (tok !== tut.token) { clearInterval(iv); d.classList.remove('show'); p.classList.remove('show'); d.onclick = null; reject(TUT_CANCEL); } }, 150);
-    d.onclick = function() { clearInterval(iv); d.classList.remove('show'); p.classList.remove('show'); d.onclick = null; resolve(); };
-  });
-}
-function tutDot(xPct, yPct, label, tok) { return tutDotAt(xPct / 100 * window.innerWidth, yPct / 100 * window.innerHeight, label, tok); }
-
-/* ---- the real Add form, moved into the story so you use the real thing ---- */
-
-function tutShowForm() {
-  const panel = tutEl('addPanel');
-  if (!panel || tut.formMoved) return;
-  tut.formHome = document.createComment('add-panel-home');
-  panel.parentNode.insertBefore(tut.formHome, panel);
-  tutEl('ftFormHost').appendChild(panel);
-  tutEl('ftFormHost').classList.add('show');
-  tutEl('ftJarWrap').classList.add('with-form');
-  tut.formMoved = true;
-  panel.addEventListener('focusin', tutFormEvent); panel.addEventListener('input', tutFormEvent); panel.addEventListener('click', tutFormEvent); panel.addEventListener('keyup', tutFormEvent);
-  setTimeout(function() { const t = tutEl('typeSeg'); if (t) t.focus(); tutUpdateFormHint(true); }, 120);
-}
-function tutHideForm() {
-  const panel = tutEl('addPanel');
-  if (!tut.formMoved || !panel) { tutEl('ftFormHost').classList.remove('show'); tutEl('ftJarWrap').classList.remove('with-form'); return; }
-  panel.removeEventListener('focusin', tutFormEvent); panel.removeEventListener('input', tutFormEvent); panel.removeEventListener('click', tutFormEvent); panel.removeEventListener('keyup', tutFormEvent);
-  if (tut.formHome && tut.formHome.parentNode) { tut.formHome.parentNode.insertBefore(panel, tut.formHome); tut.formHome.remove(); }
-  tut.formHome = null; tut.formMoved = false;
-  tutEl('ftFormHost').classList.remove('show');
-  tutEl('ftJarWrap').classList.remove('with-form');
-  tutEl('ftHint').classList.remove('show');
-}
-function tutFormEvent() { setTimeout(function() { tutUpdateFormHint(false); }, 30); }
-// A short instruction that follows where you are in the form (type, title, priority, time, label, optional, repeat...).
-function tutUpdateFormHint(first) {
-  if (!tut.formMoved) return;
-  const a = document.activeElement, id = a ? a.id : '', inside = a && tutEl('addPanel').contains(a);
-  let text = FT_HINTS.type;
-  if (inside) {
-    if (id === 'title') text = FT_HINTS.title;
-    else if (id === 'prioritySeg' || (a.closest && a.closest('#prioritySeg'))) text = tut.addKind === 'light' ? FT_HINTS.lowP : FT_HINTS.mediumP;
-    else if (id === 'time') text = FT_HINTS.time;
-    else if (id === 'motivation') text = FT_HINTS.motivation;
-    else if (id === 'labelSearch') text = FT_HINTS.label;
-    else if (id === 'optional') text = FT_HINTS.optional;
-    else if (id === 'repeatCheck') text = FT_HINTS.repeat;
-    else if (id === 'taskSubmitBtn') text = FT_HINTS.add;
-  }
-  const hint = tutEl('ftHint');
-  if (hint.dataset.text !== text) {
-    hint.dataset.text = text; hint.innerHTML = '';
-    hint.appendChild(document.createTextNode(text));
-    const skip = document.createElement('button'); skip.type = 'button'; skip.textContent = 'Skip adding'; skip.onclick = function() { if (tut.formWait) tut.formWait('skip'); };
-    hint.appendChild(skip);
-  }
-  hint.classList.add('show');
-}
-// Called by the Add form whenever a task (or event) is added.
-function tutOnTaskAdded(task) {
-  if (tut.active && task && task.kind !== 'event') task.example = true;     // these are real tasks, marked as examples (delete them any time)
-  if (tut.formWait) tut.formWait('added');
-}
-function tutEnsureExamples() {
-  if (tut.made.examples) return;
-  const open = tasks.filter(function(t) { return isTaskActiveToday(t) && !t.completed; });
-  if (open.length >= 2) { tut.made.examples = true; return; }
-  const base = { optional: false, completed: false, label: null, tomorrow: false, createdDate: localDateStr(), example: true };
-  tasks.push(Object.assign({ id: newUniqueId(), title: 'Example: read for 20 minutes', priority: 2, time: 20, motivation: 6 }, base));
-  tasks.push(Object.assign({ id: newUniqueId(), title: 'Example: tidy your desk', priority: 1, time: 10, motivation: 4 }, base));
-  saveTasks(); render();
-  tut.made.examples = true;
-}
-
-/* ---- the chapters of the story ---- */
-
-async function tutAddStep(first, tok, kind) {
-  tut.addKind = kind;
-  tutShowForm();
-  const added = new Promise(function(resolve) { tut.formWait = resolve; });
-  await tutSayUntil(first ? FT_LINES.quick : 'Add this one the same way.', tok, added);
-  tut.formWait = null;
-  tutHideForm();
-}
-function tutWaitCalendar(tok) {                       // (so we know whether Google Calendar is already connected)
-  return new Promise(function(resolve) {
-    let n = 0;
-    (function look() { if (tok !== tut.token || typeof googleLoading === 'undefined' || googleLoading === 0 || ++n > 30) { resolve(); return; } setTimeout(look, 100); })();
-  });
-}
-
-async function chTrail(tok) {
-  await tutSay(FT_LINES.trail1, tok);
-  await tutSay(FT_LINES.trail2, tok);
-  await tutSay(FT_LINES.trail3, tok);
-  await tutSayUntil(FT_LINES.trail4, tok, tutDot(60, 76, 'Click the glowing dot in the river', tok));
-}
-async function chRocks(tok) {
-  tutView('close');
-  ftStreamClear();
-  await tutWaitCalendar(tok);
-  const gcal = labelColor('Google Calendar');
-  ftStreamRock('Google Calendar', gcal, 160, 78, 6, 46, false);
-  await tutSay(FT_LINES.rock1, tok);
-  let practice = false;
-  if (!calendarConnected && !tut.afterConnect) {
-    const conn = ftStreamRock('Connect your Google Calendar', '#587a66', 180, 84, 34, 14, true);
-    tutEl('ftNotNow').classList.add('show'); tutEl('ftConnectBtn').classList.add('show');
-    const choice = new Promise(function(resolve) {
-      conn.onclick = function() { resolve('connect'); }; tutEl('ftConnectBtn').onclick = function() { resolve('connect'); };
-      tut.notNow = function() { resolve('skip'); };
-    });
-    const which = await tutSayUntil(FT_LINES.rock2, tok, choice);
-    tutEl('ftNotNow').classList.remove('show'); tutEl('ftConnectBtn').classList.remove('show');
-    if (which === 'connect') { tutBeginConnect(); await new Promise(function() {}); }   // (the page leaves for Google and comes back to this spot)
-    practice = true;
-  } else if (tut.afterConnect) {
-    tut.afterConnect = false;
-    await tutWaitCalendar(tok);
-  }
-  ftStreamClear();
-  tut.eventRocks = ftBuildEventRocks(practice);
-  ftNewRocks(1); ftBuildJarRocks(); ftLayoutJar();
-  const n = tut.eventRocks.length, picked = [];
-  const els = tut.eventRocks.map(function(r, i) {
-    return ftStreamRock(r.label, r.color, Math.round(80 + r.w * 2.5), Math.round(40 + r.w * 1.1), 3 + i * (90 / n), 26 + (i % 2) * 18, true);
-  });
-  const all = new Promise(function(resolve) {
-    els.forEach(function(el, i) {
-      el.onclick = function() {
-        if (i >= 2 && !(picked[0] && picked[1])) {            // the stones that sit on top go in after the two at the bottom
-          el.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-7px)' }, { transform: 'translateX(7px)' }, { transform: 'translateX(0)' }], { duration: 300 });
-          tutNotice('Pick up the first two rocks first. The others will sit on top of them.', 4000); return;
-        }
-        el.onclick = null; el.classList.remove('pickable'); picked[i] = true;
-        const rect = el.getBoundingClientRect(); el.classList.add('gone');
-        ftDropRock(tut.rocks[i], { left: rect.left, top: rect.top, width: rect.width, height: rect.height }, tok).then(function() { if (picked.filter(Boolean).length === els.length) resolve(); }, function() {});
-      };
-    });
-  });
-  const line = tut.usingRealEvents ? FT_LINES.rockReal : (practice ? FT_LINES.rockSkip : FT_LINES.rockNone);
-  await tutSayUntil(line, tok, all);
-  await tutSay(FT_LINES.rockDone, tok);
-}
-async function chHeavy(tok) {
-  const bp = tutEl('ftBackpack');
-  const rock = ftRockMake('Heavy task', FT_ROCK_LOOK.heavy.color); bp.appendChild(rock); bp.classList.add('show');
-  await tutSay(FT_LINES.heavy1, tok);
-  const br = bp.getBoundingClientRect();
-  await tutDotAt(br.left + br.width / 2, br.top - 54, 'Click the glowing dot above the backpack', tok);
-  const rect = rock.getBoundingClientRect();
-  rock.style.visibility = 'hidden';
-  await ftDropRock(tut.rocks.find(function(r) { return r.kind === 'heavy'; }), { left: rect.left, top: rect.top, width: rect.width, height: rect.height }, tok);
-  bp.classList.remove('show');
-  await tutSay(FT_LINES.heavy2, tok);
-}
-async function chMedium(tok) {
-  await tutSay(FT_LINES.med1, tok);
-  await tutAddStep(true, tok, 'medium');
-  await tutSay(FT_LINES.med2, tok);
-  await ftDropRock(tut.rocks.find(function(r) { return r.kind === 'medium'; }), null, tok);
-}
-async function chLight(tok) {
-  await tutSay(FT_LINES.light1, tok);
-  await tutAddStep(false, tok, 'light');
-  await tutSay(FT_LINES.light2, tok);
-  await ftDropRock(tut.rocks.find(function(r) { return r.kind === 'light'; }), null, tok);
-}
-async function chWater(tok) {
-  await tutSay(FT_LINES.water1, tok);
-  await tutDot(26, 80, 'Click the glowing dot in the river', tok);
-  const pour = tutEl('ftPour');
-  pour.style.height = '90px';
-  await tutSleep(700, tok);
-  ftSetWater(true, false);
-  await tutSleep(1700, tok);
-  pour.style.height = '0';
-  await tutSay(FT_LINES.water2, tok);
-}
-async function chBridge(tok) {
-  await tutSay(FT_LINES.bridge, tok);
-  await tutSleep(600, tok);
-}
-const FT_CHAPTERS = [chTrail, chRocks, chHeavy, chMedium, chLight, chWater, chBridge];
-
-async function tutRun(from) {
-  const tok = ++tut.token;
-  for (let c = from; c < FT_CHAPTERS.length; c++) {
-    if (tok !== tut.token) return;
-    tut.chapter = c;
-    try { await FT_CHAPTERS[c](tok); }
-    catch (e) { if (e === TUT_CANCEL) return; throw e; }
-  }
-  if (tok === tut.token) tutStartTour();
-}
-function tutChapterStartSeconds(c) { let s = 0; for (let i = 0; i < c; i++) s += FT_CHAPTER_SECONDS[i]; return s; }
-function tutGoto(c) {
-  c = tutClamp(c, 0, FT_CHAPTERS.length - 1);
-  tut.token++;
-  tutStopSpeech();
-  tutCaption('');
-  ftSetScene(c);
-  tut.chapter = c;
-  tut.elapsed = tutChapterStartSeconds(c) * 1000;
-  tut.paused = false; tutSyncPlayButton();
-  tutRun(c);
-}
-
-/* ---- the controls, like a video player: play/pause, back/forward, a progress bar with the parts of the story, captions, sound,
-   voice, full screen. In full screen the bar hides until you move to the bottom of the screen. ---- */
-
-const FT_ICON = {
-  play: '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>',
-  pause: '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>',
-  prev: '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>',
-  next: '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>',
-  vol: '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>',
-  mute: '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.796 8.796 0 0 0 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06a8.99 8.99 0 0 0 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>',
-  cc: '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M19 4H5c-1.11 0-2 .9-2 2v12c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8 7H9.5v-.5h-2v3h2V13H11v1c0 .55-.45 1-1 1H7c-.55 0-1-.45-1-1v-4c0-.55.45-1 1-1h3c.55 0 1 .45 1 1v1zm7 0h-1.5v-.5h-2v3h2V13H18v1c0 .55-.45 1-1 1h-3c-.55 0-1-.45-1-1v-4c0-.55.45-1 1-1h3c.55 0 1 .45 1 1v1z"/></svg>',
-  mic: '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>',
-  fs: '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>',
-  fsx: '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></svg>'
-};
-function tutBuildBar() {
-  const seek = tutEl('ftSeek'); seek.innerHTML = '';
-  FT_CHAPTER_SECONDS.forEach(function(sec, i) {
-    const seg = document.createElement('button'); seg.type = 'button'; seg.className = 'ft-seg'; seg.style.flex = String(sec); seg.title = FT_CHAPTER_NAMES[i]; seg.setAttribute('aria-label', 'Go to: ' + FT_CHAPTER_NAMES[i]);
-    seg.innerHTML = '<span class="ft-fill"></span>'; seg.onclick = function() { tutGoto(i); }; seek.appendChild(seg);
-  });
-  tutEl('ftBack').innerHTML = FT_ICON.prev; tutEl('ftFwd').innerHTML = FT_ICON.next; tutEl('ftCC').innerHTML = FT_ICON.cc;
-  tutEl('ftMute').innerHTML = tut.muted ? FT_ICON.mute : FT_ICON.vol; tutSyncPlayButton(); tutOnFullscreen();
-}
-function tutFmt(ms) { const s = Math.max(0, Math.round(ms / 1000)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
-function tutTickClock() {
-  if (!tut.active) return;
-  const now = Date.now();
-  if (tut.mode === 'story' && !tut.paused) tut.elapsed += (now - tut.lastTick) * tutSpeed();
-  tut.lastTick = now;
-  const total = Math.max(tutChapterStartSeconds(FT_CHAPTERS.length) * 1000, tut.elapsed + 1000), t = tutEl('ftTime');
-  if (t) t.textContent = tutFmt(tut.elapsed) + ' / ' + tutFmt(total);
-  [].forEach.call(document.querySelectorAll('#ftSeek .ft-seg'), function(seg, i) {
-    const start = tutChapterStartSeconds(i) * 1000, len = FT_CHAPTER_SECONDS[i] * 1000;
-    seg.firstChild.style.width = (tutClamp((tut.elapsed - start) / len, 0, 1) * 100) + '%';
-    seg.classList.toggle('now', tut.chapter === i);
-  });
-}
-function tutSyncPlayButton() {
-  const b = tutEl('ftPlay');
-  b.innerHTML = tut.paused ? FT_ICON.play : FT_ICON.pause; b.setAttribute('aria-label', tut.paused ? 'Play' : 'Pause'); b.title = tut.paused ? 'Play' : 'Pause';
-  tutRevealBar();
-}
-function tutTogglePause() {
-  tut.paused = !tut.paused;
-  tutSyncPlayButton();
-  try { if (tut.audio) { if (tut.paused) tut.audio.ctx.suspend(); else if (!tut.muted) tut.audio.ctx.resume(); } } catch (err) {}
-}
-function tutBack() { if (tut.mode === 'tour') { tourBack(); return; } tutGoto(tut.chapter - 1); }
-function tutForward() { if (tut.mode === 'tour') { tourNext(); return; } if (tut.chapter >= FT_CHAPTERS.length - 1) { tutStartTour(); return; } tutGoto(tut.chapter + 1); }
-function tutToggleCaptions() {
-  tut.captions = !tut.captions;
-  tutEl('ftCaption').classList.toggle('off', !tut.captions);
-  tutEl('ftCC').classList.toggle('on', tut.captions);
-  tutEl('ftCC').setAttribute('aria-pressed', String(tut.captions));
-}
-function tutToggleMute() {
-  tut.muted = !tut.muted;
-  tutEl('ftMute').innerHTML = tut.muted ? FT_ICON.mute : FT_ICON.vol; tutEl('ftMute').title = tut.muted ? 'Sound on' : 'Mute';
-  tutEl('tcMute').textContent = tut.muted ? 'Sound is off' : 'Sound is on';
-  tutAudioApplyMute();
-}
-function tutFullscreen() {
-  const el = tutEl('forestTut');
-  try {
-    if (document.fullscreenElement || document.webkitFullscreenElement) { (document.exitFullscreen || document.webkitExitFullscreen).call(document); }
-    else (el.requestFullscreen || el.webkitRequestFullscreen).call(el);
-  } catch (e) {}
-}
-function tutOnFullscreen() {
-  const fs = document.fullscreenElement || document.webkitFullscreenElement, on = fs === tutEl('forestTut');
-  tutEl('forestTut').classList.toggle('fs', on);
-  tutEl('ftFS').innerHTML = on ? FT_ICON.fsx : FT_ICON.fs; tutEl('ftFS').title = on ? 'Exit full screen' : 'Full screen';
-  tutRevealBar();
-}
-document.addEventListener('fullscreenchange', tutOnFullscreen); document.addEventListener('webkitfullscreenchange', tutOnFullscreen);
-// In full screen the bar is hidden. It comes back while you are at the bottom of the screen (or after a tap on a touch screen).
-function tutRevealBar() {
-  const el = tutEl('forestTut');
-  if (!el) return;
-  el.classList.add('reveal'); clearTimeout(tut.revealTimer);
-  tut.revealTimer = setTimeout(function() { const bar = tutEl('ftBar'); if (!tut.paused && !(bar.matches && bar.matches(':hover')) && !tut.overBottom) el.classList.remove('reveal'); }, 2200);
-}
-// the lower part of the screen brings the bar back (on a touch screen, a tap does)
-(function tutWireBar() {
-  const zone = tutEl('ftHoverZone'), bar = tutEl('ftBar'), root = tutEl('forestTut');
-  if (!zone || !bar || !root) return;
-  const over = function() { tut.overBottom = true; tutRevealBar(); }, out = function() { tut.overBottom = false; tutRevealBar(); };
-  [zone, bar].forEach(function(el) { el.addEventListener('mousemove', over); el.addEventListener('mouseenter', over); el.addEventListener('mouseleave', out); });
-  root.addEventListener('pointerdown', function(e) { if (e.pointerType === 'touch') tutRevealBar(); });
-})();
-function tutSkip() { tutStartTour(); }                  // skip the story, go to the hands-on tour of the website
-function tutEnd() { tutFinish('end'); }                 // close the tutorial and go to the website
-function tutNotNow() { if (tut.notNow) tut.notNow(); }
-
-/* ---- starting, finishing, and coming back from Google ---- */
+/* ---- starting and finishing ---- */
 
 function tutSeen() {
   if (localStorage.getItem('flowgrove_tutorial_seen') === 'true') return true;
@@ -7003,175 +5979,268 @@ function tutLater() {
 function tutStart() {
   tutEl('tutWelcome').classList.remove('show');
   tutMarkSeen();
-  tutBegin(0, false);
+  tutBeginTour('', false);
 }
-function tutBegin(chapter, afterConnect) {
+// A sound switch with a mute symbol on one side and a speaker on the other. It always starts on mute.
+function tutSyncSoundUi() {
+  const cb = tutEl('tcSound');
+  cb.checked = !tut.muted;
+  tutEl('tcSwitch').classList.toggle('on', !tut.muted);
+}
+function tutSoundChanged(on) {
+  tut.muted = !on;
+  tutSyncSoundUi();
+  if (on) tourBell();                              // a little "sound is on" bell
+}
+function tutBeginTour(startTitle, soundOn) {
   tutEl('tutWelcome').classList.remove('show');
-  tut.active = true; tut.mode = 'story'; tut.paused = false; tut.afterConnect = !!afterConnect;
-  tut.eventRocks = []; tut.made.examples = false;
-  tutEl('ftCC').classList.toggle('on', tut.captions); tutEl('ftCaption').classList.toggle('off', !tut.captions);
-  tutEl('ftFS').style.display = (document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen) ? '' : 'none';
-  tutEl('forestTut').classList.add('show'); tutEl('forestTut').classList.remove('fs');
-  ftBuildScene(); tutBuildBar();
-  tutAudioStart();
-  tut.lastTick = Date.now(); clearInterval(tut.timer); tut.timer = setInterval(tutTickClock, 250);
-  if (!tut.raf) tut.raf = requestAnimationFrame(ftDraw);
-  const tok = ++tut.token;
-  tut.chapter = chapter; tut.elapsed = tutChapterStartSeconds(chapter) * 1000;
-  ftSetScene(chapter);
-  if (tok !== tut.token) return;
-  tutRun(chapter);
+  tut.active = true; tut.tourToken++;
+  tut.muted = !soundOn;
+  tutEnsureExamples();
+  tut.tourTasks = getTodayOrder().filter(function(t) { return t.example && !t.completed; }).slice(0, 3).map(function(t) { return t.id; });
+  tut.started = { clock: false, breakOn: false, view: false, form: false, checked: [], tomorrow: [] };
+  tut.tourSteps = tourBuildSteps();
+  let start = startTitle ? tut.tourSteps.findIndex(function(s) { return s.title === startTitle; }) : 0;
+  if (start < 0) start = 0;
+  tut.tourIndex = start;
+  tutSyncSoundUi();
+  tourShow(start, 1);
 }
-// The "Connect your Google Calendar" rock takes you to Google and back; this remembers where you were.
-function tutBeginConnect() {
-  localStorage.setItem('flowfill_tut_resume', JSON.stringify({ chapter: 1, at: Date.now() }));
-  window.location.href = '/api/auth/google';
-}
+// The Connect Google Calendar link leaves for Google and comes back; this remembers where in the tour you were.
 function tutOnAppStart() {
   let resume = null;
   try { resume = JSON.parse(localStorage.getItem('flowfill_tut_resume') || 'null'); } catch (e) { resume = null; }
   if (resume) {
     localStorage.removeItem('flowfill_tut_resume');
-    if (Date.now() - resume.at < 20 * 60 * 1000) { setTimeout(function() { tutBegin(1, true); }, 500); return; }
+    if (Date.now() - resume.at < 20 * 60 * 1000) { setTimeout(function() { tutBeginTour(resume.title, !!resume.sound); }, 700); return; }
   }
   if (!tutSeen()) setTimeout(function() { tutShowWelcome(false); }, 700);
 }
 function tutCleanup() {
-  tut.token++; tut.tourToken++;
+  tut.tourToken++;
   tutLeaveStep();
-  tutStopSpeech();
-  tutAudioStop();
-  clearInterval(tut.timer); cancelAnimationFrame(tut.raf); tut.raf = 0;
-  tutHideForm();
-  tutEl('forestTut').classList.remove('show', 'fs', 'reveal');
-  tutEl('ftNotice').classList.remove('show');
+  if (tut.started && tut.started.form) { try { if (editingTaskId !== null || (tutEl('title') && tutEl('title').value)) resetTaskForm(); } catch (e) {} tut.started.form = false; }
   tutEl('tourSpot').classList.remove('show'); tutEl('tourCard').classList.remove('show');
-  try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {}
-  tut.active = false; tut.mode = null;
+  tut.active = false;
 }
+function tutEnd() { tutFinish('end'); }                 // the "End tutorial" link
 function tutFinish(how) {
   tutCleanup();
   tutMarkSeen();
   render();
-  if (how === 'done') showToast("You're all set! The example tasks are real, so you can delete them any time.");
+  if (how === 'done') tutCelebrate();
+}
+// The end of the tutorial: confetti, the Harp (if the sound is on), and a message.
+function tutCelebrate() {
+  if (settings.confetti !== false) {
+    launchConfetti({ count: 700, spread: 3.5 });
+    setTimeout(function() { launchConfetti({ count: 400, spread: 3 }); }, 2200);
+  }
+  if (!tut.muted) { try { previewTimerSound('harp'); } catch (e) {} }
+  const popup = document.getElementById('allDonePopup');
+  popup.textContent = "Tutorial complete! You're all set.";
+  popup.classList.add('show');
+  clearTimeout(window._allDoneTimer);
+  window._allDoneTimer = setTimeout(function() { popup.classList.remove('show'); }, 6000);
+}
+// the gentle bell (the one from Settings) for every Try it that you do, unless the sound is off
+function tourBell() { if (tut.muted) return; try { playSound_bell(); } catch (e) {} }
+
+/* ---- practice tasks: there are always three open example tasks to try things on ---- */
+
+// Called by the Add form whenever a task (or event) is added.
+function tutOnTaskAdded(task) {
+  if (tut.active && task && task.kind !== 'event') task.example = true;     // tasks made during the tutorial are real, marked as examples
+}
+function tutEnsureExamples() {
+  if (tut.made.examples) return;
+  const open = tasks.filter(function(t) { return t.example && isTaskActiveToday(t) && !t.completed; }).length;
+  const more = [
+    { title: 'Example: read a page', priority: 2, time: 10, motivation: 6 },
+    { title: 'Example: tidy your desk', priority: 1, time: 5, motivation: 4 },
+    { title: 'Example: stretch your legs', priority: 3, time: 5, motivation: 7 }
+  ];
+  const base = { optional: false, completed: false, label: null, tomorrow: false, createdDate: localDateStr(), example: true };
+  let added = 0;
+  for (let i = 0; open + added < 3; i++, added++) tasks.push(Object.assign({ id: newUniqueId() }, more[i], base));
+  if (added) { saveTasks(); render(); }
+  tut.made.examples = true;
 }
 
-/* ---- the hands-on tour of the real website: every step points at the real thing, and many have a "Try it" you can do (or not) ---- */
+/* ---- the tour ---- */
 
-function tutStartTour() {
-  tutEl('tutWelcome').classList.remove('show');
-  tut.token++; tutStopSpeech();
-  tut.mode = 'tour';
-  tutAudioStop();
-  tutHideForm();
-  clearInterval(tut.timer); cancelAnimationFrame(tut.raf); tut.raf = 0;
-  tutEl('forestTut').classList.remove('show', 'fs'); tutEl('ftNotice').classList.remove('show');
-  try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {}
-  tutEnsureExamples();
-  tut.tourSteps = tourBuildSteps();
-  tut.tourIndex = 0;
-  tourShow(0);
-}
 function tourSection(word) {
   return [].slice.call(document.querySelectorAll('#settingsOverlay .settings-section')).find(function(s) { const h = s.querySelector('h4'); return h && h.textContent.toLowerCase().indexOf(word) !== -1; }) || null;
 }
 function tourPrepSettings() { if (!tutEl('settingsOverlay').classList.contains('show')) openSettings(); }
 function tourPrepBlock(key) { closeSettings(); revealPanel(key); }
-function tourFirstTask() { return document.querySelector('#grid .block.task:not(.completed):not(.worked)') || document.querySelector('#grid .block.task'); }
-function tourOnClick(el, fn) { if (!el) return function() {}; const h = function() { fn(); }; el.addEventListener('click', h, true); return function() { el.removeEventListener('click', h, true); }; }
+// the blocks of the three practice tasks (found by their id, so they are still found after the schedule redraws itself)
+function tourBlock(n) {
+  const id = tut.tourTasks && tut.tourTasks[n];
+  return (id != null && document.querySelector('#grid .block.task[data-task-id="' + id + '"]:not(.completed)')) || document.querySelector('#grid .block.task:not(.completed):not(.worked)');
+}
+function tourBlockPart(n, sel) { const b = tourBlock(n); return b ? b.querySelector(sel) : null; }
+function tourListen(el, type, test, done) {
+  if (!el) return function() {};
+  const h = function(e) { if (!test || test(e)) done(e); };
+  el.addEventListener(type, h, true);
+  return function() { el.removeEventListener(type, h, true); };
+}
 function tourPoll(test, fn) { const iv = setInterval(function() { let ok = false; try { ok = test(); } catch (e) {} if (ok) { clearInterval(iv); fn(); } }, 250); return function() { clearInterval(iv); }; }
+function tourBoth(a, b) { return function() { a(); b(); }; }
+// A target can be one thing or a list of things (the highlight then covers all of them).
+function tourEls(t) { return Array.isArray(t) ? t.filter(Boolean) : (t ? [t] : []); }
+function tourRectOf(t) {
+  const els = tourEls(t);
+  if (!els.length) return null;
+  let l = 1e9, tp = 1e9, r = -1e9, b = -1e9;
+  els.forEach(function(e) { const q = e.getBoundingClientRect(); l = Math.min(l, q.left); tp = Math.min(tp, q.top); r = Math.max(r, q.right); b = Math.max(b, q.bottom); });
+  return { left: l, top: tp, right: r, bottom: b, width: r - l, height: b - tp };
+}
 
 function tourBuildSteps() {
   const q = function(sel) { return function() { return document.querySelector(sel); }; };
   const byId = function(id) { return function() { return tutEl(id); }; };
+  const phone = window.innerWidth <= 900;
+  const day = function() { closeSettings(); switchView('day'); };
+  const addPrep = function() { tourPrepBlock('add'); tut.started.form = true; setEntryType('task'); };
+  const focusOn = function(id) { return function() { const el = tutEl(id); if (el) el.focus(); }; };
+  const keyOn = function(id, test) { return function(done) { return tourListen(tutEl(id), 'keydown', test, done); }; };
+  const orderKey = function() { return getTodayOrder().map(function(t) { return t.id; }).join(','); };
+  const tomorrowIds = function() { return tasks.filter(function(t) { return t.tomorrow; }).map(function(t) { return t.id; }); };
+  const calendarLink = function() { return document.querySelector('#calendarConnectionStatus a'); };
   return [
-    { icon: '\u2699\uFE0F', title: 'Settings', text: "Let's start with Settings. Try clicking the Settings button.", try: 'Click the Settings button', advance: true,
-      target: q('[data-tut="settingsBtn"]'), prepare: function() { closeSettings(); }, detect: function(done) { return tourOnClick(document.querySelector('[data-tut="settingsBtn"]'), done); } },
-    { icon: '\uD83D\uDC64', title: 'Your account', text: 'This is your account. Sign in with Google here, and your tasks, events and settings follow you to every device. You can even add a second Google account, like home and school.',
+    // --- Settings
+    { icon: '\u2699\uFE0F', title: 'Settings', text: 'Open Settings.', try: 'Click Settings',
+      target: q('[data-tut="settingsBtn"]'), prepare: function() { closeSettings(); }, detect: function(done) { return tourListen(document.querySelector('[data-tut="settingsBtn"]'), 'click', null, done); } },
+    { icon: '\uD83D\uDC64', title: 'Your account', text: 'Sign in with Google to keep your tasks on every device.',
       target: function() { return tourSection('sync'); }, prepare: tourPrepSettings },
-    { icon: '\u23F0', title: 'Working hours', text: 'Here are your working hours. Flowfill plans your tasks inside them, so nothing gets scheduled in the middle of the night.',
+    { icon: '\u23F0', title: 'Working hours', text: 'Tasks are planned inside these hours.',
       target: function() { return tourSection('working hours'); }, prepare: tourPrepSettings },
-    { icon: '\u2615', title: 'Breaks', text: 'Here is how long you work before a break, and how long your breaks last.',
+    { icon: '\u2615', title: 'Breaks', text: 'Breaks are based on the Pomodoro technique, which is just the skeleton: work, then rest. Your tasks will not be exactly 25 minutes, so Flowfill adapts it. Feel free to customize it.',
       target: function() { return tourSection('break settings'); }, prepare: tourPrepSettings },
-    { icon: '\uD83D\uDCC5', title: 'Google Calendar', text: 'Connect Google Calendar here, and your events become the big rocks that everything else fits around. Flowfill only reads your calendar. It never changes it.',
-      target: function() { return tourSection('google calendar'); }, prepare: tourPrepSettings },
-    { icon: '\uD83D\uDDC2\uFE0F', title: 'Your data', text: 'And at the very bottom, you can download your data or delete your account. Your tasks are always yours.',
-      target: function() { return tourSection('& data'); }, prepare: tourPrepSettings },
-    { icon: '\u2716\uFE0F', title: 'Close Settings', text: 'Click the X to close Settings.', try: 'Click the X', advance: true,
-      target: q('#settingsOverlay .modal-close'), prepare: tourPrepSettings, detect: function(done) { return tourOnClick(document.querySelector('#settingsOverlay .modal-close'), done); } },
-    { icon: '\uD83D\uDCCB', title: "Today's schedule", text: 'This is your day. Your calendar events are fixed blocks, and Flowfill fits your tasks around them. The dark line is right now.',
-      target: function() { const g = tutEl('grid'); return (g && g.closest('.schedule-panel')) || g; }, prepare: function() { closeSettings(); switchView('day'); } },
-    { icon: '\u2705', title: 'Check a task off', text: 'Check a task off when you finish it, and you get a little celebration. The pencil edits it. Right-click it, or press and hold on a phone, to see its details.', try: 'Try checking off an example task. You can uncheck it again.', done: 'Nice! You can uncheck it any time.',
-      target: tourFirstTask, prepare: function() { closeSettings(); switchView('day'); },
-      detect: function(done) { const h = function(e) { if (e.target && e.target.matches && e.target.matches('#grid input[type=checkbox]')) done(); }; document.addEventListener('change', h, true); return function() { document.removeEventListener('change', h, true); }; } },
-    { icon: '\u23F1\uFE0F', title: 'Timer and stopwatch', text: 'Click a task to open its timer and stopwatch.', try: 'Click a task', advance: true,
-      target: tourFirstTask, prepare: function() { closeSettings(); switchView('day'); },
-      detect: function(done) { const g = tutEl('grid'); const h = function(e) { if (e.target.closest && e.target.closest('.block.task')) done(); }; g.addEventListener('click', h, true); return function() { g.removeEventListener('click', h, true); }; } },
-    { icon: '\u23F1\uFE0F', title: 'The clock', text: "Press Start when you begin working. This tells Flowfill when you really work, so your schedule stays accurate. Start another task's timer, and Flowfill knows you moved on.", try: 'Try pressing Start', done: 'Nice! Press Pause when you are done.',
+    // (only shown if Google Calendar is not connected yet)
+    { icon: '\uD83D\uDCC5', title: 'Google Calendar', text: 'Connect it, and your events become fixed blocks that your tasks fit around.', try: 'Click Connect Google Calendar',
+      skip: function() { return typeof calendarConnected !== 'undefined' && calendarConnected; },
+      target: calendarLink, prepare: tourPrepSettings,
+      detect: function(done) { return tourListen(calendarLink(), 'click', null, function() { try { localStorage.setItem('flowfill_tut_resume', JSON.stringify({ title: 'Save Settings', sound: !tut.muted, at: Date.now() })); } catch (e) {} done(); }); } },
+    { icon: '\uD83D\uDD14', title: 'Sounds', text: 'Both are off, so you will not disturb anyone nearby. Turn them on if you like.', try: 'Tick one of them',
+      target: function() { return [tutEl('soundToggle') && tutEl('soundToggle').closest('.toggle-row'), tutEl('timerSoundToggle') && tutEl('timerSoundToggle').closest('.toggle-row')]; }, prepare: tourPrepSettings,
+      detect: function(done) { return tourBoth(tourListen(tutEl('soundToggle'), 'change', null, done), tourListen(tutEl('timerSoundToggle'), 'change', null, done)); } },
+    { icon: '\uD83D\uDCBE', title: 'Save Settings', text: 'Click Save Settings after you change anything.', try: 'Click Save Settings',
+      target: q('#settingsOverlay button[onclick="saveSettings()"]'), prepare: tourPrepSettings, detect: function(done) { return tourListen(document.querySelector('#settingsOverlay button[onclick="saveSettings()"]'), 'click', null, done); } },
+    // --- the schedule
+    { icon: '\uD83D\uDCCB', title: 'Your day', text: 'Calendar events are fixed. Your tasks fit around them.',
+      target: function() { const g = tutEl('grid'); return (g && g.closest('.schedule-panel')) || g; }, prepare: day },
+    { icon: '\u2705', title: 'Check a task off', text: 'Check a task when it is done.', try: 'Check the box', silent: true,
+      target: function() { return tourBlockPart(0, '.task-checkbox-wrap'); }, prepare: day,
+      detect: function(done) { return tourListen(tutEl('grid'), 'change', function(e) { return e.target.matches && e.target.matches('.task-checkbox-wrap input'); }, function(e) { const b = e.target.closest('.block'); if (b && b.dataset.taskId) tut.started.checked.push(parseInt(b.dataset.taskId, 10)); done(); }); },
+      leave: function() { tut.started.checked.splice(0).forEach(function(id) { const t = tasks.find(function(x) { return x.id === id; }); if (t && t.completed) toggleComplete(id); }); } },
+    { icon: '\u270F\uFE0F', title: 'Edit a task', text: 'Click the pencil to edit a task.', try: 'Click the pencil',
+      target: function() { return tourBlockPart(1, '.task-edit-btn'); }, prepare: day,
+      detect: function(done) { return tourListen(tutEl('grid'), 'click', function(e) { return e.target.closest && e.target.closest('.task-edit-btn'); }, done); },
+      leave: function() { try { if (editingTaskId !== null) cancelEditTask(); } catch (e) {} } },
+    { icon: '\uD83D\uDD0D', title: 'Task details', text: phone ? 'Press and hold a task to see its details.' : 'Right-click a task to see its details.', try: phone ? 'Press and hold a task' : 'Right-click a task',
+      target: function() { return tourBlock(2); }, prepare: day,
+      detect: function(done) { return tourListen(tutEl('grid'), 'contextmenu', function(e) { return e.target.closest && e.target.closest('.block.task'); }, done); },
+      leave: function() { const tip = tutEl('durationTooltip'); if (tip) tip.style.display = 'none'; } },
+    { icon: '\u23F1\uFE0F', title: 'Timer', text: 'Click a task to open its timer.', try: 'Click a task',
+      target: function() { return tourBlock(0); }, prepare: day,
+      detect: function(done) { return tourListen(tutEl('grid'), 'click', function(e) { return e.target.closest && e.target.closest('.block.task') && !e.target.closest('.task-edit-btn') && !e.target.closest('.task-checkbox-wrap'); }, done); } },
+    { icon: '\u25B6\uFE0F', title: 'The clock', text: 'Press Start when you begin. Flowfill tracks your real work.', try: 'Press Start',
       target: byId('clockPanel'),
       prepare: function() { closeSettings(); if (!workState.panelTaskId) { const first = tasks.find(function(x) { return !x.completed && isTaskActiveToday(x); }); if (first) openClockPanel(first.id); } revealPanel('clock'); },
-      detect: function(done) { return tourOnClick(tutEl('clockStartBtn'), function() { tut.started.clock = true; done(); }); },
+      detect: function(done) { return tourListen(tutEl('clockStartBtn'), 'click', null, function() { tut.started.clock = true; done(); }); },
       leave: function() { if (tut.started.clock) { tut.started.clock = false; try { pauseRunningClock(); render(); } catch (e) {} } } },
-    { icon: '\u2795', title: 'Add a task or event', text: 'This is where you add tasks and events. Press 1 for a task, 2 for an event, and Enter to move quickly. You already know how.', try: 'Try typing a task name', done: 'Nice! Press Enter to keep going, or just leave it.',
-      target: byId('addPanel'), prepare: function() { tourPrepBlock('add'); }, detect: function(done) { const t = tutEl('title'); if (!t) return function() {}; const h = function() { done(); }; t.addEventListener('input', h, true); return function() { t.removeEventListener('input', h, true); }; } },
-    { icon: '\uD83D\uDCDD', title: 'All tasks today', text: 'Everything for today, in order. Remove deletes a task, and you can always undo it. On a phone, the Tomorrow button moves a task to tomorrow.',
-      target: byId('tasksPanel'), prepare: function() { tourPrepBlock('tasks'); } },
-    { icon: '\uD83D\uDCCC', title: 'Fixed events', text: 'Fixed events are things like lunch or practice. They can repeat, and your tasks are planned around them.',
+    // --- adding a task, one box at a time
+    { icon: '\u2795', title: 'Add: type', text: 'Press 1 for a Task or 2 for an Event. Enter goes forward, Tab goes back.', try: 'Press 1',
+      target: byId('typeSeg'), prepare: addPrep, focus: focusOn('typeSeg'),
+      detect: function(done) { return tourBoth(tourListen(tutEl('typeSeg'), 'keydown', function(e) { return e.key === '1' || e.key === '2'; }, done), tourListen(tutEl('typeSeg'), 'click', function(e) { return e.target.closest && e.target.closest('.seg-btn'); }, done)); } },
+    { icon: '\uD83D\uDCDD', title: 'Add: title', text: 'Type a title, then press Enter.', try: 'Type a title, then press Enter',
+      target: byId('title'), prepare: function() { addPrep(); }, focus: focusOn('title'),
+      detect: keyOn('title', function(e) { return e.key === 'Enter' && tutEl('title').value.trim() !== ''; }) },
+    { icon: '\u2B50', title: 'Add: priority', text: 'Press 1 for Low, 2 for Medium, or 3 for Top.', try: 'Press 1, 2, or 3',
+      target: byId('prioritySeg'), prepare: addPrep, focus: focusOn('prioritySeg'),
+      detect: function(done) { return tourBoth(tourListen(tutEl('prioritySeg'), 'keydown', function(e) { return e.key === '1' || e.key === '2' || e.key === '3'; }, done), tourListen(tutEl('prioritySeg'), 'click', function(e) { return e.target.closest && e.target.closest('.seg-btn'); }, done)); } },
+    { icon: '\u23F3', title: 'Add: time', text: 'How many minutes will it take? Press Enter.', try: 'Type a number, then Enter',
+      target: byId('time'), prepare: addPrep, focus: focusOn('time'), detect: keyOn('time', function(e) { return e.key === 'Enter'; }) },
+    { icon: '\uD83D\uDCAA', title: 'Add: motivation', text: 'How motivated are you, from 1 to 10? Press Enter.', try: 'Type a number, then Enter',
+      target: byId('motivation'), prepare: addPrep, focus: focusOn('motivation'), detect: keyOn('motivation', function(e) { return e.key === 'Enter'; }) },
+    { icon: '\uD83C\uDFF7\uFE0F', title: 'Add: label', text: 'Optional. Press Enter to skip.', try: 'Press Enter',
+      target: byId('labelSearch'), prepare: addPrep, focus: focusOn('labelSearch'), detect: keyOn('labelSearch', function(e) { return e.key === 'Enter'; }) },
+    { icon: '\uD83D\uDD01', title: 'Optional and repeat', text: 'Optional: skip it if time runs out. Repeat: it comes back. Space toggles, Enter moves on.', try: 'Press Space or Enter',
+      target: function() { const o = tutEl('optional'); return o && (o.closest('label') || o.parentElement); }, prepare: addPrep, focus: focusOn('optional'),
+      detect: function(done) { return tourBoth(tourListen(tutEl('optional'), 'change', null, done), tourBoth(tourListen(tutEl('repeatCheck'), 'change', null, done), tourBoth(tourListen(tutEl('optional'), 'keydown', function(e) { return e.key === 'Enter'; }, done), tourListen(tutEl('repeatCheck'), 'keydown', function(e) { return e.key === 'Enter'; }, done)))); } },
+    { icon: '\u2714\uFE0F', title: 'Add: finish', text: 'Press Enter to add it.', try: 'Press Enter', done: 'Added!',
+      target: byId('taskSubmitBtn'), prepare: function() { addPrep(); const t = tutEl('title'); if (t && !t.value.trim()) t.value = 'My example task'; }, focus: focusOn('taskSubmitBtn'),
+      detect: function(done) { const base = tasks.length; return tourPoll(function() { return tasks.length > base; }, done); } },
+    // --- the other blocks
+    { icon: '\u2195\uFE0F', title: 'Reorder', text: 'Drag tasks to change their order.', try: 'Drag a task above another',
+      skip: function() { return phone; }, target: byId('tasksPanel'), prepare: function() { tourPrepBlock('tasks'); },
+      detect: function(done) { const base = orderKey(); return tourPoll(function() { return orderKey() !== base; }, done); } },
+    { icon: '\uD83D\uDCCC', title: 'Fixed events', text: 'Lunch, practice, anything that must happen. Tasks plan around them.',
       target: byId('eventsSidebarPanel'), prepare: function() { tourPrepBlock('events'); } },
-    { icon: '\uD83C\uDF19', title: 'Tomorrow', text: 'Not today? Move a task here and it waits for tomorrow.', try: window.innerWidth <= 900 ? 'Try tapping Tomorrow on a task' : 'Try dragging a task into Tomorrow', done: 'Nice! You can drag it back out any time.',
-      target: byId('tomorrowPanel'), prepare: function() { tourPrepBlock('tomorrow'); }, detect: function(done) { const base = tasks.filter(function(t) { return t.tomorrow; }).length; return tourPoll(function() { return tasks.filter(function(t) { return t.tomorrow; }).length > base; }, done); } },
-    { icon: '\uD83C\uDFF7\uFE0F', title: 'Labels', text: 'Labels color-code your tasks, so you can see what kind of work is coming up.', try: 'Try adding a label: type a name, then press Add Label', done: 'Nice! Your new label is ready to use.',
+    { icon: '\uD83C\uDF19', title: 'Tomorrow', side: 'left', text: phone ? 'Tap Tomorrow next to a task to do it tomorrow.' : 'Drag a task here to do it tomorrow.', try: phone ? 'Tap Tomorrow next to a task' : 'Drag a task into Tomorrow',
+      target: function() { return phone ? tutEl('tasksPanel') : tutEl('tomorrowPanel'); }, prepare: function() { closeSettings(); revealPanel(phone ? 'tasks' : 'tomorrow'); },
+      detect: function(done) { const base = tomorrowIds(); return tourPoll(function() { const now = tomorrowIds(), fresh = now.filter(function(id) { return base.indexOf(id) === -1; }); if (fresh.length) tut.started.tomorrow = fresh; return fresh.length > 0; }, done); },
+      leave: function() { tut.started.tomorrow.splice(0).forEach(function(id) { const t = tasks.find(function(x) { return x.id === id; }); if (t && t.example && t.tomorrow) { t.tomorrow = false; saveTasks(); render(); } }); } },
+    { icon: '\uD83C\uDFF7\uFE0F', title: 'Labels', text: 'Labels color-code your tasks.', try: 'Type a name, then Add Label',
       target: byId('labelsSidebarPanel'), prepare: function() { tourPrepBlock('labels'); }, detect: function(done) { const base = labels.length; return tourPoll(function() { return labels.length > base; }, done); } },
-    { icon: '\u2728', title: 'Motivation', text: 'A little encouragement whenever you need it.', try: 'Try refreshing the motivation', done: 'Nice! Press it again for another one.',
-      target: byId('motivationPanel'), prepare: function() { tourPrepBlock('motivation'); }, detect: function(done) { return tourOnClick(document.querySelector('#motivationPanel .mot-refresh'), done); } },
-    { icon: '\uD83D\uDCC6', title: 'Other views', text: 'Switch between Day, Weekdays, Week and Month. Use the arrows to look at other weeks and months.', try: 'Try clicking Week', done: 'Nice! Click Day to come back.',
-      target: q('.view-switch'), prepare: function() { closeSettings(); }, detect: function(done) { const bar = document.querySelector('.view-switch'); const h = function(e) { const b = e.target.closest && e.target.closest('button'); if (b && !b.classList.contains('active')) { tut.started.view = true; done(); } }; bar.addEventListener('click', h, true); return function() { bar.removeEventListener('click', h, true); }; },
+    { icon: '\u2728', title: 'Motivation', text: 'A little encouragement.', try: 'Press Refresh',
+      target: byId('motivationPanel'), prepare: function() { tourPrepBlock('motivation'); }, detect: function(done) { return tourListen(tutEl('motivationPanel'), 'click', function(e) { return e.target.closest && e.target.closest('.mot-refresh'); }, done); } },
+    // --- views, breaks, feedback
+    { icon: '\uD83D\uDCC6', title: 'Views', text: 'Day, Weekdays, Week, or Month.', try: 'Click Week',
+      target: q('.view-switch'), prepare: function() { closeSettings(); }, detect: function(done) { return tourListen(document.querySelector('.view-switch'), 'click', function(e) { const b = e.target.closest && e.target.closest('button'); return b && !b.classList.contains('active'); }, function() { tut.started.view = true; done(); }); },
       leave: function() { if (tut.started.view) { tut.started.view = false; try { switchView('day'); } catch (e) {} } } },
-    { icon: '\u2615', title: 'Take a break', text: 'Press this any time to take a break. Flowfill also adds breaks for you.', try: 'Try the break button', done: 'Nice! Press it again to end the break.',
+    { icon: '\u2615', title: 'Take a break', text: 'Take a break any time.', try: 'Press the break button',
       target: byId('breakBtn'), prepare: function() { closeSettings(); switchView('day'); }, detect: function(done) { return tourPoll(function() { return breakActive; }, function() { tut.started.breakOn = true; done(); }); },
       leave: function() { if (tut.started.breakOn) { tut.started.breakOn = false; try { if (breakActive) toggleBreak(); } catch (e) {} } } },
-    { icon: '\uD83D\uDC1E', title: 'Feedback', text: 'Feedback will make this website better, so please fill out this quick form whenever you have a bug or a suggestion.', try: 'Try clicking the bug', done: 'Thank you! That is how you share an idea or a bug.', last: true,
+    { icon: '\uD83D\uDC1E', title: 'Feedback', text: 'Feedback will make this website better, so please fill out this quick form whenever you have a bug or a suggestion.', try: 'Click the bug', done: 'Thank you!', last: true,
       target: q('.fb-btn'), prepare: function() { closeSettings(); },
-      detect: function(done) { return tourOnClick(document.querySelector('.fb-btn'), function() {          // the tour hides while the feedback box is open
+      detect: function(done) { return tourListen(document.querySelector('.fb-btn'), 'click', null, function() {          // the tour hides while the feedback box is open
         tutEl('tourSpot').style.visibility = 'hidden'; tutEl('tourCard').style.visibility = 'hidden';
         const iv = setInterval(function() { if (!tutEl('feedbackOverlay').classList.contains('show')) { clearInterval(iv); tutEl('tourSpot').style.visibility = ''; tutEl('tourCard').style.visibility = ''; done(); } }, 300);
       }); } }
   ];
 }
 
+// Puts everything the tour changed back the way it was (a task it checked off, a timer or break it started, an edit it opened...).
 function tutLeaveStep() {
   if (tut.stepCleanup) { try { tut.stepCleanup(); } catch (e) {} tut.stepCleanup = null; }
   const step = tut.tourSteps && tut.tourSteps[tut.tourIndex];
-  if (step && step.leave && tut.mode === 'tour') { try { step.leave(); } catch (e) {} }
+  if (step && step.leave && tut.active) { try { step.leave(); } catch (e) {} }
 }
 function tourFindTarget(step) {
   return new Promise(function(resolve) {
     let n = 0;
     (function look() {
-      const el = step.target ? step.target() : null;
-      if (el && el.getBoundingClientRect().width > 0) { resolve(el); return; }
+      const t = step.target ? step.target() : null, r = tourRectOf(t), ok = tourEls(t).length === (Array.isArray(t) ? t.length : 1);
+      if (r && r.width > 0 && ok) { resolve(t); return; }
       if (++n > 14) { resolve(null); return; }
       setTimeout(look, 120);
     })();
   });
 }
-async function tourShow(i) {
+const TOUR_PRAISE = ['Nice!', 'Great!', 'You got it!', 'Well done!'];
+async function tourShow(i, dir) {
+  dir = dir || 1;
   const steps = tut.tourSteps;
   if (!steps || i < 0) return;
   tutLeaveStep();
   if (i >= steps.length) { tutFinish('done'); return; }
   const tt = ++tut.tourToken;
   tut.tourIndex = i;
-  tutStopSpeech();
   tutEl('tourSpot').style.visibility = ''; tutEl('tourCard').style.visibility = '';
   const step = steps[i];
+  if (step.skip && step.skip()) { tourShow(i + dir, dir); return; }
   try { if (step.prepare) step.prepare(); } catch (e) {}
   await new Promise(function(r) { setTimeout(r, 240); });
   if (tt !== tut.tourToken) return;
-  const el = await tourFindTarget(step);
+  const target = await tourFindTarget(step);
   if (tt !== tut.tourToken) return;
-  if (!el) { tourShow(i + 1); return; }          // (nothing to point at here, so move on)
-  try { el.scrollIntoView({ block: window.innerWidth <= 900 ? 'start' : 'center', behavior: 'instant' }); } catch (e) { el.scrollIntoView(); }
+  if (!target) { tourShow(i + dir, dir); return; }          // (nothing to point at here, so move on)
+  const first = tourEls(target)[0];
+  try { first.scrollIntoView({ block: window.innerWidth <= 900 ? 'start' : 'center', behavior: 'instant' }); } catch (e) { first.scrollIntoView(); }
   tutEl('tcStep').textContent = 'Step ' + (i + 1) + ' of ' + steps.length;
   tutEl('tcIcon').textContent = step.icon || '';
   tutEl('tcTitle').textContent = step.title;
@@ -7181,46 +6250,53 @@ async function tourShow(i) {
   tryBox.style.display = step.try ? '' : 'none'; tryBox.classList.remove('done');
   tutEl('tcTryIcon').textContent = '\uD83D\uDC49'; tutEl('tcTryText').textContent = step.try ? 'Try it: ' + step.try : '';
   tutEl('tcBack').disabled = (i === 0);
-  const next = tutEl('tcNext'); next.textContent = step.last ? 'Finish' : 'Next';
+  tutEl('tcNext').textContent = step.last ? 'Finish' : 'Next';
+  tutSyncSoundUi();
   tutEl('tourCard').classList.add('show'); tutEl('tourSpot').classList.add('show');
-  tourPlace(el);
+  tourPlace(tourRectOf(target));
+  if (step.focus) setTimeout(function() { if (tt === tut.tourToken) step.focus(); }, 160);
   if (step.detect) {
     let doneOnce = false;
     const done = function() {
       if (doneOnce || tt !== tut.tourToken) return; doneOnce = true;
-      tryBox.classList.add('done'); tutEl('tcTryIcon').textContent = '\u2705'; tutEl('tcTryText').textContent = step.done || 'Nice work!';
-      if (step.advance) setTimeout(function() { if (tt === tut.tourToken) tourShow(i + 1); }, 650);
+      tryBox.classList.add('done'); tutEl('tcTryIcon').textContent = '\u2705'; tutEl('tcTryText').textContent = step.done || TOUR_PRAISE[Math.floor(Math.random() * TOUR_PRAISE.length)];
+      if (!step.silent) tourBell();
+      setTimeout(function() { if (tt === tut.tourToken) { if (i >= steps.length - 1) tutFinish('done'); else tourShow(i + 1, 1); } }, 950);   // doing the Try it moves on by itself
     };
     tut.stepCleanup = step.detect(done);
   }
-  tourFollow(el, tt);
+  tourFollow(step, tt);
 }
-// Keeps the highlight on its target while things move (scrolling, panels sliding in).
-function tourFollow(el, tt) {
-  if (tt !== tut.tourToken || tut.mode !== 'tour') return;
-  tourPlace(el);
-  requestAnimationFrame(function() { tourFollow(el, tt); });
+// Keeps the highlight on its target while things move or redraw (the schedule redraws itself, which replaces the little boxes in it).
+function tourFollow(step, tt) {
+  if (tt !== tut.tourToken || !tut.active) return;
+  const r = tourRectOf(step.target ? step.target() : null);
+  if (r && r.width > 0) { tutEl('tourSpot').classList.add('show'); tourPlace(r); }
+  requestAnimationFrame(function() { tourFollow(step, tt); });
 }
-function tourPlace(el) {
-  const r = el.getBoundingClientRect(), spot = tutEl('tourSpot'), card = tutEl('tourCard'), pad = 6;
+function tourPlace(r) {
+  if (!r) return;
+  const spot = tutEl('tourSpot'), card = tutEl('tourCard'), pad = 6;
   spot.style.left = (r.left - pad) + 'px'; spot.style.top = (r.top - pad) + 'px'; spot.style.width = (r.width + pad * 2) + 'px'; spot.style.height = (r.height + pad * 2) + 'px';
-  if (window.innerWidth <= 900) {                         // on a phone the card is a sheet: at the bottom, or at the top when the block is down there
-    const sh = card.offsetHeight || 220, H = window.innerHeight;                 // the card goes wherever it covers the block less
+  if (window.innerWidth <= 900) {                         // on a phone the card is a sheet: at the bottom, or at the top, wherever it covers the block less
+    const sh = card.offsetHeight || 220, H = window.innerHeight;
     const coverTop = Math.max(0, Math.min(r.bottom, 8 + sh) - Math.max(r.top, 8)), coverBottom = Math.max(0, Math.min(r.bottom, H - 8) - Math.max(r.top, H - 8 - sh));
     card.classList.toggle('tc-top', coverTop < coverBottom);
     return;
   }
-  const cw = card.offsetWidth || 380, ch = card.offsetHeight || 230;
+  const cw = card.offsetWidth || 380, ch = card.offsetHeight || 230, cur = tut.tourSteps && tut.tourSteps[tut.tourIndex];
+  if (cur && cur.side === 'left') {            // out of the way, so the tasks you drag from stay uncovered
+    card.style.left = '12px'; card.style.top = tutClamp(r.top, 10, window.innerHeight - ch - 10) + 'px'; return;
+  }
   let left = r.right + 18, top = r.top;
   if (left + cw > window.innerWidth - 10) left = r.left - cw - 18;
   if (left < 10) { left = tutClamp(r.left, 10, window.innerWidth - cw - 10); top = r.bottom + 16; if (top + ch > window.innerHeight - 10) top = r.top - ch - 16; }
   card.style.left = tutClamp(left, 10, window.innerWidth - cw - 10) + 'px';
   card.style.top = tutClamp(top, 10, window.innerHeight - ch - 10) + 'px';
 }
-function tourNext() { const steps = tut.tourSteps; if (!steps) return; if (tut.tourIndex >= steps.length - 1) { tutFinish('done'); return; } tourShow(tut.tourIndex + 1); }
-function tourBack() { if (tut.tourIndex > 0) tourShow(tut.tourIndex - 1); }
+function tourNext() { const steps = tut.tourSteps; if (!steps) return; if (tut.tourIndex >= steps.length - 1) { tutFinish('done'); return; } tourShow(tut.tourIndex + 1, 1); }
+function tourBack() { if (tut.tourIndex > 0) tourShow(tut.tourIndex - 1, -1); }
 
-window.addEventListener('resize', function() { if (tut.active && tut.mode === 'story') { ftBuildScene(); ftLayoutJar(); } });
 
 /* (the older step-by-step tutorial below is no longer used) */
 const TUTORIAL_STEPS = [

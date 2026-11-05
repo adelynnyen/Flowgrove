@@ -487,6 +487,9 @@
   #tcSwitch .tc-thumb { position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.3); transition: transform 0.2s ease; }
   #tcSwitch.on .tc-track { background: var(--tertiary); } #tcSwitch.on .tc-thumb { transform: translateX(18px); }
   #tcSwitch input:focus-visible + .tc-track { outline: 2px solid var(--tertiary); outline-offset: 2px; }
+  #tcTry { flex-wrap: wrap; }
+  #tcAfter { flex-basis: 100%; margin-left: 28px; font-size: 12px; font-weight: 500; }
+  #tcAfter .tc-link { margin-left: 6px; color: inherit; }
   .drop-ready { outline: 3px dashed var(--tertiary); outline-offset: -3px; background: var(--accent-light); }
 </style>
 </head>
@@ -815,22 +818,22 @@
       <div class="toggle-row"><span>Play a sound on completion</span><input type="checkbox" id="soundToggle"></div>
       <div class="toggle-row"><span>Confetti when a task is completed</span><input type="checkbox" id="confettiToggle" checked></div>
       <div style="margin:6px 0 4px;font-size:12px;color:var(--ink-soft);">Pick a sound (tap ▶ to preview):</div>
-      <div class="sound-option"><label><input type="radio" name="completionSoundChoice" value="chime"> Soft Chime</label><button type="button" class="icon-btn" onclick="previewSound('chime')">▶</button></div>
-      <div class="sound-option"><label><input type="radio" name="completionSoundChoice" value="bell"> Gentle Bell</label><button type="button" class="icon-btn" onclick="previewSound('bell')">▶</button></div>
-      <div class="sound-option"><label><input type="radio" name="completionSoundChoice" value="sparkle"> Bright Sparkle</label><button type="button" class="icon-btn" onclick="previewSound('sparkle')">▶</button></div>
-      <div class="sound-option"><label><input type="radio" name="completionSoundChoice" value="deep"> Deep Tone</label><button type="button" class="icon-btn" onclick="previewSound('deep')">▶</button></div>
-      <div class="sound-option"><label><input type="radio" name="completionSoundChoice" value="arpeggio"> Rising Arpeggio</label><button type="button" class="icon-btn" onclick="previewSound('arpeggio')">▶</button></div>
+      <div class="sound-option"><label><input type="radio" name="completionSoundChoice" value="chime"> Soft Chime</label><button type="button" class="icon-btn" onclick="previewSound('chime', this)">▶</button></div>
+      <div class="sound-option"><label><input type="radio" name="completionSoundChoice" value="bell"> Gentle Bell</label><button type="button" class="icon-btn" onclick="previewSound('bell', this)">▶</button></div>
+      <div class="sound-option"><label><input type="radio" name="completionSoundChoice" value="sparkle"> Bright Sparkle</label><button type="button" class="icon-btn" onclick="previewSound('sparkle', this)">▶</button></div>
+      <div class="sound-option"><label><input type="radio" name="completionSoundChoice" value="deep"> Deep Tone</label><button type="button" class="icon-btn" onclick="previewSound('deep', this)">▶</button></div>
+      <div class="sound-option"><label><input type="radio" name="completionSoundChoice" value="arpeggio"> Rising Arpeggio</label><button type="button" class="icon-btn" onclick="previewSound('arpeggio', this)">▶</button></div>
     </div>
 
     <div class="settings-section">
       <h4>Timer Sound</h4>
       <div class="toggle-row"><span>Ring when the timer ends</span><input type="checkbox" id="timerSoundToggle"></div>
       <div style="margin:6px 0 4px;font-size:12px;color:var(--ink-soft);">Pick a sound (tap ▶ to preview):</div>
-      <div class="sound-option"><label><input type="radio" name="timerSoundChoice" value="bell"> Ring Bell</label><button type="button" class="icon-btn" onclick="previewTimerSound('bell')">▶</button></div>
-      <div class="sound-option"><label><input type="radio" name="timerSoundChoice" value="marimba"> Marimba</label><button type="button" class="icon-btn" onclick="previewTimerSound('marimba')">▶</button></div>
-      <div class="sound-option"><label><input type="radio" name="timerSoundChoice" value="harp"> Harp</label><button type="button" class="icon-btn" onclick="previewTimerSound('harp')">▶</button></div>
-      <div class="sound-option"><label><input type="radio" name="timerSoundChoice" value="dingdong"> Ding Dong</label><button type="button" class="icon-btn" onclick="previewTimerSound('dingdong')">▶</button></div>
-      <div class="sound-option"><label><input type="radio" name="timerSoundChoice" value="windchimes"> Wind Chimes</label><button type="button" class="icon-btn" onclick="previewTimerSound('windchimes')">▶</button></div>
+      <div class="sound-option"><label><input type="radio" name="timerSoundChoice" value="bell"> Ring Bell</label><button type="button" class="icon-btn" onclick="previewTimerSound('bell', this)">▶</button></div>
+      <div class="sound-option"><label><input type="radio" name="timerSoundChoice" value="marimba"> Marimba</label><button type="button" class="icon-btn" onclick="previewTimerSound('marimba', this)">▶</button></div>
+      <div class="sound-option"><label><input type="radio" name="timerSoundChoice" value="harp"> Harp</label><button type="button" class="icon-btn" onclick="previewTimerSound('harp', this)">▶</button></div>
+      <div class="sound-option"><label><input type="radio" name="timerSoundChoice" value="dingdong"> Ding Dong</label><button type="button" class="icon-btn" onclick="previewTimerSound('dingdong', this)">▶</button></div>
+      <div class="sound-option"><label><input type="radio" name="timerSoundChoice" value="windchimes"> Wind Chimes</label><button type="button" class="icon-btn" onclick="previewTimerSound('windchimes', this)">▶</button></div>
     </div>
 
     <div class="settings-section">
@@ -960,7 +963,7 @@
       <div><div class="tc-step" id="tcStep"></div><h3 id="tcTitle"></h3></div>
     </div>
     <p id="tcText"></p>
-    <div id="tcTry"><span id="tcTryIcon"></span><span id="tcTryText"></span></div>
+    <div id="tcTry"><span id="tcTryIcon"></span><span id="tcTryText"></span><span id="tcAfter"><span id="tcCount"></span><button type="button" id="tcStay" class="tc-link" style="display:none;">Stay here</button></span></div>
     <div class="tc-buttons">
       <button type="button" class="icon-btn" id="tcBack" onclick="tourBack()">Back</button>
       <button type="button" id="tcNext" onclick="tourNext()">Next</button>
@@ -3136,14 +3139,16 @@ function cancelTimerRing() {
   }
 }
 
-function previewTimerSound(name) {
-  try {
+function previewTimerSound(name, btn) {
+  const make = function() {
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return;
     const ctx = new AC();
     scheduleRing(ctx, name, 0, makeRingDest(ctx), 2); // just a taste of it
-    setTimeout(function() { try { ctx.close(); } catch (e) {} }, 9000);
-  } catch (e) {}
+    if (!btn) setTimeout(function() { try { ctx.close(); } catch (e) {} }, 9000);
+  };
+  if (!btn) { try { make(); } catch (e) {} return; }
+  runSoundPreview(btn, make);
 }
 
 /* ---- the clock panel (above "Add a Task/Event") ---- */
@@ -4577,6 +4582,7 @@ function maybeShowSaying() {
 }
 
 function playTone(ctx, freq, start, dur, type, peakVol, dest) {
+  ctx._endAt = Math.max(ctx._endAt || 0, start + dur + 0.05);   // (so we know when a sound is finished)
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
   osc.type = type || 'triangle';
@@ -4631,7 +4637,7 @@ function playSound_arpeggio() {
   playTone(ctx, 783.99, 0.16, 0.30, 'triangle', 0.18); // G5
 }
 
-function previewSound(name) {
+function playSoundByName(name) {
   try {
     if (name === 'chime') playSound_chime();
     else if (name === 'bell') playSound_bell();
@@ -4639,6 +4645,52 @@ function previewSound(name) {
     else if (name === 'deep') playSound_deep();
     else if (name === 'arpeggio') playSound_arpeggio();
   } catch (e) {}
+}
+// Hearing a sound in Settings: the play button turns into a pause button (two bars) while the sound is going.
+// Press it to pause, press it again to carry on; when the sound ends it turns back into play. Only one plays at a time.
+let soundPreview = null;   // { btn, ctx, timer }
+function setPreviewButton(btn, playing) {
+  if (!btn) return;
+  btn.textContent = playing ? '\u275A\u275A' : '\u25B6';
+  btn.setAttribute('aria-label', playing ? 'Pause' : 'Play');
+}
+function stopSoundPreview() {
+  if (!soundPreview) return;
+  clearInterval(soundPreview.timer);
+  setPreviewButton(soundPreview.btn, false);
+  try { soundPreview.ctx.close(); } catch (e) {}
+  soundPreview = null;
+}
+// Runs a function that makes a sound, and catches the audio context it creates (so the sound can be paused).
+function captureAudioContext(makeSound) {
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) { makeSound(); return null; }
+  let made = null;
+  const Wrapped = function() { made = new AC(); return made; };
+  Wrapped.prototype = AC.prototype;
+  const saved = window.AudioContext;
+  window.AudioContext = Wrapped;
+  try { makeSound(); } finally { window.AudioContext = saved; }
+  return made;
+}
+function runSoundPreview(btn, makeSound) {
+  if (soundPreview && soundPreview.btn === btn) {            // the same button again: pause, or carry on
+    const c = soundPreview.ctx;
+    if (c.state === 'running') { c.suspend(); setPreviewButton(btn, false); } else { c.resume(); setPreviewButton(btn, true); }
+    return;
+  }
+  stopSoundPreview();
+  const ctx = captureAudioContext(makeSound);
+  if (!ctx) return;
+  const t0 = Date.now();
+  soundPreview = { btn: btn, ctx: ctx, timer: setInterval(function() {
+    if (ctx.state === 'running' && (ctx.currentTime >= (ctx._endAt || 0) || Date.now() - t0 > 15000)) stopSoundPreview();
+  }, 150) };
+  setPreviewButton(btn, true);
+}
+function previewSound(name, btn) {
+  if (!btn) { playSoundByName(name); return; }                 // (plain playing, like when a task is completed)
+  runSoundPreview(btn, function() { playSoundByName(name); });
 }
 
 // Confetti rains across the whole screen for a few seconds (can be turned off in Settings).
@@ -5737,7 +5789,8 @@ function openSettings() {
   const profile = JSON.parse(localStorage.getItem('flowgrove_profile') || 'null');
   document.getElementById('settingsNickname').value = profile ? (profile.nickname || '') : '';
 }
-function closeSettings() { document.getElementById('settingsOverlay').classList.remove('show'); }
+function closeSettings() {
+  try { stopSoundPreview(); } catch (e) {} document.getElementById('settingsOverlay').classList.remove('show'); }
 
 function renderQuoteSettingsUI() {
   const catBox = document.getElementById('quoteCategoryToggles');
@@ -6036,15 +6089,39 @@ function tutCelebrate() {
     launchConfetti({ count: 700, spread: 3.5 });
     setTimeout(function() { launchConfetti({ count: 400, spread: 3 }); }, 2200);
   }
-  if (!tut.muted) { try { previewTimerSound('harp'); } catch (e) {} }
+  if (!tut.muted) tutHarpOnce();
   const popup = document.getElementById('allDonePopup');
   popup.textContent = "Tutorial complete! You're all set.";
   popup.classList.add('show');
   clearTimeout(window._allDoneTimer);
   window._allDoneTimer = setTimeout(function() { popup.classList.remove('show'); }, 6000);
 }
-// the gentle bell (the one from Settings) for every Try it that you do, unless the sound is off
-function tourBell() { if (tut.muted) return; try { playSound_bell(); } catch (e) {} }
+// A soft glass "ding" for every Try it you do (unless the sound is off): a warm bright note, a hint of a higher one, and a little echo so it rings out gently.
+function tourBell() { tourDing(); }
+function tourDing() {
+  if (tut.muted) return;
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext, ctx = new AC(), out = ctx.createGain();
+    out.gain.value = 0.9; out.connect(ctx.destination);
+    const echo = ctx.createDelay(0.6), back = ctx.createGain(), soft = ctx.createBiquadFilter(), bus = ctx.createGain();
+    echo.delayTime.value = 0.22; back.gain.value = 0.26; soft.type = 'lowpass'; soft.frequency.value = 3000;
+    echo.connect(soft); soft.connect(back); back.connect(echo); soft.connect(out);
+    bus.connect(out); bus.connect(echo);
+    playTone(ctx, 1174.66, 0, 1.7, 'sine', 0.17, bus);        // D6, the main note
+    playTone(ctx, 1760, 0.07, 1.2, 'sine', 0.06, bus);          // A6, a little sweetness just after
+    playTone(ctx, 3237, 0, 0.55, 'sine', 0.045, bus);           // a glassy overtone that fades quickly
+    playTone(ctx, 6343, 0, 0.22, 'sine', 0.012, bus);           // the tiniest sparkle
+    setTimeout(function() { try { ctx.close(); } catch (e) {} }, 4200);
+  } catch (e) {}
+}
+// The Harp from Settings, once (not twice) for the end of the tutorial.
+function tutHarpOnce() {
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext, ctx = new AC();
+    scheduleRing(ctx, 'harp', 0, makeRingDest(ctx), 1);
+    setTimeout(function() { try { ctx.close(); } catch (e) {} }, 5000);
+  } catch (e) {}
+}
 
 /* ---- practice tasks: there are always three open example tasks to try things on ---- */
 
@@ -6111,91 +6188,94 @@ function tourBuildSteps() {
   const calendarLink = function() { return document.querySelector('#calendarConnectionStatus a'); };
   return [
     // --- Settings
-    { icon: '\u2699\uFE0F', title: 'Settings', text: 'Open Settings.', try: 'Click Settings',
+    { icon: '\u2699\uFE0F', title: 'Settings', wait: 2000, text: 'Open Settings.', try: 'Click Settings',
       target: q('[data-tut="settingsBtn"]'), prepare: function() { closeSettings(); }, detect: function(done) { return tourListen(document.querySelector('[data-tut="settingsBtn"]'), 'click', null, done); } },
     { icon: '\uD83D\uDC64', title: 'Your account', text: 'Sign in with Google to keep your tasks on every device.',
       target: function() { return tourSection('sync'); }, prepare: tourPrepSettings },
     { icon: '\u23F0', title: 'Working hours', text: 'Tasks are planned inside these hours.',
       target: function() { return tourSection('working hours'); }, prepare: tourPrepSettings },
-    { icon: '\u2615', title: 'Breaks', text: 'Breaks are based on the Pomodoro technique, which is just the skeleton: work, then rest. Your tasks will not be exactly 25 minutes, so Flowfill adapts it. Feel free to customize it.',
+    { icon: '\u2615', title: 'Breaks', text: 'Breaks are based on the Pomodoro technique. However, your tasks will not be exactly 25 minutes, so Flowfill adapts to it.',
       target: function() { return tourSection('break settings'); }, prepare: tourPrepSettings },
     // (only shown if Google Calendar is not connected yet)
-    { icon: '\uD83D\uDCC5', title: 'Google Calendar', text: 'Connect it, and your events become fixed blocks that your tasks fit around.', try: 'Click Connect Google Calendar',
+    { icon: '\uD83D\uDCC5', title: 'Google Calendar', wait: 1500, text: 'Connect it, and your events become fixed blocks that your tasks fit around.', try: 'Click Connect Google Calendar',
       skip: function() { return typeof calendarConnected !== 'undefined' && calendarConnected; },
       target: calendarLink, prepare: tourPrepSettings,
       detect: function(done) { return tourListen(calendarLink(), 'click', null, function() { try { localStorage.setItem('flowfill_tut_resume', JSON.stringify({ title: 'Save Settings', sound: !tut.muted, at: Date.now() })); } catch (e) {} done(); }); } },
-    { icon: '\uD83D\uDD14', title: 'Sounds', text: 'Both are off, so you will not disturb anyone nearby. Turn them on if you like.', try: 'Tick one of them',
-      target: function() { return [tutEl('soundToggle') && tutEl('soundToggle').closest('.toggle-row'), tutEl('timerSoundToggle') && tutEl('timerSoundToggle').closest('.toggle-row')]; }, prepare: tourPrepSettings,
-      detect: function(done) { return tourBoth(tourListen(tutEl('soundToggle'), 'change', null, done), tourListen(tutEl('timerSoundToggle'), 'change', null, done)); } },
-    { icon: '\uD83D\uDCBE', title: 'Save Settings', text: 'Click Save Settings after you change anything.', try: 'Click Save Settings',
+    { icon: '\uD83D\uDD14', title: 'Sounds', text: 'Both sounds start off, so you will not disturb anyone nearby. Turn them on, pick a sound, and tap play to hear it.', try: 'Tick a box, pick a sound, or tap play', silent: true, wait: 12000,
+      target: function() { return [tourSection('task completion'), tourSection('timer sound')]; }, prepare: tourPrepSettings,
+      detect: function(done) {
+        const root = tutEl('settingsOverlay');
+        return tourListen(root, 'click', function(e) { return e.target.closest && (e.target.closest('.sound-option button') || (e.target.matches && e.target.matches('#soundToggle, #timerSoundToggle, input[name=completionSoundChoice], input[name=timerSoundChoice]'))); }, done);
+      } },
+    { icon: '\uD83D\uDCBE', title: 'Save Settings', wait: 3000, text: 'Click Save Settings after you change anything.', try: 'Click Save Settings',
       target: q('#settingsOverlay button[onclick="saveSettings()"]'), prepare: tourPrepSettings, detect: function(done) { return tourListen(document.querySelector('#settingsOverlay button[onclick="saveSettings()"]'), 'click', null, done); } },
     // --- the schedule
     { icon: '\uD83D\uDCCB', title: 'Your day', text: 'Calendar events are fixed. Your tasks fit around them.',
       target: function() { const g = tutEl('grid'); return (g && g.closest('.schedule-panel')) || g; }, prepare: day },
-    { icon: '\u2705', title: 'Check a task off', text: 'Check a task when it is done.', try: 'Check the box', silent: true,
+    { icon: '\u2705', title: 'Check a task off', wait: 7000, text: 'Check a task when it is done.', try: 'Check the box', silent: true,
       target: function() { return tourBlockPart(0, '.task-checkbox-wrap'); }, prepare: day,
       detect: function(done) { return tourListen(tutEl('grid'), 'change', function(e) { return e.target.matches && e.target.matches('.task-checkbox-wrap input'); }, function(e) { const b = e.target.closest('.block'); if (b && b.dataset.taskId) tut.started.checked.push(parseInt(b.dataset.taskId, 10)); done(); }); },
       leave: function() { tut.started.checked.splice(0).forEach(function(id) { const t = tasks.find(function(x) { return x.id === id; }); if (t && t.completed) toggleComplete(id); }); } },
-    { icon: '\u270F\uFE0F', title: 'Edit a task', text: 'Click the pencil to edit a task.', try: 'Click the pencil',
+    { icon: '\u270F\uFE0F', title: 'Edit a task', wait: 7000, text: 'Click the pencil to edit a task.', try: 'Click the pencil',
       target: function() { return tourBlockPart(1, '.task-edit-btn'); }, prepare: day,
       detect: function(done) { return tourListen(tutEl('grid'), 'click', function(e) { return e.target.closest && e.target.closest('.task-edit-btn'); }, done); },
       leave: function() { try { if (editingTaskId !== null) cancelEditTask(); } catch (e) {} } },
-    { icon: '\uD83D\uDD0D', title: 'Task details', text: phone ? 'Press and hold a task to see its details.' : 'Right-click a task to see its details.', try: phone ? 'Press and hold a task' : 'Right-click a task',
+    { icon: '\uD83D\uDD0D', title: 'Task details', wait: 5000, text: phone ? 'Press and hold a task to see its details.' : 'Right-click a task to see its details.', try: phone ? 'Press and hold a task' : 'Right-click a task',
       target: function() { return tourBlock(2); }, prepare: day,
       detect: function(done) { return tourListen(tutEl('grid'), 'contextmenu', function(e) { return e.target.closest && e.target.closest('.block.task'); }, done); },
       leave: function() { const tip = tutEl('durationTooltip'); if (tip) tip.style.display = 'none'; } },
-    { icon: '\u23F1\uFE0F', title: 'Timer', text: 'Click a task to open its timer.', try: 'Click a task',
+    { icon: '\u23F1\uFE0F', title: 'Timer', wait: 3000, text: 'Click a task to open its timer.', try: 'Click a task',
       target: function() { return tourBlock(0); }, prepare: day,
       detect: function(done) { return tourListen(tutEl('grid'), 'click', function(e) { return e.target.closest && e.target.closest('.block.task') && !e.target.closest('.task-edit-btn') && !e.target.closest('.task-checkbox-wrap'); }, done); } },
-    { icon: '\u25B6\uFE0F', title: 'The clock', text: 'Press Start when you begin. Flowfill tracks your real work.', try: 'Press Start',
+    { icon: '\u25B6\uFE0F', title: 'The clock', wait: 7000, text: 'Press Start when you begin. Flowfill tracks your real work.', try: 'Press Start',
       target: byId('clockPanel'),
       prepare: function() { closeSettings(); if (!workState.panelTaskId) { const first = tasks.find(function(x) { return !x.completed && isTaskActiveToday(x); }); if (first) openClockPanel(first.id); } revealPanel('clock'); },
       detect: function(done) { return tourListen(tutEl('clockStartBtn'), 'click', null, function() { tut.started.clock = true; done(); }); },
       leave: function() { if (tut.started.clock) { tut.started.clock = false; try { pauseRunningClock(); render(); } catch (e) {} } } },
     // --- adding a task, one box at a time
-    { icon: '\u2795', title: 'Add: type', text: 'Press 1 for a Task or 2 for an Event. Enter goes forward, Tab goes back.', try: 'Press 1',
+    { icon: '\u2795', title: 'Add: type', wait: 2000, text: 'Press 1 for a Task or 2 for an Event. Enter goes forward, Tab goes back.', try: 'Press 1',
       target: byId('typeSeg'), prepare: addPrep, focus: focusOn('typeSeg'),
       detect: function(done) { return tourBoth(tourListen(tutEl('typeSeg'), 'keydown', function(e) { return e.key === '1' || e.key === '2'; }, done), tourListen(tutEl('typeSeg'), 'click', function(e) { return e.target.closest && e.target.closest('.seg-btn'); }, done)); } },
-    { icon: '\uD83D\uDCDD', title: 'Add: title', text: 'Type a title, then press Enter.', try: 'Type a title, then press Enter',
+    { icon: '\uD83D\uDCDD', title: 'Add: title', wait: 2000, text: 'Type a title, then press Enter.', try: 'Type a title, then press Enter',
       target: byId('title'), prepare: function() { addPrep(); }, focus: focusOn('title'),
       detect: keyOn('title', function(e) { return e.key === 'Enter' && tutEl('title').value.trim() !== ''; }) },
-    { icon: '\u2B50', title: 'Add: priority', text: 'Press 1 for Low, 2 for Medium, or 3 for Top.', try: 'Press 1, 2, or 3',
+    { icon: '\u2B50', title: 'Add: priority', wait: 2000, text: 'Press 1 for Low, 2 for Medium, or 3 for Top.', try: 'Press 1, 2, or 3',
       target: byId('prioritySeg'), prepare: addPrep, focus: focusOn('prioritySeg'),
       detect: function(done) { return tourBoth(tourListen(tutEl('prioritySeg'), 'keydown', function(e) { return e.key === '1' || e.key === '2' || e.key === '3'; }, done), tourListen(tutEl('prioritySeg'), 'click', function(e) { return e.target.closest && e.target.closest('.seg-btn'); }, done)); } },
-    { icon: '\u23F3', title: 'Add: time', text: 'How many minutes will it take? Press Enter.', try: 'Type a number, then Enter',
+    { icon: '\u23F3', title: 'Add: time', wait: 2000, text: 'How many minutes will it take? Press Enter.', try: 'Type a number, then Enter',
       target: byId('time'), prepare: addPrep, focus: focusOn('time'), detect: keyOn('time', function(e) { return e.key === 'Enter'; }) },
-    { icon: '\uD83D\uDCAA', title: 'Add: motivation', text: 'How motivated are you, from 1 to 10? Press Enter.', try: 'Type a number, then Enter',
+    { icon: '\uD83D\uDCAA', title: 'Add: motivation', wait: 2000, text: 'How motivated are you, from 1 to 10? Press Enter.', try: 'Type a number, then Enter',
       target: byId('motivation'), prepare: addPrep, focus: focusOn('motivation'), detect: keyOn('motivation', function(e) { return e.key === 'Enter'; }) },
-    { icon: '\uD83C\uDFF7\uFE0F', title: 'Add: label', text: 'Optional. Press Enter to skip.', try: 'Press Enter',
+    { icon: '\uD83C\uDFF7\uFE0F', title: 'Add: label', wait: 2000, text: 'Optional. Press Enter to skip.', try: 'Press Enter',
       target: byId('labelSearch'), prepare: addPrep, focus: focusOn('labelSearch'), detect: keyOn('labelSearch', function(e) { return e.key === 'Enter'; }) },
-    { icon: '\uD83D\uDD01', title: 'Optional and repeat', text: 'Optional: skip it if time runs out. Repeat: it comes back. Space toggles, Enter moves on.', try: 'Press Space or Enter',
+    { icon: '\uD83D\uDD01', title: 'Optional and repeat', wait: 2000, text: 'Optional: skip it if time runs out. Repeat: it comes back. Space toggles, Enter moves on.', try: 'Press Space or Enter',
       target: function() { const o = tutEl('optional'); return o && (o.closest('label') || o.parentElement); }, prepare: addPrep, focus: focusOn('optional'),
       detect: function(done) { return tourBoth(tourListen(tutEl('optional'), 'change', null, done), tourBoth(tourListen(tutEl('repeatCheck'), 'change', null, done), tourBoth(tourListen(tutEl('optional'), 'keydown', function(e) { return e.key === 'Enter'; }, done), tourListen(tutEl('repeatCheck'), 'keydown', function(e) { return e.key === 'Enter'; }, done)))); } },
-    { icon: '\u2714\uFE0F', title: 'Add: finish', text: 'Press Enter to add it.', try: 'Press Enter', done: 'Added!',
+    { icon: '\u2714\uFE0F', title: 'Add: finish', wait: 7000, text: 'Press Enter to add it.', try: 'Press Enter', done: 'Added!',
       target: byId('taskSubmitBtn'), prepare: function() { addPrep(); const t = tutEl('title'); if (t && !t.value.trim()) t.value = 'My example task'; }, focus: focusOn('taskSubmitBtn'),
       detect: function(done) { const base = tasks.length; return tourPoll(function() { return tasks.length > base; }, done); } },
     // --- the other blocks
-    { icon: '\u2195\uFE0F', title: 'Reorder', text: 'Drag tasks to change their order.', try: 'Drag a task above another',
+    { icon: '\u2195\uFE0F', title: 'Reorder', wait: 5000, text: 'Drag tasks to change their order.', try: 'Drag a task above another',
       skip: function() { return phone; }, target: byId('tasksPanel'), prepare: function() { tourPrepBlock('tasks'); },
       detect: function(done) { const base = orderKey(); return tourPoll(function() { return orderKey() !== base; }, done); } },
     { icon: '\uD83D\uDCCC', title: 'Fixed events', text: 'Lunch, practice, anything that must happen. Tasks plan around them.',
       target: byId('eventsSidebarPanel'), prepare: function() { tourPrepBlock('events'); } },
-    { icon: '\uD83C\uDF19', title: 'Tomorrow', side: 'left', text: phone ? 'Tap Tomorrow next to a task to do it tomorrow.' : 'Drag a task here to do it tomorrow.', try: phone ? 'Tap Tomorrow next to a task' : 'Drag a task into Tomorrow',
+    { icon: '\uD83C\uDF19', title: 'Tomorrow', wait: 7000, side: 'left', text: phone ? 'Tap Tomorrow next to a task to do it tomorrow.' : 'Drag a task here to do it tomorrow.', try: phone ? 'Tap Tomorrow next to a task' : 'Drag a task into Tomorrow',
       target: function() { return phone ? tutEl('tasksPanel') : tutEl('tomorrowPanel'); }, prepare: function() { closeSettings(); revealPanel(phone ? 'tasks' : 'tomorrow'); },
       detect: function(done) { const base = tomorrowIds(); return tourPoll(function() { const now = tomorrowIds(), fresh = now.filter(function(id) { return base.indexOf(id) === -1; }); if (fresh.length) tut.started.tomorrow = fresh; return fresh.length > 0; }, done); },
       leave: function() { tut.started.tomorrow.splice(0).forEach(function(id) { const t = tasks.find(function(x) { return x.id === id; }); if (t && t.example && t.tomorrow) { t.tomorrow = false; saveTasks(); render(); } }); } },
-    { icon: '\uD83C\uDFF7\uFE0F', title: 'Labels', text: 'Labels color-code your tasks.', try: 'Type a name, then Add Label',
+    { icon: '\uD83C\uDFF7\uFE0F', title: 'Labels', wait: 5000, text: 'Labels color-code your tasks.', try: 'Type a name, then Add Label',
       target: byId('labelsSidebarPanel'), prepare: function() { tourPrepBlock('labels'); }, detect: function(done) { const base = labels.length; return tourPoll(function() { return labels.length > base; }, done); } },
-    { icon: '\u2728', title: 'Motivation', text: 'A little encouragement.', try: 'Press Refresh',
+    { icon: '\u2728', title: 'Motivation', wait: 5000, text: 'A little encouragement.', try: 'Press Refresh',
       target: byId('motivationPanel'), prepare: function() { tourPrepBlock('motivation'); }, detect: function(done) { return tourListen(tutEl('motivationPanel'), 'click', function(e) { return e.target.closest && e.target.closest('.mot-refresh'); }, done); } },
     // --- views, breaks, feedback
-    { icon: '\uD83D\uDCC6', title: 'Views', text: 'Day, Weekdays, Week, or Month.', try: 'Click Week',
+    { icon: '\uD83D\uDCC6', title: 'Views', wait: 7000, text: 'Day, Weekdays, Week, or Month.', try: 'Click Week',
       target: q('.view-switch'), prepare: function() { closeSettings(); }, detect: function(done) { return tourListen(document.querySelector('.view-switch'), 'click', function(e) { const b = e.target.closest && e.target.closest('button'); return b && !b.classList.contains('active'); }, function() { tut.started.view = true; done(); }); },
       leave: function() { if (tut.started.view) { tut.started.view = false; try { switchView('day'); } catch (e) {} } } },
-    { icon: '\u2615', title: 'Take a break', text: 'Take a break any time.', try: 'Press the break button',
+    { icon: '\u2615', title: 'Take a break', wait: 7000, text: 'Take a break any time.', try: 'Press the break button',
       target: byId('breakBtn'), prepare: function() { closeSettings(); switchView('day'); }, detect: function(done) { return tourPoll(function() { return breakActive; }, function() { tut.started.breakOn = true; done(); }); },
       leave: function() { if (tut.started.breakOn) { tut.started.breakOn = false; try { if (breakActive) toggleBreak(); } catch (e) {} } } },
-    { icon: '\uD83D\uDC1E', title: 'Feedback', text: 'Feedback will make this website better, so please fill out this quick form whenever you have a bug or a suggestion.', try: 'Click the bug', done: 'Thank you!', last: true,
+    { icon: '\uD83D\uDC1E', title: 'Feedback', wait: 3000, text: 'Feedback will make this website better, so please fill out this quick form whenever you have a bug or a suggestion.', try: 'Click the bug', done: 'Thank you!', last: true,
       target: q('.fb-btn'), prepare: function() { closeSettings(); },
       detect: function(done) { return tourListen(document.querySelector('.fb-btn'), 'click', null, function() {          // the tour hides while the feedback box is open
         tutEl('tourSpot').style.visibility = 'hidden'; tutEl('tourCard').style.visibility = 'hidden';
@@ -6248,6 +6328,7 @@ async function tourShow(i, dir) {
   tutEl('tcProgress').style.width = (((i + 1) / steps.length) * 100) + '%';
   const tryBox = tutEl('tcTry');
   tryBox.style.display = step.try ? '' : 'none'; tryBox.classList.remove('done');
+  tutEl('tcCount').textContent = ''; tutEl('tcStay').style.display = 'none';
   tutEl('tcTryIcon').textContent = '\uD83D\uDC49'; tutEl('tcTryText').textContent = step.try ? 'Try it: ' + step.try : '';
   tutEl('tcBack').disabled = (i === 0);
   tutEl('tcNext').textContent = step.last ? 'Finish' : 'Next';
@@ -6261,11 +6342,26 @@ async function tourShow(i, dir) {
       if (doneOnce || tt !== tut.tourToken) return; doneOnce = true;
       tryBox.classList.add('done'); tutEl('tcTryIcon').textContent = '\u2705'; tutEl('tcTryText').textContent = step.done || TOUR_PRAISE[Math.floor(Math.random() * TOUR_PRAISE.length)];
       if (!step.silent) tourBell();
-      setTimeout(function() { if (tt === tut.tourToken) { if (i >= steps.length - 1) tutFinish('done'); else tourShow(i + 1, 1); } }, 950);   // doing the Try it moves on by itself
+      tourCountdown(i, tt, step.wait != null ? step.wait : 7000);   // doing the Try it moves on by itself, after a pause so you can see what happened
     };
     tut.stepCleanup = step.detect(done);
   }
   tourFollow(step, tt);
+}
+// After you do a Try it, wait a few seconds (so you can see what happened) and then move on. Next moves on right away; Stay here keeps you on this step.
+function tourCountdown(i, tt, ms) {
+  const steps = tut.tourSteps, cnt = tutEl('tcCount'), stay = tutEl('tcStay'), scale = window.__tutSpeed || 1;
+  let left = Math.max(1, Math.round(ms / 1000)), stopped = false;
+  const paint = function() { cnt.textContent = stopped ? 'Press Next when you are ready.' : 'Moving on in ' + left + 's'; };
+  const iv = setInterval(function() {
+    if (tt !== tut.tourToken) { clearInterval(iv); return; }
+    if (stopped) return;
+    left--;
+    if (left <= 0) { clearInterval(iv); if (i >= steps.length - 1) tutFinish('done'); else tourShow(i + 1, 1); }
+    else paint();
+  }, 1000 / scale);
+  stay.style.display = ''; stay.onclick = function() { stopped = true; stay.style.display = 'none'; paint(); };
+  paint();
 }
 // Keeps the highlight on its target while things move or redraw (the schedule redraws itself, which replaces the little boxes in it).
 function tourFollow(step, tt) {

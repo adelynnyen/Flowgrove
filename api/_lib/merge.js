@@ -8,12 +8,30 @@ const KEYS = {
   tasks: function(x) { return String(x.id); },
   events: function(x) { return String(x.id); },
   labels: function(x) { return String(x.name); },
-  quotes: function(x) { return String(x.text); }
+  quotes: function(x) { return String(x.text); },
+  sessions: function(x) { return String(x.id); },
+  breaks: function(x) { return String(x.id); }
 };
 const DEMO_TITLES = ['Study for science quiz', 'Finish reading chapter', 'Practice violin', 'Clean room'];
 
 function isDemoTask(t) {
   return DEMO_TITLES.indexOf(t.title) !== -1 && !t.updatedAt && !t.completed;
+}
+
+// Which copy of a task wins: the most recently changed one, except that a FINISHED task is not undone by a copy that was only
+// sent to Tomorrow by a device that hadn't heard it was finished.
+function contentJson(t) {
+  const c = Object.assign({}, t);
+  ['updatedAt', 'tomorrow', 'manualOrder', 'completed', 'fixedStartMin', 'fixedEndMin', 'chunkStartMs', 'inferredNetMs', 'cutKeys', 'completedDate'].forEach(function(k) { delete c[k]; });
+  return JSON.stringify(c);
+}
+function taskWinner(a, b) {
+  const newer = (b.updatedAt || 0) > (a.updatedAt || 0) ? b : a;
+  const older = newer === b ? a : b;
+  if (older.completed && !newer.completed && newer.tomorrow && contentJson(older) === contentJson(newer)) {
+    return Object.assign({}, older, { updatedAt: Math.max(newer.updatedAt || 0, older.updatedAt || 0) });
+  }
+  return newer;
 }
 
 export function mergeData(a, b) {
@@ -33,7 +51,8 @@ export function mergeData(a, b) {
       if (name === 'tasks' && aHasTasks && isDemoTask(item)) return; // sample tasks from a new account are not real tasks
       const k = keyOf(item);
       const have = map.get(k);
-      if (!have || (item.updatedAt || 0) > (have.updatedAt || 0)) map.set(k, item);
+      if (!have) map.set(k, item);
+      else map.set(k, name === 'tasks' ? taskWinner(have, item) : ((item.updatedAt || 0) > (have.updatedAt || 0) ? item : have));
     });
     out[name] = Array.from(map.values()).filter(function(item) {
       const t = tomb[keyOf(item)];

@@ -58,6 +58,17 @@ function googleGet(url, token) {
   return fetch(url, { headers: { Authorization: `Bearer ${token}` } });
 }
 
+// The link to join an event's meeting, if it has one: Google Meet, a video entry point (Zoom, Teams...), or a web address in the location.
+function meetingLink(ev) {
+  const ok = function(u) { return typeof u === 'string' && /^https:\/\//i.test(u) ? u : null; };
+  if (ok(ev.hangoutLink)) return ev.hangoutLink;
+  const eps = (ev.conferenceData && ev.conferenceData.entryPoints) || [];
+  const video = eps.find(function(e) { return e.entryPointType === 'video' && ok(e.uri); });
+  if (video) return video.uri;
+  if (ok(ev.location)) return ev.location;
+  return null;
+}
+
 export default async function handler(req, res) {
   // Calendar data is personal: never let a browser or CDN reuse a cached copy.
   res.setHeader('Cache-Control', 'no-store');
@@ -184,6 +195,8 @@ export default async function handler(req, res) {
           counts[r.cal.id]++;
           events.push({
             id: ev.id || null,
+            recurringEventId: ev.recurringEventId || null, // the series a repeating event belongs to
+            link: meetingLink(ev),                           // a Meet / Zoom / Teams link, if the event has one
             calId: r.cal.id,
             title: ev.summary || '(No title)',
             colorId: ev.colorId || null, // an event can have its own color, different from its calendar's
